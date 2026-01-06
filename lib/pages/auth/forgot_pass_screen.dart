@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../controller/auth_controller.dart';
+
 class ForgotPassScreen extends StatefulWidget {
   const ForgotPassScreen({super.key});
 
@@ -15,6 +17,9 @@ class ForgotPassScreen extends StatefulWidget {
 }
 
 class _ForgotPassScreenState extends State<ForgotPassScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  TextEditingController emailController = TextEditingController();
+  final auth = Get.put(AuthController());
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -23,76 +28,91 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                customHeight(10.h),
-                Image.asset(AppAsset.forgotPassImg, height: 243.h),
-                customHeight(40.h),
-                Text(
-                  'Forgot Your Password?',
-                  style: AppTextStyle.normal14style.copyWith(
-                    color: AppColors.defaultTxtGrey,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                customHeight(3.h),
-                Text(
-                  AppString.forgotPassPageTxt,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyle.normal12style.copyWith(
-                    color: AppColors.defaultTxtGrey,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-                customHeight(70.h),
-                PrimaryTextField(
-                  hintText: 'Email ID',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => Validators.validateEmail(value),
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 15.w),
-                    child: SvgPicture.asset(AppAsset.emailSvgIcon),
-                  ),
-                ),
-                customHeight(34.h),
-                PrimaryButton(
-                  label: 'Send Email',
-                  onTap: () {
-                    Get.bottomSheet(
-                      PassResetEmailSentBottomsheet(),
-                      barrierColor: Colors.white.withValues(alpha: 0.3),
-                    );
-                  },
-                ),
-                customHeight(5.h),
-                RichText(
-                  text: TextSpan(
-                    text: 'Don\'t receive? ',
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  customHeight(10.h),
+                  Image.asset(AppAsset.forgotPassImg, height: 243.h),
+                  customHeight(40.h),
+                  Text(
+                    'Forgot Your Password?',
                     style: AppTextStyle.normal14style.copyWith(
-                      color: AppColors.textGreyColor,
+                      color: AppColors.defaultTxtGrey,
+                      fontWeight: FontWeight.w600,
                     ),
-                    children: [
-                      WidgetSpan(
-                        child: InkWell(
-                          onTap: () {
-                            // Get.off(() => RegisterScreen());
-                          },
-                          child: Text(
-                            'Resend',
-                            style: AppTextStyle.normal14style.copyWith(
-                              color: AppColors.primaryAppColor,
-                              fontWeight: FontWeight.w700,
+                  ),
+                  customHeight(3.h),
+                  Text(
+                    AppString.forgotPassPageTxt,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyle.normal12style.copyWith(
+                      color: AppColors.defaultTxtGrey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                  customHeight(70.h),
+                  PrimaryTextField(
+                    controller: emailController,
+                    hintText: 'Email ID',
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) => Validators.validateEmail(value),
+                    prefixIcon: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.w),
+                      child: SvgPicture.asset(AppAsset.emailSvgIcon),
+                    ),
+                  ),
+                  customHeight(34.h),
+              Obx(() => auth.isLoading.value ? CircularProgressIndicator(
+                color: AppColors.primaryAppColor,
+              ):PrimaryButton(
+                    label: 'Send Email',
+                    onTap: () async{
+                      if (_formKey.currentState!.validate()) {
+                        // Form is valid
+                        final response = await auth.forgetPasswordAuth(
+                            email: emailController.text);
+                        if (response.success) {
+                          Get.bottomSheet(
+                          PassResetEmailSentBottomsheet(),
+                          barrierColor: Colors.white.withValues(alpha: 0.3),
+                        );
+                        }
+                      } else {
+                        // Form is invalid
+                      }
+                    },
+                  )),
+                  customHeight(5.h),
+                  RichText(
+                    text: TextSpan(
+                      text: 'Don\'t receive? ',
+                      style: AppTextStyle.normal14style.copyWith(
+                        color: AppColors.textGreyColor,
+                      ),
+                      children: [
+                        WidgetSpan(
+                          child: InkWell(
+                            onTap: () {
+                              // Get.off(() => RegisterScreen());
+                            },
+                            child: Text(
+                              'Resend',
+                              style: AppTextStyle.normal14style.copyWith(
+                                color: AppColors.primaryAppColor,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                customHeight(20.h),
-              ],
+                  customHeight(20.h),
+                ],
+              ),
             ),
           ),
         ),

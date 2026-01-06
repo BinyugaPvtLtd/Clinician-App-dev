@@ -159,15 +159,22 @@ class _PrimaryDropDownState extends State<PrimaryDropDown> {
           ButtonStyleData(height: 40.h, width: double.maxFinite),
       hint: Align(
         alignment: Alignment.centerLeft,
-        child: Text(
-          widget.hintText ?? '--select--',
-          style:
-              widget.hintStyle ??
-              AppTextStyle.normal10style.copyWith(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-                color: AppColors.hintGrey,
-              ),
+        child: Padding(
+          padding:  EdgeInsets.all(8.h),
+          child: Text(
+            widget.hintText ?? '--select--',
+            style:
+                widget.hintStyle ??AppTextStyle.normal12style
+                    .copyWith(
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.hintGrey,
+                ),
+                // AppTextStyle.normal10style.copyWith(
+                //   fontSize: 14.sp,
+                //   fontWeight: FontWeight.w400,
+                //   color: AppColors.hintGrey,
+                // ),
+          ),
         ),
       ),
       onChanged: widget.onChanged,

@@ -9,6 +9,7 @@ class AppAsset {
   static const String emailSentImg = 'assets/png/email_sent_img.png';
   static const String symmetryLogoImg = 'assets/png/symmetry_logo.png';
   static const String avatarImg = 'assets/png/avatar_img.png';
+  static const String profilePicImg = 'assets/png/profilepic.png';
   static const String chatAvatarImg = 'assets/png/chat_avatar_img.png';
   static const String document = 'assets/png/doc.png';
   static const String earning = 'assets/png/earnings.png';
@@ -24,6 +25,7 @@ class AppAsset {
   static const String splashScreen = 'assets/png/spalsh.png';
   static const String question = 'assets/png/question-square 1.png';
   static const String googleMapIcon = 'assets/png/google_map_icon.png';
+  static const String sucessImg = 'assets/png/sucess.png';
 
   // -------------------- SVG -----------------------
   static const String calenderSvgIcon = 'assets/svg/calender_icon.svg';

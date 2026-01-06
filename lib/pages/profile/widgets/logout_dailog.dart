@@ -1,8 +1,11 @@
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
+import 'package:clinician_app/pages/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../services/token_manager/token_manager_service.dart';
 
 void showLogoutConfirmationDialog(BuildContext context) {
   showDialog(
@@ -70,8 +73,9 @@ void showLogoutConfirmationDialog(BuildContext context) {
                         color: Colors.red,
                       ),
                       buttonColor: Colors.red,
-                      onPressed: () {
-                        Get.back();
+                      onPressed: () async{
+                        TokenManager.removeAccessToken();
+                        Get.offAll(()=>LoginScreen());
                       },
                     ),
                     customWidth(12.w),

@@ -1,4 +1,5 @@
 class ApiAppConstant {
-  static const String domain = 'http://localHost:4000/';
+  static const String domain = 'https://dev.symmetry.care/';
   static const String clinicialBaseUrl = '${domain}api/';
+  static const googleApiKey = "AIzaSyCw6mXOPCtbKn5i0bWcAcnfXCkb0y5G7Lg";
 }

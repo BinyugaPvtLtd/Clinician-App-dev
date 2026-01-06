@@ -1,4 +1,5 @@
 class AppString {
+  static const String somethingWentWrong = 'Something went wrong!';
   static const String forgotPassPageTxt = '''
 Do not worry! We will help you in logging in back to your account safely! Enter Your Email address and proceed further!''';
   static const String emailSentTxt = '''

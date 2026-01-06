@@ -1,7 +1,13 @@
 import 'package:clinician_app/core/constant/constant_import.dart';
+import 'package:clinician_app/pages/auth/login_screen.dart';
 import 'package:clinician_app/pages/auth/register_screen.dart';
+import 'package:clinician_app/pages/home/home_screen.dart';
+import 'package:clinician_app/services/token_manager/token_manager_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get/route_manager.dart';
+
+import '../../controller/splash_controller.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,10 +20,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 3), () {
-      Get.offAll(() => RegisterScreen());
-    });
+    // Future.delayed(Duration(seconds: 3), () async{
+    //   var authToken = await TokenManager.getAccessToken();
+    //   print('Auth token ${authToken}');
+    //   Get.offAll(() => authToken.isEmpty ? LoginScreen() : HomeScreen());
+    // });
   }
+  final SplashController controller = Get.put(SplashController());
 
   @override
   Widget build(BuildContext context) {

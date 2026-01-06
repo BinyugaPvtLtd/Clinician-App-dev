@@ -9,6 +9,12 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controller/timesheet_controller.dart';
+import '../../core/ui/const_sucess_popup.dart';
+import '../../core/ui/overlay_primary_textfield.dart';
+import '../../utils/validator.dart';
+import '../calender_section/widget/calender_date_pick_dialog_widget.dart';
+
 class AddVisitPage extends StatefulWidget {
   const AddVisitPage({super.key});
 
@@ -17,7 +23,16 @@ class AddVisitPage extends StatefulWidget {
 }
 
 class _AddVisitPageState extends State<AddVisitPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final addVisitController = Get.put(TimeSheetController());
   VisitController visitController = Get.find<VisitController>();
+  TextEditingController visitData = TextEditingController();
+  TextEditingController visitRateController = TextEditingController();
+  TextEditingController visitStartTimeController = TextEditingController();
+  TextEditingController visitEndTimeController = TextEditingController();
+  TextEditingController locationController = TextEditingController();
+  TextEditingController patientNameController = TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
@@ -25,324 +40,469 @@ class _AddVisitPageState extends State<AddVisitPage> {
       child: Scaffold(
         body: Column(
           children: [
-            CommonAppbar(label: "Add Visit"),
+            CommonAppbar(label: "Add Visit",onTap: (){
+              addVisitController.selectedRecordTypeId.value = 0;
+              addVisitController.selectedRecordName.value = '';
+              addVisitController.selectedMasterVisitId.value = 0;
+              addVisitController.selectedMasterVisitName.value = '';
+              addVisitController.selectedPatientId.value = 0;
+              addVisitController.selectedPatientName.value = '';
+              visitData.clear();
+              visitStartTimeController.clear();
+              visitEndTimeController.clear();
+              locationController.clear();
+              patientNameController.clear();
+              visitController.status.value = '';
+              visitRateController.clear();
+              Get.back();
+            },),
             customHeight(10.h),
             Obx(
               () => Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15.w),
                   child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 56.w,
-                              decoration: BoxDecoration(shape: BoxShape.circle),
-                              clipBehavior: Clip.hardEdge,
-                              child: Image.asset(
-                                AppAsset.avatarImg,
-                                fit: BoxFit.cover,
+                    child: Form(
+                      key: _formKey,
+                      //autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 56.w,
+                                decoration: BoxDecoration(shape: BoxShape.circle),
+                                clipBehavior: Clip.hardEdge,
+                                child: Image.asset(
+                                  AppAsset.avatarImg,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                            ),
-                            customWidth(10.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Lucas Jackson',
-                                    style: AppTextStyle.normal12style.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.defaultTxtGrey,
+                              customWidth(10.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Lucas Jackson',
+                                      style: AppTextStyle.normal12style.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.defaultTxtGrey,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    'Anxiety',
-                                    style: AppTextStyle.normal12style.copyWith(
-                                      fontWeight: FontWeight.w300,
-                                      color: AppColors.defaultTxtGrey,
+                                    Text(
+                                      'Anxiety',
+                                      style: AppTextStyle.normal12style.copyWith(
+                                        fontWeight: FontWeight.w300,
+                                        color: AppColors.defaultTxtGrey,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        customHeight(18.h),
-                        Text("Record Type", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        SizedBox(
-                          width: double.infinity,
-                          child: PrimaryDropDown(
-                            value: visitController.statusVal.value,
-                            buttonStyleData: ButtonStyleData(
-                              width: 120.w,
-                              height: 44.h,
-
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.borderGrey),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.zero,
-                            filled: false,
-
-                            items: [
-                              ...List.generate(4, (index) {
-                                var list = [
-                                  'Traveling',
-                                  'Break',
-                                  'Patient Visit',
-                                  'Other Visit',
-                                ];
-                                return DropdownMenuItem(
-                                  value: list[index],
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      list[index],
-                                      style: AppTextStyle.normal12style
-                                          .copyWith(
-                                            fontWeight: FontWeight.w400,
-                                            color: AppColors.defaultTxtGrey,
-                                          ),
-                                    ),
-                                  ),
-                                );
-                              }),
                             ],
-                            onChanged: (value) {
-                              visitController.statusVal.value = value ?? "";
-                            },
                           ),
-                        ),
-                        customHeight(18.h),
-
-                        Row(
-                          children: [
-                            AppRadioButton(
-                              groupValue: visitController.recordType.value,
-                              value: "SOC",
-                              onChanged: (v) {
-                                visitController.recordType.value = v!;
-                              },
-                            ),
-                            customWidth(5.w),
-                            Text("SOC", style: AppTextStyle.bold12style),
-                            customWidth(12.w),
-                            AppRadioButton(
-                              groupValue: visitController.recordType.value,
-                              value: "Revisit",
-                              onChanged: (v) {
-                                visitController.recordType.value = v!;
-                              },
-                            ),
-                            customWidth(5.w),
-                            Text("Revisit", style: AppTextStyle.bold12style),
-                            customWidth(12.w),
-                            AppRadioButton(
-                              groupValue: visitController.recordType.value,
-                              value: "Evaluation",
-                              onChanged: (v) {
-                                visitController.recordType.value = v!;
-                              },
-                            ),
-                            customWidth(5.w),
-                            Text("Evaluation", style: AppTextStyle.bold12style),
-                          ],
-                        ),
-                        customHeight(18.h),
-                        Text("Visit Type", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        SizedBox(
-                          width: double.infinity,
-                          child: PrimaryDropDown(
-                            value: visitController.statusVal.value,
-                            buttonStyleData: ButtonStyleData(
-                              width: 120.w,
-                              height: 44.h,
-
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.borderGrey),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.zero,
-                            filled: false,
-
-                            items: [
-                              ...List.generate(4, (index) {
-                                var list = [
-                                  'Traveling',
-                                  'Break',
-                                  'Patient Visit',
-                                  'Other Visit',
-                                ];
-                                return DropdownMenuItem(
-                                  value: list[index],
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      list[index],
-                                      style: AppTextStyle.normal12style
-                                          .copyWith(
-                                            fontWeight: FontWeight.w400,
-                                            color: AppColors.defaultTxtGrey,
-                                          ),
-                                    ),
+                          customHeight(18.h),
+                          Text("Record Type", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Obx(() {
+                              return PrimaryDropDown(
+                                validator: (value) => Validators.validateRequired(addVisitController.selectedRecordName.value,'Record Type'),
+                                contentPadding: EdgeInsets.zero,
+                                filled: false,
+                                value: addVisitController.selectedRecordName.value,
+                                buttonStyleData: ButtonStyleData(
+                                  width: 120.w,
+                                  height: 44.h,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppColors.borderGrey),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                );
-                              }),
-                            ],
-                            onChanged: (value) {
-                              visitController.statusVal.value = value ?? "";
-                            },
-                          ),
-                        ),
-                        customHeight(18.h),
-                        Text("Patient Name", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        PrimaryTextField(),
-                        customHeight(18.h),
-                        Text("Location", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        PrimaryTextField(),
-                        customHeight(18.h),
-                        Text("Visit Date", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        PrimaryTextField(
-                          suffixIcon: Icon(Icons.calendar_month_rounded),
-                        ),
-                        customHeight(18.h),
-                        Row(
-                          children: [
-                            AppRadioButton(
-                              groupValue: visitController.zoneType.value,
-                              value: "In",
-                              onChanged: (v) {
-                                visitController.zoneType.value = v!;
-                              },
-                            ),
-                            customWidth(5.w),
-                            Text("In Zone", style: AppTextStyle.bold12style),
-                            customWidth(12.w),
-                            AppRadioButton(
-                              groupValue: visitController.zoneType.value,
-                              value: "Out",
-                              onChanged: (v) {
-                                visitController.zoneType.value = v!;
-                              },
-                            ),
-                            customWidth(5.w),
-                            Text("Out Zone", style: AppTextStyle.bold12style),
-                            customWidth(12.w),
-                          ],
-                        ),
-
-                        customHeight(18.h),
-                        Text("Visit Rate", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        PrimaryTextField(),
-                        customHeight(18.h),
-                        Text("Start Time", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        PrimaryTextField(
-                          suffixIcon: Icon(
-                            Icons.timer_outlined,
-                            color: AppColors.primaryAppColor,
-                          ),
-                        ),
-                        customHeight(18.h),
-                        Text("End Time", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        PrimaryTextField(
-                          suffixIcon: Icon(
-                            Icons.timer_outlined,
-                            color: AppColors.primaryAppColor,
-                          ),
-                        ),
-                        customHeight(18.h),
-                        Text("Visit Type", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        SizedBox(
-                          width: double.infinity,
-                          child: PrimaryDropDown(
-                            value: visitController.status.value,
-                            buttonStyleData: ButtonStyleData(
-                              width: 120.w,
-                              height: 44.h,
-
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.borderGrey),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.zero,
-                            filled: false,
-
-                            items: [
-                              ...List.generate(2, (index) {
-                                var list = ['Completed', 'Ongoing'];
-                                return DropdownMenuItem(
-                                  value: list[index],
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      list[index],
-                                      style: AppTextStyle.normal12style
-                                          .copyWith(
-                                            fontWeight: FontWeight.w400,
-                                            color: AppColors.defaultTxtGrey,
-                                          ),
+                                ),
+                                hintText:  "Select record type",
+                                // value: addVisitController.selectedRecordName.value == ''
+                                //     ? 'Select type'
+                                //     : addVisitController.selectedRecordName.value,
+                                items: addVisitController.recordTypes.map((item) {
+                                  return DropdownMenuItem<String>(
+                                    value: item.recordName ?? '',
+                                    child: Padding(
+                                      padding:  EdgeInsets.all(8.h),
+                                      child: Text(
+                                        item.recordName,
+                                        style: AppTextStyle.normal12style
+                                            .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.defaultTxtGrey,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                );
-                              }),
-                            ],
-                            onChanged: (value) {
-                              visitController.status.value = value ?? "";
-                            },
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  for (var a in addVisitController.recordTypes) {
+                                    if (a.recordName == value) {
+                                      addVisitController.selectedRecordName.value = value ?? '';
+                                      addVisitController.selectedRecordTypeId.value = a.recordId ?? 0;
+                                    }
+                                  }
+                                  //
+
+                                },
+                              );
+                            }),
                           ),
-                        ),
-                        customHeight(48.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            PrimaryOutlinedButton(
-                              text: "Cancel",
-                              onPressed: () {},
-                              fillColor: Colors.white,
+                          customHeight(18.h),
+                          // Row(
+                          //   children: [
+                          //     AppRadioButton(
+                          //       groupValue: visitController.recordType.value,
+                          //       value: "SOC",
+                          //       onChanged: (v) {
+                          //         visitController.recordType.value = v!;
+                          //       },
+                          //     ),
+                          //     customWidth(5.w),
+                          //     Text("SOC", style: AppTextStyle.bold12style),
+                          //     customWidth(12.w),
+                          //     AppRadioButton(
+                          //       groupValue: visitController.recordType.value,
+                          //       value: "Revisit",
+                          //       onChanged: (v) {
+                          //         visitController.recordType.value = v!;
+                          //       },
+                          //     ),
+                          //     customWidth(5.w),
+                          //     Text("Revisit", style: AppTextStyle.bold12style),
+                          //     customWidth(12.w),
+                          //     AppRadioButton(
+                          //       groupValue: visitController.recordType.value,
+                          //       value: "Evaluation",
+                          //       onChanged: (v) {
+                          //         visitController.recordType.value = v!;
+                          //       },
+                          //     ),
+                          //     customWidth(5.w),
+                          //     Text("Evaluation", style: AppTextStyle.bold12style),
+                          //   ],
+                          // ),
+                          // customHeight(18.h),
+                          Text("Visit Type", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Obx(() {
+                              return PrimaryDropDown(
+                                validator: (value) => Validators.validateRequired(addVisitController.selectedMasterVisitName.value,'Visit Type'),
+                                contentPadding: EdgeInsets.zero,
+                                filled: false,
+                                buttonStyleData: ButtonStyleData(
+                                  width: 120.w,
+                                  height: 44.h,
 
-                              textStyle: AppTextStyle.bold14style.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primaryAppColor,
-                              ),
-                              borderWidth: 1.5,
-                              width: 110.w,
-                              radius: 6,
-                              height: 30.h,
-                            ),
-                            customWidth(5.w),
-                            PrimaryOutlinedButton(
-                              text: "Save",
-                              onPressed: () {},
-                              fillColor: AppColors.primaryAppColor,
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: AppColors.borderGrey),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                                hintText:  "Select visit type",
+                                // value: addVisitController.selectedRecordName.value == ''
+                                //     ? 'Select type'
+                                //     : addVisitController.selectedRecordName.value,
+                                items: addVisitController.visitMaster.map((item) {
+                                  return DropdownMenuItem<String>(
+                                    value: item.visitName ?? '',
+                                    child: Padding(
+                                      padding:  EdgeInsets.all(8.h),
+                                      child: Text(
+                                        item.visitName,
+                                        style: AppTextStyle.normal12style
+                                            .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.defaultTxtGrey,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  for (var a in addVisitController.visitMaster) {
+                                    if (a.visitName == value) {
+                                      addVisitController.selectedMasterVisitName.value = value ?? '';
+                                      addVisitController.selectedMasterVisitId.value = a.visitMasterId ?? 0;
+                                    }
+                                  }
+                                  //
 
-                              textStyle: AppTextStyle.normal14style.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                              borderWidth: 1.5,
-                              width: 110.w,
-                              radius: 6,
-                              height: 30.h,
+                                },
+                              );
+                            }),
+                          ),
+                          customHeight(18.h),
+                          Text("Patient Name", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Obx(() {
+                              return PrimarySearchOverlayField(
+                                // show selected value in field
+                                controller: TextEditingController(
+                                  text: addVisitController.selectedPatientName.value
+                                ),
+                                validator: (_) => Validators.validateRequired(
+                                  addVisitController.selectedPatientName.value,
+                                  'Patient Name',
+                                ),
+                                items: addVisitController.patientMaster,
+
+                                // what to show in overlay row + what gets filled on select
+                                itemText: (item) => item.ptName ?? '',
+
+                                hintText: "Search patient",
+
+                                // show overlay even when empty? (optional)
+                                showWhenEmpty: true,
+
+                                // optional: custom filter (better safety for nulls)
+                                filter: (item, query) {
+                                  final name = (item.ptName ?? '').toLowerCase();
+                                  return name.contains(query.toLowerCase().trim());
+                                },
+
+                                // prefixIcon: Padding(
+                                //   padding: const EdgeInsets.all(6.0),
+                                //   child: Icon(Icons.search, size: 20), // or your svg
+                                // ),
+
+                                filledColor: Colors.transparent,
+
+                                // on select
+                                onItemSelected: (item) {
+                                  addVisitController.selectedPatientName.value = item.ptName ?? '';
+                                  addVisitController.selectedPatientId.value = item.ptId ?? 0;
+                                  patientNameController.text = item.ptName;
+                                  locationController.text = item.ptAddress ?? '';
+                                },
+                              );
+                            }),
+                          ),
+                          customHeight(18.h),
+                          Text("Location", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          PrimaryTextField(
+                            controller: locationController,
+                            validator: (value) => Validators.validateRequired(value!,'Location'),
+                          ),
+                          customHeight(18.h),
+                          Text("Visit Date", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          PrimaryTextField(
+                            controller: visitData,
+                            validator: (value) => Validators.validateRequired(value!,'Visit Date'),
+                            onTap: () async{
+                              final String? selectedDate =
+                                  await Get.dialog(CalenderDatePickDialogWidget());
+                              if (selectedDate != null) {
+                                visitData.text = selectedDate;
+
+                              }
+                            },
+                            suffixIcon: Icon(Icons.calendar_month_rounded),
+                          ),
+                          customHeight(18.h),
+                          // Row(
+                          //   children: [
+                          //     AppRadioButton(
+                          //       groupValue: visitController.zoneType.value,
+                          //       value: "In",
+                          //       onChanged: (v) {
+                          //         visitController.zoneType.value = v!;
+                          //       },
+                          //     ),
+                          //     customWidth(5.w),
+                          //     Text("In Zone", style: AppTextStyle.bold12style),
+                          //     customWidth(12.w),
+                          //     AppRadioButton(
+                          //       groupValue: visitController.zoneType.value,
+                          //       value: "Out",
+                          //       onChanged: (v) {
+                          //         visitController.zoneType.value = v!;
+                          //       },
+                          //     ),
+                          //     customWidth(5.w),
+                          //     Text("Out Zone", style: AppTextStyle.bold12style),
+                          //     customWidth(12.w),
+                          //   ],
+                          // ),
+                          //
+                          // customHeight(18.h),
+                          Text("Visit Rate", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          PrimaryTextField(
+                            validator: (value) => Validators.validateRequired(value!,'Visit Rate'),
+                            controller: visitRateController,
+                          ),
+                          customHeight(18.h),
+                          Text("Start Time", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          PrimaryTextField(
+                            onTap: ()=>addVisitController.selectStartTime(context,visitStartTimeController),
+                            // onChanged: (value)=>
+                            validator: (value) => Validators.validateRequired(value!,'Start Time'),
+                            controller: visitStartTimeController,
+                            suffixIcon: Icon(
+                              Icons.timer_outlined,
+                              color: AppColors.primaryAppColor,
                             ),
-                          ],
-                        ),
-                        customHeight(48.h),
-                      ],
+                          ),
+                          customHeight(18.h),
+                          Text("End Time", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          PrimaryTextField(
+                            onTap: ()=>addVisitController.selectStartTime(context,visitEndTimeController),
+                            validator: (value) => Validators.validateRequired(value!,'End Time'),
+                            controller: visitEndTimeController,
+                            suffixIcon: Icon(
+                              Icons.timer_outlined,
+                              color: AppColors.primaryAppColor,
+                            ),
+                          ),
+                          customHeight(18.h),
+                          Text("Status", style: AppTextStyle.bold14style),
+                          customHeight(4.h),
+                          SizedBox(
+                            width: double.infinity,
+                            child: PrimaryDropDown(
+                              validator: (value) => Validators.validateRequired(visitController.status.value,'Status'),
+                              value: visitController.status.value,
+                              hintText: 'Select status',
+                              buttonStyleData: ButtonStyleData(
+                                width: 120.w,
+                                height: 44.h,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.borderGrey),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                              filled: false,
+
+                              items: [
+                                ...List.generate(2, (index) {
+                                  var list = ['Completed', 'Ongoing'];
+                                  return DropdownMenuItem(
+                                    value: list[index],
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        list[index],
+                                        style: AppTextStyle.normal12style
+                                            .copyWith(
+                                              fontWeight: FontWeight.w400,
+                                              color: AppColors.defaultTxtGrey,
+                                            ),
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ],
+                              onChanged: (value) {
+                                visitController.status.value = value ?? "";
+                              },
+                            ),
+                          ),
+                          customHeight(48.h),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              PrimaryOutlinedButton(
+                                text: "Cancel",
+                                onPressed: () {
+                                  addVisitController.selectedRecordTypeId.value = 0;
+                                  addVisitController.selectedRecordName.value = '';
+                                  addVisitController.selectedMasterVisitId.value = 0;
+                                  addVisitController.selectedMasterVisitName.value = '';
+                                  addVisitController.selectedPatientId.value = 0;
+                                  addVisitController.selectedPatientName.value = '';
+                                  visitData.clear();
+                                  visitStartTimeController.clear();
+                                  visitEndTimeController.clear();
+                                  locationController.clear();
+                                  patientNameController.clear();
+                                  visitController.status.value = '';
+                                  visitRateController.clear();
+                                  Get.back();
+                                },
+                                fillColor: Colors.white,
+
+                                textStyle: AppTextStyle.bold14style.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryAppColor,
+                                ),
+                                borderWidth: 1.5,
+                                width: 110.w,
+                                radius: 6,
+                                height: 30.h,
+                              ),
+                              customWidth(5.w),
+                              Obx(() => addVisitController.isVisitSaveLoading.value ? Padding(
+                                padding:  EdgeInsets.symmetric(horizontal: 17.h),
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primaryAppColor,
+                                ),
+                              ): PrimaryOutlinedButton(
+                                text: "Save",
+                                onPressed: () async{
+                                  if (_formKey.currentState!.validate()){
+                                  var response = await addVisitController.postAddVisitData(
+                                        ptId: addVisitController.selectedPatientId.value,
+                                        recordTypeId: addVisitController.selectedRecordTypeId.value,
+                                        visitMasterId: addVisitController.selectedMasterVisitId.value,
+                                        visitDate: visitData.text,
+                                        startTime: visitStartTimeController.text,
+                                        endTime: visitEndTimeController.text,
+                                        status: visitController.status.value);
+                                  if(response.success){
+                                    showSucessDialog(context);
+                                    addVisitController.selectedRecordTypeId.value = 0;
+                                    addVisitController.selectedRecordName.value = '';
+                                    addVisitController.selectedMasterVisitId.value = 0;
+                                    addVisitController.selectedMasterVisitName.value = '';
+                                    addVisitController.selectedPatientId.value = 0;
+                                    addVisitController.selectedPatientName.value = '';
+                                    locationController.clear();
+                                    visitData.clear();
+                                    visitStartTimeController.clear();
+                                    visitEndTimeController.clear();
+                                    visitRateController.clear();
+                                    patientNameController.clear();
+                                    visitController.status.value = '';
+                                  }else{
+
+                                  }
+                                  }else{
+
+                                  }
+                                },
+                                fillColor: AppColors.primaryAppColor,
+
+                                textStyle: AppTextStyle.normal14style.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                                borderWidth: 1.5,
+                                width: 110.w,
+                                radius: 6,
+                                height: 30.h,
+                              )),
+                            ],
+                          ),
+                          customHeight(48.h),
+                        ],
+                      ),
                     ),
                   ),
                 ),

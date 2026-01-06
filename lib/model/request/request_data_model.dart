@@ -15,3 +15,11 @@ class RequestDataModel {
     this.noteTxt,
   });
 }
+
+class ApiData{
+  final bool success;
+  final String message;
+  final int statusCode;
+  final Object? data;
+  ApiData({required this.success, required this.message, required this.statusCode, this.data});
+}

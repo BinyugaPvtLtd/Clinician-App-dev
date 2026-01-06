@@ -1,3 +1,115 @@
+import 'package:clinician_app/core/constant/app_string.dart';
 import 'package:get/get.dart';
 
-class AuthController extends GetxController {}
+import '../model/request/request_data_model.dart';
+import '../services/auth_api_services/auth_services.dart';
+import '../services/token_manager/token_manager_service.dart';
+
+class AuthController extends GetxController {
+  final ApiService _api = Get.put(ApiService());
+
+  final isLoading = false.obs;
+  final error = ''.obs;
+
+  Future<ApiData> signInAuth({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final res = await _api.post('/auth/signIn', {
+        "email": email,
+        "password": password,
+      });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+       // final data = res.data as Map<String, dynamic>;
+        print("accessToken ${res.data["accessToken"]}");
+        String token = res.data["accessToken"] ?? "";
+        String username = "${res.data['user']['firstName']} ${res.data['user']['lastName']}";
+        int departmentId = res.data['user']["departmentId"] ?? 0;
+        int companyId = res.data['user']["company_id"] ?? 0;
+        int userId = res.data['user']["userId"] ?? 0;
+        String userEmail = res.data['user']["email"] ?? email;
+
+        TokenManager.setAccessToken(
+          token: token,
+          username: username,
+          departmentId: departmentId,
+          companyId: companyId,
+          userID: userId,
+          email: userEmail,
+        );
+
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }else{
+        error.value = "Login failed";
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// forgot password
+  Future<ApiData> forgetPasswordAuth({
+    required String email,
+  }) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final res = await _api.post('/auth/ForgotPassword', {
+        "email": email,
+      });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }else{
+        error.value = res.statusMessage!;
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // int _toInt(dynamic v) {
+  //   if (v == null) return 0;
+  //   if (v is int) return v;
+  //   return int.tryParse(v.toString()) ?? 0;
+  // }
+}

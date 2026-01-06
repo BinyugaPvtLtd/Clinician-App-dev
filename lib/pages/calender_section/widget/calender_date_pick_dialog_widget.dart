@@ -28,7 +28,13 @@ class _CalenderDatePickDialogWidgetState
           child: CalendarDatePicker2(
             onValueChanged: (value) {
               // log('-=-=->${value}');
-              Get.back();
+              if (value.isNotEmpty && value.first != null) {
+                final DateTime d = value.first!;
+                final formatted =
+                    "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+
+                Get.back(result: formatted); // ✅ return String
+              }
             },
             config: CalendarDatePicker2Config(
               firstDayOfWeek: 1,
