@@ -5,15 +5,25 @@ import 'package:clinician_app/core/constant/static_decoration.dart';
 import 'package:clinician_app/core/ui/common_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+
+import '../../controller/time_off_controller.dart';
 
 class HistoryPage extends StatefulWidget {
-  const HistoryPage({super.key});
+  final int employeeId;
+  const HistoryPage({super.key, required this.employeeId});
 
   @override
   State<HistoryPage> createState() => _HistoryPageState();
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  final TimeController timeController = Get.put(TimeController());
+  @override
+  void initState() {
+    timeController.fetchEmpHistoryTimeOff(employeeId: 51);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,12 +41,29 @@ class _HistoryPageState extends State<HistoryPage> {
               ),
             ),
             Divider(),
+            Obx(() {
+              if (timeController.isLoading.value) {
+                return Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryAppColor,
+                    ),
+                  ),
+                );
+              }
 
-            Expanded(
+              final items = timeController.timeOffHistory.value.timeOffData;
+              if (items.isEmpty) {
+                return const Expanded(
+                  child: Center(child: Text("No History Found!")),
+                );
+              }
+           return Expanded(
               child: ListView.builder(
-                itemCount: 34,
+                itemCount:  timeController.timeOffHistory.value.timeOffData.length,
                 padding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
                 itemBuilder: (context, index) {
+                  final historydata = timeController.timeOffHistory.value.timeOffData[index];
                   return Padding(
                     padding: EdgeInsets.only(top: 12.h),
                     child: Container(
@@ -60,7 +87,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               customWidth(15.w),
                               Expanded(
                                 child: Text(
-                                  "Lucas Jackson",
+                                  historydata.employeeName,
                                   style: AppTextStyle.normal12style.copyWith(
                                     color: AppColors.defaultTxtGrey,
                                   ),
@@ -96,7 +123,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               Image.asset(AppAsset.others, height: 16.h),
                               customWidth(15.w),
                               Text(
-                                "Vacation",
+                                historydata.timeOffTypeName,
                                 style: AppTextStyle.normal12style.copyWith(
                                   color: AppColors.primaryAppColor,
                                 ),
@@ -110,7 +137,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               customWidth(15.w),
                               Expanded(
                                 child: Text(
-                                  "12/05/2025/09.30pm  to 18/05/2025/09.50am",
+                                  "${historydata.startDate}  to ${historydata.endDate}",
                                   style: AppTextStyle.normal12style.copyWith(
                                     color: AppColors.defaultTxtGrey,
                                   ),
@@ -124,7 +151,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   );
                 },
               ),
-            ),
+            );}),
           ],
         ),
       ),

@@ -7,7 +7,8 @@ import 'package:get/get.dart';
 
 import '../../../services/token_manager/token_manager_service.dart';
 
-void showSucessDialog(BuildContext context) {
+void showSucessDialog({required BuildContext context,
+  required String message,required String title}) {
   showDialog(
     context: context,
     barrierDismissible: true,
@@ -33,7 +34,7 @@ void showSucessDialog(BuildContext context) {
 
             // Title
             Text(
-              "Successfully",
+              title,
               style: AppTextStyle.normal12style.copyWith(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w600,
@@ -45,7 +46,7 @@ void showSucessDialog(BuildContext context) {
 
             // Subtitle
             Text(
-              "Visit added successfully",
+              message,
               style: AppTextStyle.normal12style.copyWith(
                 fontSize: 12.sp,
                 color: AppColors.textGreyColor,

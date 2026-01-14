@@ -10,6 +10,8 @@ import 'package:clinician_app/pages/profile/widgets/profile_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controller/profile_controller.dart';
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -18,6 +20,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  ProfileController controller = Get.put(ProfileController());
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -28,7 +32,8 @@ class _ProfilePageState extends State<ProfilePage> {
               label: "My Profile",
               trailing: InkWell(
                 onTap: () {
-                  Get.to(() => EditProfilePage());
+                  controller.fetchRecordType();
+                  Get.to(() => EditProfilePage(employeeId: controller.employeeId,));
                 },
                 child: Text(
                   "Edit Profile",
@@ -123,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: textMenuWidget(
                         ontap: () {
-                          Get.to(() => TimeOffPage());
+                          Get.to(() => TimeOffPage(employeeId: controller.employeeId,));
                         },
                         title: "Time Off",
                         imageicon: AppAsset.timer,

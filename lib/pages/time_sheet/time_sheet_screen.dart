@@ -39,6 +39,14 @@ class _TimeSheetPageState extends State<TimeSheetPage>
     timeSheetController.selectedDate.value = '2025-12-19';
     timeSheetController.searchText.value = 'all';
   }
+  @override
+  void dispose() {
+    if (Get.isRegistered<TimeSheetController>()) {
+      Get.delete<TimeSheetController>(); // triggers onClose()
+    }
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {

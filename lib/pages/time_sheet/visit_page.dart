@@ -17,6 +17,13 @@ class VisitPage extends StatefulWidget {
 
 class _VisitPageState extends State<VisitPage> {
   TimeSheetController timeSheetController = Get.put(TimeSheetController());
+  // @override
+  // void dispose() {
+  //   if (Get.isRegistered<TimeSheetController>()) {
+  //     Get.delete<TimeSheetController>(); // triggers onClose()
+  //   }
+  //   super.dispose();
+  // }
   @override
   Widget build(BuildContext context) {
     return SafeArea(

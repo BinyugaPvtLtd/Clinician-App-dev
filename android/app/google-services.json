@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1037706652640",
+    "project_id": "prohealth-symmetry",
+    "storage_bucket": "prohealth-symmetry.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1037706652640:android:25eb4175e898ec26b15985",
+        "android_client_info": {
+          "package_name": "com.clinician.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrDVRZAFqRVwROCoumKhxkanJzxtc5fV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1037706652640:android:505fc37df699750ab15985",
+        "android_client_info": {
+          "package_name": "com.example.pro_health_patient_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrDVRZAFqRVwROCoumKhxkanJzxtc5fV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

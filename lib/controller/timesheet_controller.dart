@@ -41,17 +41,24 @@ class TimeSheetController extends GetxController {
   final searchText = 'all'.obs;
   TimeOfDay _selectedTime = TimeOfDay.now();
   Timer? _pollTimer;
+  Worker? _everWorker; // <— IMPORTANT
+
   @override
   void onInit() {
     super.onInit();
+
     fetchRecordType();
     fetchVisitMaster();
     fetchPatientMaster();
+
     selectedDate.value = _todayDate();
-    everAll(
+
+    // Save the worker so you can dispose it
+    _everWorker = everAll(
       [selectedTypeRecord, selectedDate, searchText],
           (_) => fetchTimeSheetRecord(),
     );
+
     // First load (shows loader)
     fetchTimeSheetRecord();
 
@@ -60,6 +67,17 @@ class TimeSheetController extends GetxController {
       const Duration(seconds: 5),
           (_) => fetchTimeSheetRecord(silent: true),
     );
+  }
+
+  @override
+  void onClose() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+
+    _everWorker?.dispose();
+    _everWorker = null;
+
+    super.onClose();
   }
 
 

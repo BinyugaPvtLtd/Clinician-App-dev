@@ -10,6 +10,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+import '../../controller/calender_controller.dart';
+
 class CalenderScreen extends StatefulWidget {
   const CalenderScreen({super.key});
 
@@ -18,15 +20,28 @@ class CalenderScreen extends StatefulWidget {
 }
 
 class _CalenderScreenState extends State<CalenderScreen> {
-  RxInt contentTypeInx = 0.obs;
-  Rx<DateTime> currentDate = DateTime.now().obs;
-  CalendarController calController = CalendarController();
+  CalenderListController controller = Get.put(CalenderListController());
 
-  changeDate(int day) {
-    currentDate.value = currentDate.value.add(Duration(days: day));
-    if (contentTypeInx.value == 1) {
-      calController.displayDate = currentDate.value;
+  @override
+  void initState() {
+    // TODO: implement initState
+    controller.fetchCalenderListDetails(status: 'pending', date: controller.formattedDate);
+    super.initState();
+  }
+  DateTime? _parsePickedDate(dynamic result) {
+    if (result == null) return null;
+    if (result is DateTime) return result;
+    if (result is String) {
+      // Expecting "yyyy-MM-dd"
+      return DateTime.tryParse(result);
     }
+    return null;
+  }
+  void _fetchForCurrentDate() {
+    controller.fetchCalenderListDetails(
+      status: 'pending',
+      date: controller.formattedDate,
+    );
   }
 
   @override
@@ -53,7 +68,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                         return Obx(
                           () => InkWell(
                             onTap: () {
-                              contentTypeInx.value = index;
+                              controller.contentTypeInx.value = index;
                             },
                             child: Container(
                               width: 83.w,
@@ -61,7 +76,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color:
-                                    index == contentTypeInx.value
+                                    index == controller.contentTypeInx.value
                                         ? AppColors.primaryAppColor
                                         : Colors.white,
                                 borderRadius: BorderRadius.circular(6.r),
@@ -70,11 +85,11 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                 index == 0 ? 'List' : 'Calender',
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight:
-                                      index == contentTypeInx.value
+                                      index == controller.contentTypeInx.value
                                           ? FontWeight.w600
                                           : FontWeight.w300,
                                   color:
-                                      index == contentTypeInx.value
+                                      index == controller.contentTypeInx.value
                                           ? Colors.white
                                           : AppColors.defaultTxtGrey,
                                 ),
@@ -95,7 +110,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
                         Spacer(),
                         InkWell(
                           onTap: () {
-                            changeDate(-1);
+                            controller.changeDate(-1);
+                            _fetchForCurrentDate();
                           },
                           child: Container(
                             width: 32.h,
@@ -131,7 +147,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                           ),
                           child: Obx(
                             () => Text(
-                              CommonMethods.getFormattedDay(currentDate.value),
+                              CommonMethods.getFormattedDay(controller.currentDate.value),
                               style: AppTextStyle.normal12style.copyWith(
                                 color: AppColors.defaultTxtGrey,
                                 fontWeight: FontWeight.w700,
@@ -142,7 +158,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
                         customWidth(10.w),
                         InkWell(
                           onTap: () {
-                            changeDate(1);
+                            controller.changeDate(1);
+                            _fetchForCurrentDate();
                           },
                           child: Container(
                             width: 32.h,
@@ -160,8 +177,22 @@ class _CalenderScreenState extends State<CalenderScreen> {
                         Spacer(),
                         customWidth(5.w),
                         InkWell(
-                          onTap: () {
-                            Get.dialog(CalenderDatePickDialogWidget());
+                          onTap: () async{
+                            final result = await Get.dialog(
+                              CalenderDatePickDialogWidget(),
+                            );
+
+                            final picked = _parsePickedDate(result);
+                            if (picked == null) return;
+
+                            controller.currentDate.value = picked;
+
+                            // If you want calendar to follow date in calendar mode
+                            if (controller.contentTypeInx.value == 1) {
+                              controller.calController.value.displayDate = picked;
+                            }
+
+                            _fetchForCurrentDate();
                           },
                           child: Container(
                             width: 28.w,
@@ -184,12 +215,12 @@ class _CalenderScreenState extends State<CalenderScreen> {
                   customHeight(10.h),
                   Obx(
                     () => Visibility(
-                      visible: contentTypeInx.value == 0,
+                      visible: controller.contentTypeInx.value == 0,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'January 5,2025',
+                            controller.formattedDateReadable,
                             style: AppTextStyle.normal12style.copyWith(
                               fontWeight: FontWeight.w300,
                               color: AppColors.defaultTxtGrey,
@@ -200,71 +231,94 @@ class _CalenderScreenState extends State<CalenderScreen> {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Obx(
-                      () =>
-                          contentTypeInx.value == 0
-                              ? ListView.builder(
-                                itemCount: 5,
-                                physics: BouncingScrollPhysics(),
-                                padding: EdgeInsets.only(bottom: 20.h),
-                                shrinkWrap: true,
-                                itemBuilder: (context, index) {
-                                  return InkWell(
-                                    onTap: () {
-                                      Get.to(() => VisitDetailPage());
-                                    },
-                                    child: AppointmentListWidget(),
-                                  );
-                                },
-                              )
-                              : SfCalendar(
-                                // key: ValueKey('sf_calender'),
-                                controller: calController,
-                                cellBorderColor: Colors.transparent,
-                                view: CalendarView.day,
-                                headerHeight: 0,
+                  Obx(
+                    () {
+                      if (controller.isListLoading.value) {
+                        return Expanded(
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryAppColor,
+                            ),
+                          ),
+                        );
+                      }
 
-                                onViewChanged: (viewChangedDetails) {
-                                  Future.delayed(
-                                    Duration(milliseconds: 10),
-                                    () {
-                                      DateTime visibleDate =
-                                          viewChangedDetails.visibleDates.first;
-                                      currentDate.value = visibleDate;
-                                    },
-                                  );
+                      final items = controller.calenderListModel.value.visits;
+                      // if (items.isEmpty) {
+                      //   return const Expanded(
+                      //     child: Center(child: Text("No Records Found!")),
+                      //   );
+                      // }
+                      return  Expanded(
+                          child:controller.contentTypeInx.value == 0
+                              ? items.isEmpty ? Center(child: Text("No Records Found!")) : ListView.builder(
+                            itemCount: controller.calenderListModel.value.visits.length,
+                            physics: BouncingScrollPhysics(),
+                            padding: EdgeInsets.only(bottom: 20.h),
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              var visitListData = controller.calenderListModel.value.visits[index];
+                              return InkWell(
+                                onTap: () {
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    Get.to(
+                                          () => VisitDetailPage(
+                                        visitId: visitListData.visitId,
+                                      ),
+                                    );
+                                  });
                                 },
-                                monthViewSettings: MonthViewSettings(),
-                                viewHeaderStyle: ViewHeaderStyle(
-                                  dayTextStyle: AppTextStyle.normal12style
-                                      .copyWith(
-                                        color: AppColors.defaultTxtGrey,
-                                      ),
-                                  dateTextStyle: AppTextStyle.regular16style
-                                      .copyWith(
-                                        fontSize: 20.sp,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.defaultTxtGrey,
-                                      ),
-                                ),
-                                timeSlotViewSettings: TimeSlotViewSettings(
-                                  timeFormat: 'h\na',
-                                  timeTextStyle: AppTextStyle.normal12style
-                                      .copyWith(
-                                        color: AppColors.defaultTxtGrey,
-                                      ),
-                                  timeIntervalHeight: 44.h,
-                                  startHour: 8,
-                                  endHour: 16,
-                                ),
-                                firstDayOfWeek: 1,
-                                dataSource: MeetingDataSource(
-                                  getAppointments(),
-                                ),
-                                appointmentBuilder: customAppointmentBuilder,
+                                child: AppointmentListWidget(dataList: visitListData,),
+                              );
+                            },
+                          )
+                              : SfCalendar(
+                            // key: ValueKey('sf_calender'),
+                            controller: controller.calController.value,
+                            cellBorderColor: Colors.transparent,
+                            view: CalendarView.day,
+                            headerHeight: 0,
+
+                            onViewChanged: (viewChangedDetails) {
+                              Future.delayed(
+                                Duration(milliseconds: 10),
+                                    () {
+                                  DateTime visibleDate =
+                                      viewChangedDetails.visibleDates.first;
+                                  controller.currentDate.value = visibleDate;
+                                },
+                              );
+                            },
+                            monthViewSettings: MonthViewSettings(),
+                            viewHeaderStyle: ViewHeaderStyle(
+                              dayTextStyle: AppTextStyle.normal12style
+                                  .copyWith(
+                                color: AppColors.defaultTxtGrey,
                               ),
-                    ),
+                              dateTextStyle: AppTextStyle.regular16style
+                                  .copyWith(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.defaultTxtGrey,
+                              ),
+                            ),
+                            timeSlotViewSettings: TimeSlotViewSettings(
+                              timeFormat: 'h\na',
+                              timeTextStyle: AppTextStyle.normal12style
+                                  .copyWith(
+                                color: AppColors.defaultTxtGrey,
+                              ),
+                              timeIntervalHeight: 44.h,
+                              startHour: 8,
+                              endHour: 16,
+                            ),
+                            firstDayOfWeek: 1,
+                            dataSource: MeetingDataSource(
+                              getAppointments(),
+                            ),
+                            appointmentBuilder: customAppointmentBuilder,
+                          ));
+                   }
                   ),
                 ],
               ),

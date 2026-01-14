@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/constant/constant_import.dart';
+import '../../model/calender/list_model.dart';
 
 class AppointmentListWidget extends StatefulWidget {
-  const AppointmentListWidget({super.key});
+  final VisitsListData dataList;
+   AppointmentListWidget({super.key, required this.dataList});
 
   @override
   State<AppointmentListWidget> createState() => _AppointmentListWidgetState();
@@ -45,7 +47,7 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                         color: AppColors.appYellowColor.withValues(alpha: 0.3),
                       ),
                       child: Text(
-                        'Evaluation',
+                        widget.dataList.visitType,
                         style: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppColors.appYellowColor,
@@ -60,8 +62,11 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                           width: 56.w,
                           decoration: BoxDecoration(shape: BoxShape.circle),
                           clipBehavior: Clip.hardEdge,
-                          child: Image.asset(
-                            AppAsset.avatarImg,
+                          child: widget.dataList.patientImgUrl.isEmpty ? Image.asset(
+                            AppAsset.profilePicImg,
+                            fit: BoxFit.cover,
+                          ):Image.network(
+                            widget.dataList.patientImgUrl,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -70,14 +75,14 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Lucas Jackson',
+                              widget.dataList.patientName,
                               style: AppTextStyle.normal12style.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.defaultTxtGrey,
                               ),
                             ),
                             Text(
-                              'Anxiety',
+                              widget.dataList.primaryDiagnosis,
                               style: AppTextStyle.normal12style.copyWith(
                                 fontWeight: FontWeight.w300,
                                 color: AppColors.defaultTxtGrey,
@@ -94,11 +99,17 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   customHeight(4.h),
-                  Text(
+                  widget.dataList.inZone ?  Text(
                     CommonMethods.getZoneName(ZoneType.inZone),
                     style: AppTextStyle.normal12style.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.appYellowColor,
+                    ),
+                  ) : Text(
+                    CommonMethods.getZoneName(ZoneType.outOfZone),
+                    style: AppTextStyle.normal12style.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.redColor,
                     ),
                   ),
                   customHeight(13.h),
@@ -139,7 +150,7 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                       customWidth(4.w),
                       Flexible(
                         child: Text(
-                          '132 My Street, Kingston, New York 12401',
+                          widget.dataList.address,
                           style: AppTextStyle.normal12style.copyWith(
                             color: AppColors.defaultTxtGrey,
                           ),
@@ -160,7 +171,7 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                     color: AppColors.appYellowColor.withValues(alpha: 0.3),
                   ),
                   child: Text(
-                    '9.00AM-10.00AM',
+                    '${widget.dataList.timeFrom}-${widget.dataList.timeTo}',
                     style: AppTextStyle.normal14style.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.defaultTxtGrey,

@@ -1,7 +1,5 @@
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/common_appbar.dart';
-import 'package:clinician_app/pages/calender_section/appointment_list_widget.dart';
-import 'package:clinician_app/pages/calender_section/calender_screen.dart';
 import 'package:clinician_app/pages/calender_section/widget/calender_date_pick_dialog_widget.dart';
 import 'package:clinician_app/pages/request/visit_detail_page.dart';
 import 'package:clinician_app/utils/common_methods.dart';
@@ -9,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+
+import '../../controller/profile_controller.dart';
 
 class PendingVisits extends StatefulWidget {
   const PendingVisits({super.key});
@@ -18,15 +18,32 @@ class PendingVisits extends StatefulWidget {
 }
 
 class _PendingVisitsState extends State<PendingVisits> {
-  RxInt contentTypeInx = 0.obs;
-  Rx<DateTime> currentDate = DateTime.now().obs;
-  CalendarController calController = CalendarController();
+  final ProfileController controller = Get.put(ProfileController());
 
-  changeDate(int day) {
-    currentDate.value = currentDate.value.add(Duration(days: day));
-    if (contentTypeInx.value == 1) {
-      calController.displayDate = currentDate.value;
+  @override
+  void initState() {
+    super.initState();
+    controller.fetchPatientNoteRecord(
+      empId: 51,
+      date: controller.formattedDate, // should be yyyy-MM-dd from controller getter
+    );
+  }
+
+  void _fetchForCurrentDate() {
+    controller.fetchPatientNoteRecord(
+      empId: 51,
+      date: controller.formattedDate,
+    );
+  }
+
+  DateTime? _parsePickedDate(dynamic result) {
+    if (result == null) return null;
+    if (result is DateTime) return result;
+    if (result is String) {
+      // Expecting "yyyy-MM-dd"
+      return DateTime.tryParse(result);
     }
+    return null;
   }
 
   @override
@@ -37,7 +54,6 @@ class _PendingVisitsState extends State<PendingVisits> {
           children: [
             CommonAppbar(
               label: "Pending Visit Notes",
-
               padding: EdgeInsets.only(
                 left: 20.w,
                 right: 20.w,
@@ -45,8 +61,10 @@ class _PendingVisitsState extends State<PendingVisits> {
                 bottom: 8.h,
               ),
             ),
-            Divider(),
+            const Divider(),
             customHeight(10.h),
+
+            // ✅ No Obx here (was causing "improper use" because no Rx was read in this builder)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: SizedBox(
@@ -54,10 +72,12 @@ class _PendingVisitsState extends State<PendingVisits> {
                 child: Row(
                   children: [
                     customWidth(33.w),
-                    Spacer(),
+                    const Spacer(),
+
                     InkWell(
                       onTap: () {
-                        changeDate(-1);
+                        controller.changeDate(-1);
+                        _fetchForCurrentDate();
                       },
                       child: Container(
                         width: 32.h,
@@ -72,7 +92,9 @@ class _PendingVisitsState extends State<PendingVisits> {
                         child: SvgPicture.asset(AppAsset.leftArrowSvgIcon),
                       ),
                     ),
+
                     customWidth(10.w),
+
                     Container(
                       height: 32.h,
                       padding: EdgeInsets.symmetric(
@@ -87,13 +109,14 @@ class _PendingVisitsState extends State<PendingVisits> {
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.25),
                             blurRadius: 1.r,
-                            offset: Offset(0, 0),
+                            offset: const Offset(0, 0),
                           ),
                         ],
                       ),
+                      // ✅ Only Obx where Rx is actually read
                       child: Obx(
-                        () => Text(
-                          CommonMethods.getFormattedDay(currentDate.value),
+                            () => Text(
+                          CommonMethods.getFormattedDay(controller.currentDate.value),
                           style: AppTextStyle.normal12style.copyWith(
                             color: AppColors.defaultTxtGrey,
                             fontWeight: FontWeight.w700,
@@ -101,10 +124,13 @@ class _PendingVisitsState extends State<PendingVisits> {
                         ),
                       ),
                     ),
+
                     customWidth(10.w),
+
                     InkWell(
                       onTap: () {
-                        changeDate(1);
+                        controller.changeDate(1);
+                        _fetchForCurrentDate();
                       },
                       child: Container(
                         width: 32.h,
@@ -119,11 +145,27 @@ class _PendingVisitsState extends State<PendingVisits> {
                         child: SvgPicture.asset(AppAsset.rightArrowSvgIcon),
                       ),
                     ),
-                    Spacer(),
+
+                    const Spacer(),
                     customWidth(5.w),
+
                     InkWell(
-                      onTap: () {
-                        Get.dialog(CalenderDatePickDialogWidget());
+                      onTap: () async {
+                        final result = await Get.dialog(
+                          CalenderDatePickDialogWidget(),
+                        );
+
+                        final picked = _parsePickedDate(result);
+                        if (picked == null) return;
+
+                        controller.currentDate.value = picked;
+
+                        // If you want calendar to follow date in calendar mode
+                        if (controller.contentTypeInx.value == 1) {
+                          controller.calController.value.displayDate = picked;
+                        }
+
+                        _fetchForCurrentDate();
                       },
                       child: Container(
                         width: 28.w,
@@ -144,17 +186,21 @@ class _PendingVisitsState extends State<PendingVisits> {
                 ),
               ),
             ),
+
             customHeight(10.h),
+
+            // Example: show some header text only when list mode selected
             Obx(
-              () => Visibility(
-                visible: contentTypeInx.value == 0,
+                  () => Visibility(
+                visible: controller.contentTypeInx.value == 0,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // ✅ Use current date instead of hardcoded string
                       Text(
-                        'January 5,2025',
+                        controller.formattedDateReadable, // yyyy-MM-dd
                         style: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w300,
                           color: AppColors.defaultTxtGrey,
@@ -166,147 +212,163 @@ class _PendingVisitsState extends State<PendingVisits> {
                 ),
               ),
             ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: ListView.builder(
-                  itemCount: 5,
-                  physics: BouncingScrollPhysics(),
-                  padding: EdgeInsets.only(bottom: 20.h),
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    return InkWell(
-                      onTap: () {
-                        Get.to(() => VisitDetailPage());
-                      },
-                      child: Container(
-                        margin: EdgeInsets.symmetric(vertical: 10.h),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6.r),
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 1.2.r,
-                              offset: Offset(0, 1.2.w),
-                              color: Colors.black.withValues(alpha: 0.25),
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 97.w,
-                                  height: 20.h,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.appYellowColor.withValues(
-                                      alpha: 0.3,
+
+            // Main list area
+            Obx(() {
+              if (controller.isEmployeeLoading.value) {
+                return Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryAppColor,
+                    ),
+                  ),
+                );
+              }
+
+              final items = controller.patientVisitNoteData.value.items;
+              if (items.isEmpty) {
+                return const Expanded(
+                  child: Center(child: Text("No Records Found!")),
+                );
+              }
+
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    physics: const BouncingScrollPhysics(),
+                    padding: EdgeInsets.only(bottom: 20.h),
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      // TODO: You can bind real data from items[index] here
+                      var visitsItem = items[index];
+                      return InkWell(
+                        onTap: () {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Get.to(() => VisitDetailPage(
+                              visitId: visitsItem.visitId,
+                            ));
+                          });
+                        },
+                        child: Container(
+                          margin: EdgeInsets.symmetric(vertical: 10.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6.r),
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 1.2.r,
+                                offset: Offset(0, 1.2.w),
+                                color: Colors.black.withValues(alpha: 0.25),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 97.w,
+                                    height: 20.h,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.appYellowColor.withValues(alpha: 0.3),
+                                    ),
+                                    child: Text(
+                                      visitsItem.visitType.name,
+                                      style: AppTextStyle.normal12style.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.appYellowColor,
+                                      ),
                                     ),
                                   ),
-                                  child: Text(
-                                    'Evaluation',
-                                    style: AppTextStyle.normal12style.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.appYellowColor,
+                                  const Spacer(),
+                                  Container(
+                                    width: 130.w,
+                                    height: 23.h,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.appYellowColor.withValues(alpha: 0.3),
+                                    ),
+                                    child: Text(
+                                      '${visitsItem.visiteDateTimeFrom}-${visitsItem.visitDateTimeTo}',
+                                      style: AppTextStyle.normal14style.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.defaultTxtGrey,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Spacer(),
-                                Container(
-                                  width: 130.w,
-                                  height: 23.h,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.appYellowColor.withValues(
-                                      alpha: 0.3,
+                                ],
+                              ),
+                              customHeight(7.5.h),
+                              Row(
+                                children: [
+                                  customWidth(20.w),
+                                  Container(
+                                    width: 54.w,
+                                    decoration: const BoxDecoration(shape: BoxShape.circle),
+                                    clipBehavior: Clip.hardEdge,
+                                    child: visitsItem.imageUrl.isEmpty ? Image.asset(
+                                      AppAsset.profilePicImg,
+                                      fit: BoxFit.cover,
+                                    ):Image.network(
+                                      visitsItem.imageUrl,
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                  child: Text(
-                                    '9.00AM-10.00AM',
-                                    style: AppTextStyle.normal14style.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.defaultTxtGrey,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            customHeight(7.5.h),
-                            Row(
-                              children: [
-                                customWidth(20.w),
-                                Container(
-                                  width: 56.w,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                  ),
-                                  clipBehavior: Clip.hardEdge,
-                                  child: Image.asset(
-                                    AppAsset.avatarImg,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                customWidth(10.w),
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Lucas Jackson',
-                                              style: AppTextStyle.normal12style
-                                                  .copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                    color:
-                                                        AppColors
-                                                            .defaultTxtGrey,
-                                                  ),
-                                            ),
-                                            Text(
-                                              'Anxiety',
-                                              style: AppTextStyle.normal12style
-                                                  .copyWith(
-                                                    fontWeight: FontWeight.w300,
-                                                    color:
-                                                        AppColors
-                                                            .defaultTxtGrey,
-                                                  ),
-                                            ),
-                                          ],
+                                  customWidth(10.w),
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                visitsItem.patientName,
+                                                style: AppTextStyle.normal12style.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppColors.defaultTxtGrey,
+                                                ),
+                                              ),
+                                              Text(
+                                                visitsItem.primaryDiagnosis.name,
+                                                style: AppTextStyle.normal12style.copyWith(
+                                                  fontWeight: FontWeight.w300,
+                                                  color: AppColors.defaultTxtGrey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        '\$55.00',
-                                        style: AppTextStyle.normal12style
-                                            .copyWith(
-                                              fontSize: 20.sp,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primaryAppColor,
-                                            ),
-                                      ),
-                                    ],
+                                        Text(
+                                          '\$55.00',
+                                          style: AppTextStyle.normal12style.copyWith(
+                                            fontSize: 20.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.primaryAppColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                customWidth(20.w),
-                              ],
-                            ),
-                            customHeight(10.h),
-                          ],
+                                  customWidth(20.w),
+                                ],
+                              ),
+                              customHeight(10.h),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ),
+              );
+            }),
           ],
         ),
       ),

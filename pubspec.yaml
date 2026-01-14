@@ -53,6 +53,19 @@ dependencies:
   syncfusion_flutter_calendar: ^29.1.38
   timelines_plus: ^1.0.7
   get_storage: ^2.1.1
+  agora_rtc_engine: any
+  flutter_ringtone_player: any
+  audioplayers: any
+#  flutter_local_notifications: any
+  printing: any
+  file_picker: ^8.0.0
+  record: any
+  just_audio: any
+  open_file: ^3.2.1
+  device_info_plus: any
+  firebase_core: any
+  firebase_messaging: any
+  permission_handler: any
 dev_dependencies:
   change_app_package_name: ^1.5.0
   flutter_lints: ^5.0.0

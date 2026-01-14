@@ -129,6 +129,7 @@ class _PrimaryDropDownState extends State<PrimaryDropDown> {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField2<String>(
+
       dropdownSearchData:
           widget.isSearchable
               ? DropdownSearchData(

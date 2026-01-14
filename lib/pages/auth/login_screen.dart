@@ -121,7 +121,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           Get.offAll(() => HomeScreen());
                         }else{
                           print('Error');
-                          showErrorDialog(context);
+                          showErrorDialog(
+                              context:context,
+                              title: "Invalid credentials!",
+                              subtitle:"Unable to retrieve credentials for authorizing user.");
                         }
                         //Get.to(() => HomeScreen());
 

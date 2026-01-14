@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 import '../constant/app_colors.dart';
 
 class CommonAppbar extends StatelessWidget {
-  const CommonAppbar({
+   CommonAppbar({
     super.key,
     required this.label,
     this.padding,
@@ -22,7 +22,7 @@ class CommonAppbar extends StatelessWidget {
   final Color? forgroundColor;
   final TextStyle? labelStyle;
   final Widget? widget;
-  final Widget? trailing;
+   Widget? trailing;
   final Function()? onTap;
 
   @override

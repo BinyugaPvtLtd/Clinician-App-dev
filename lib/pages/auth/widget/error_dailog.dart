@@ -7,10 +7,10 @@ import 'package:get/get.dart';
 
 import '../../../services/token_manager/token_manager_service.dart';
 
-void showErrorDialog(BuildContext context) {
+void showErrorDialog({required BuildContext context, required String title, required String subtitle}) {
   showDialog(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: false,
     builder:
         (_) => Dialog(
       shape: RoundedRectangleBorder(
@@ -33,7 +33,7 @@ void showErrorDialog(BuildContext context) {
 
             // Title
             Text(
-              "Invalid credentials!",
+              title,
               style: AppTextStyle.normal12style.copyWith(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w600,
@@ -45,7 +45,7 @@ void showErrorDialog(BuildContext context) {
 
             // Subtitle
             Text(
-              "Unable to retrieve credentials for authorizing user.",
+              subtitle,
               style: AppTextStyle.normal12style.copyWith(
                 fontSize: 12.sp,
                 color: AppColors.textGreyColor,

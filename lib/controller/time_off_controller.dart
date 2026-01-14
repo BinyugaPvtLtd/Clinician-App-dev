@@ -1,10 +1,205 @@
+import 'package:clinician_app/controller/repository/profile_repo.dart';
+import 'package:clinician_app/model/profile/time_off_model.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
+import '../core/constant/app_string.dart';
+import '../model/request/request_data_model.dart';
+import '../services/auth_api_services/auth_services.dart';
 
 class TimeController extends GetxController {
-
+  final ApiService _api = Get.put(ApiService());
+  final isLoading = false.obs;
+  final isTimeOffSaveLoading = false.obs;
+  final error = ''.obs;
+  final timeOfftype = <TimeOffType>[].obs;
+  final leaveTypeRecord = <LeaveType>[].obs;
   RxInt homeIndex = 0.obs;
-  RxString timeOfType = 'Vacation'.obs;
-  RxString leaveType = 'One day'.obs;
+  RxString timeOfType = ''.obs;
+  RxInt timeOfTypeId = 0.obs;
+  RxString leaveType = ''.obs;
+  RxInt leaveTypeId = 0.obs;
   RxString recordType = ''.obs;
   RxString zoneType = ''.obs;
+  final timeOffHistory = TimeOffHistory(timeOffData: []).obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchDropdownMaster();
+
+  }
+  /// Methods
+  Future<void> fetchDropdownMaster() async {
+    final list = await getTimeOffTypeData();
+    final leaveList = await getLeaveTypeData();
+    timeOfftype.assignAll(list);
+    leaveTypeRecord.assignAll(leaveList);
+  }
+  Future<void> fetchEmpHistoryTimeOff({required int employeeId}) async {
+     timeOffHistory.value = await getTimeOffEmpDataHistory(empId: employeeId);
+  }
+
+
+
+
+  /// Api's call
+
+  Future<List<TimeOffType>> getTimeOffTypeData() async {
+    List<TimeOffType> itemData = [];
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(ProfileRepository.getTimeOffTypes());
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        for (var i in res.data) {
+          itemData.add(
+            TimeOffType(
+              id: i['id'] ?? 0,
+              name: i['name'] ?? '',
+            ),
+          );
+        }
+      } else {
+        error.value = "failed to load data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+
+    // ✅ return ONLY here
+    return itemData;
+  }
+  Future<List<LeaveType>> getLeaveTypeData() async {
+    List<LeaveType> itemData = [];
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(ProfileRepository.getLeaveType());
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        for (var i in res.data) {
+          itemData.add(
+            LeaveType(
+              id: i['id'] ?? 0,
+              name: i['name'] ?? '',
+            ),
+          );
+        }
+      } else {
+        error.value = "failed to load data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+
+    // ✅ return ONLY here
+    return itemData;
+  }
+
+  Future<ApiData> postTimeOffData({
+    required int empId,
+    required int timeOffTypeId,
+    required int leaveTypeId,
+    required String startDate,
+    required String endDate,
+    required String reason,
+  }) async {
+    try {
+      isTimeOffSaveLoading.value = true;
+      error.value = '';
+
+      final res = await _api.post(ProfileRepository.postAddTimeOffRequest(), {
+        "employeeId": empId,
+        "timeOffTypeId": timeOffTypeId,
+        "leaveTypeId": leaveTypeId,
+        "startDate": startDate,
+        "endDate": endDate,
+        "reason": reason
+      });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }else{
+        error.value = res.statusMessage!;
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isTimeOffSaveLoading.value = false;
+    }
+  }
+
+  Future<TimeOffHistory> getTimeOffEmpDataHistory({
+    required int empId
+  }) async {
+    List<TimeOffData> itemData = [];
+    String formatIOSDate(String iosDate) {
+      if (iosDate.isEmpty) return '';
+
+      DateTime dateTime = DateTime.parse(iosDate);
+
+      return DateFormat('dd/MM/yyyy/h.mma')
+          .format(dateTime)
+          .toLowerCase();
+    }
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(ProfileRepository.getTimeOffHistory(empId: empId));
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        for (var i in res.data['history']) {
+          itemData.add(
+            TimeOffData(
+              timeOffRequestId: i['timeOffRequestId'] ?? 0,
+              employeeId: i['employeeId'] ?? 0,
+              employeeName: i['employeeName'] ?? '',
+              timeOffTypeId: i['timeOffTypeId'] ?? 0,
+              timeOffTypeName: i['timeOffTypeName'] ?? '',
+              startDate: i['startDate'] != null ? formatIOSDate(i['startDate']) : '',
+              endDate: i['endDate'] != null ? formatIOSDate(i['endDate']) : '',
+              reason: i['reason'] ?? '',
+              createdAt: i['createdAt'] ?? '',
+            ),
+          );
+        }
+        return TimeOffHistory(timeOffData: itemData);
+      } else {
+        error.value = "failed to load data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+      debugPrint('error time off history: $e');
+    } finally {
+      isLoading.value = false;
+    }
+
+    // ✅ return ONLY here
+    return TimeOffHistory(timeOffData: itemData);
+  }
 }

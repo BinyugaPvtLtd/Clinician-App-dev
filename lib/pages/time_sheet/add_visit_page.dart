@@ -453,7 +453,8 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                 child: CircularProgressIndicator(
                                   color: AppColors.primaryAppColor,
                                 ),
-                              ): PrimaryOutlinedButton(
+                              ):
+                              PrimaryOutlinedButton(
                                 text: "Save",
                                 onPressed: () async{
                                   if (_formKey.currentState!.validate()){
@@ -466,7 +467,9 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                         endTime: visitEndTimeController.text,
                                         status: visitController.status.value);
                                   if(response.success){
-                                    showSucessDialog(context);
+                                    showSucessDialog( context: context,
+                                        message: 'Visit added successfully',
+                                        title: 'Successfully');
                                     addVisitController.selectedRecordTypeId.value = 0;
                                     addVisitController.selectedRecordName.value = '';
                                     addVisitController.selectedMasterVisitId.value = 0;

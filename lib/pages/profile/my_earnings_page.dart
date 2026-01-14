@@ -15,6 +15,12 @@ class MyEarningPage extends StatefulWidget {
 
 class _MyEarningPageState extends State<MyEarningPage> {
   EarningsController earningsController = Get.put(EarningsController());
+  @override
+  void initState() {
+    // TODO: implement initState
+    earningsController.fetchMyTotalEarningData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +40,17 @@ class _MyEarningPageState extends State<MyEarningPage> {
               ),
             ),
             Divider(),
-            Expanded(
+          Obx((){
+            if (earningsController.isEarningLoading.value) {
+              return Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryAppColor,
+                  ),
+                ),
+              );
+            }
+            return Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,7 +144,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                       child: GridView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount: earningsController.visitsList.length,
+                        itemCount: 3,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 10.w,
@@ -304,7 +320,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                   ],
                 ),
               ),
-            ),
+            );}),
           ],
         ),
       ),

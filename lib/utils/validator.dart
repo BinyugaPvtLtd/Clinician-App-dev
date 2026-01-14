@@ -58,6 +58,20 @@ class Validators {
     return null;
   }
 
+  static String? validateOtp(String value, {int length = 6}) {
+    final RegExp otpRegex = RegExp(r'^[0-9]+$');
+
+    if (value.isEmpty) {
+      return 'OTP is required';
+    } else if (value.length != length) {
+      return 'OTP must be $length digits';
+    } else if (!otpRegex.hasMatch(value)) {
+      return 'Enter valid OTP';
+    }
+    return null;
+  }
+
+
   static String? validateRequired(String value, String type) {
     if (value.isEmpty) {
       return "$type is required";
@@ -135,7 +149,7 @@ class Validators {
 
   static String? validatePassword(String value) {
     String pattern =
-        r'^.*(?=.{8,})((?=.*[!@#$%^&*()\-_=+{};:,<.>]){1})(?=.*\d)((?=.*[a-z]){1})((?=.*[A-Z]){1}).*$';
+        r'^.*(?=.{8,})((?=.*[!@#$%^&*()\-_=+{};:,<.>]){1})(?=.*\d)((?=.*[a-z]){1}).*$';
     RegExp regExp = RegExp(pattern);
     if (value.isEmpty) {
       return "Password is Required";
@@ -144,6 +158,15 @@ class Validators {
     } else {
       return null;
     }
+  }
+  static String? validateConfirmPassword(
+      String value, String newPassword) {
+    if (value.isEmpty) {
+      return 'Confirm password is required';
+    } else if (value != newPassword) {
+      return 'Passwords do not match';
+    }
+    return null;
   }
 
   String? validatepass(String value) {

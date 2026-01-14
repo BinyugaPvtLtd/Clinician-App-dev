@@ -70,13 +70,15 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
               ):PrimaryButton(
                     label: 'Send Email',
                     onTap: () async{
+                      FocusScope.of(context).unfocus();
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
                         final response = await auth.forgetPasswordAuth(
                             email: emailController.text);
+                        print('Response: ${response.data}');
                         if (response.success) {
                           Get.bottomSheet(
-                          PassResetEmailSentBottomsheet(),
+                          PassResetEmailSentBottomsheet(email:emailController.text,),
                           barrierColor: Colors.white.withValues(alpha: 0.3),
                         );
                         }

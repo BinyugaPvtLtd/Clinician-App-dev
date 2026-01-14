@@ -13,14 +13,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../controller/profile_controller.dart';
+import '../../model/profile/visit_details_model.dart';
+
 class VisitDetailPage extends StatefulWidget {
-  const VisitDetailPage({super.key});
+  final int visitId;
+  const VisitDetailPage({super.key, required this.visitId});
 
   @override
   State<VisitDetailPage> createState() => _VisitDetailPageState();
 }
 
 class _VisitDetailPageState extends State<VisitDetailPage> {
+   ProfileController controller = Get.put(ProfileController());
+  @override
+  void initState() {
+    // TODO: implement initState
+   controller.fetchVisitDetails(visitId: widget.visitId);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -54,7 +65,24 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
             customHeight(14.h),
             CommonDivider(),
             customHeight(14.h),
-            Expanded(
+    Obx(() {
+      if (controller.isEmployeedetailsLoading.value) {
+        return Expanded(
+          child: Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primaryAppColor,
+            ),
+          ),
+        );
+      }
+
+      final items = controller.visitDetailModel == null;
+      if (items == true) {
+        return const Expanded(
+          child: Center(child: Text("No Details Found!")),
+        );
+      }
+          return  Expanded(
               child: SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
                 child: Column(
@@ -75,8 +103,12 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                     shape: BoxShape.circle,
                                   ),
                                   clipBehavior: Clip.hardEdge,
-                                  child: Image.asset(
-                                    AppAsset.avatarImg,
+                                  child: controller.visitDetailModel.value!.patient.imageUrl.isEmpty ?
+                                  Image.asset(
+                                    AppAsset.profilePicImg,
+                                    fit: BoxFit.cover,
+                                  ):Image.network(
+                                    controller.visitDetailModel.value!.patient.imageUrl,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -85,7 +117,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Lucas Jackson',
+                                      controller.visitDetailModel.value!.patient.name,
                                       style: AppTextStyle.normal12style
                                           .copyWith(
                                             fontWeight: FontWeight.w600,
@@ -93,7 +125,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                           ),
                                     ),
                                     Text(
-                                      'Anxiety',
+                                      controller.visitDetailModel.value!.patient.primaryDiagnosis,
                                       style: AppTextStyle.normal12style
                                           .copyWith(
                                             fontWeight: FontWeight.w300,
@@ -114,7 +146,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                             ),
                             customHeight(10.h),
                             Text(
-                              'Lorem Ipsum about',
+                              controller.visitDetailModel.value!.patient.summary,
                               style: AppTextStyle.normal12style,
                             ),
                             customHeight(10.h),
@@ -123,7 +155,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                 SvgPicture.asset(AppAsset.locationFillSvgIcon),
                                 customWidth(4.w),
                                 Text(
-                                  '132 My Street, Kingston, New York 12401',
+                                  controller.visitDetailModel.value!.patient.address,
                                   style: AppTextStyle.normal12style.copyWith(
                                     color: AppColors.defaultTxtGrey,
                                   ),
@@ -140,7 +172,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                             ),
                             Row(
                               children: [
-                                ...List.generate(3, (index) {
+                                ...List.generate(controller.visitDetailModel.value!.planOfCare.length, (index) {
                                   var list = [
                                     KeyValueModel(key: 'OT', value: 'FEBD4D'),
                                     KeyValueModel(key: 'PT', value: 'F6928A'),
@@ -253,13 +285,14 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                             customHeight(10.h),
                             Flexible(
                               child: ListView.separated(
-                                itemCount: 3,
+                                itemCount:  controller.visitDetailModel.value!.otherClinicians.length,
                                 shrinkWrap: true,
                                 physics: NeverScrollableScrollPhysics(),
                                 separatorBuilder: (context, index) {
                                   return customHeight(10.h);
                                 },
                                 itemBuilder: (context, index) {
+                                  var otherClinicianData = controller.visitDetailModel.value!.otherClinicians[index];
                                   return Row(
                                     children: [
                                       SizedBox(
@@ -274,8 +307,13 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                 shape: BoxShape.circle,
                                               ),
                                               clipBehavior: Clip.hardEdge,
-                                              child: Image.asset(
-                                                AppAsset.avatarImg,
+                                              child: otherClinicianData.imageUrl.isEmpty ?
+                                              Image.asset(
+                                                AppAsset.profilePicImg,
+                                                fit: BoxFit.cover,
+                                              ):Image.network(
+                                                otherClinicianData.imageUrl,
+                                                fit: BoxFit.cover,
                                               ),
                                             ),
                                             Positioned(
@@ -305,7 +343,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                       AppColors.appYellowColor,
                                                 ),
                                                 child: Text(
-                                                  'OT',
+                                                  otherClinicianData.employeeTypeAbbreviation,
                                                   style: AppTextStyle
                                                       .normal10style
                                                       .copyWith(
@@ -322,7 +360,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                       customWidth(15.w),
                                       Expanded(
                                         child: Text(
-                                          'John Bark',
+                                          otherClinicianData.name,
                                           style: AppTextStyle.normal12style
                                               .copyWith(
                                                 fontWeight: FontWeight.w600,
@@ -366,18 +404,19 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
 
                             Flexible(
                               child: ListView.separated(
-                                itemCount: 4,
+                                itemCount:  controller.visitDetailModel.value!.weeks.length,
                                 shrinkWrap: true,
                                 physics: NeverScrollableScrollPhysics(),
                                 separatorBuilder: (context, index) {
                                   return CommonDivider();
                                 },
                                 itemBuilder: (context, index) {
+                                  var weekData = controller.visitDetailModel.value!.weeks[index];
                                   return InkWell(
                                     onTap: () {
-                                      if (index < 2) {
-                                        Get.to(() => VisitDocUploadPage());
-                                      }
+                                      // if (index < 2) {
+                                      //   Get.to(() => VisitDocUploadPage());
+                                      // }
                                     },
                                     child: Column(
                                       crossAxisAlignment:
@@ -387,7 +426,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                         Row(
                                           children: [
                                             Text(
-                                              'Week ${index + 1}',
+                                              'Week ${weekData.weekNo}',
                                               style: AppTextStyle.normal12style
                                                   .copyWith(
                                                     fontWeight: FontWeight.w600,
@@ -413,7 +452,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                     BorderRadius.circular(2.r),
                                               ),
                                               child: Text(
-                                                'SOC',
+                                                weekData.socLabel,
                                                 style: AppTextStyle
                                                     .normal10style
                                                     .copyWith(
@@ -425,7 +464,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                           ],
                                         ),
                                         customHeight(8.h),
-                                        ...List.generate(2, (inx) {
+                                        ...List.generate(weekData.items.length, (inx) {
                                           return Padding(
                                             padding: EdgeInsets.symmetric(
                                               horizontal: 4.w,
@@ -437,27 +476,22 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                   AppAsset.scheduleSvgIcon,
                                                   width: 15.w,
                                                   colorFilter:
-                                                      index > 2
-                                                          ? null
-                                                          : index == 2
-                                                          ? AppColors
+                                                      AppColors
                                                               .greenColor
                                                               .getSvgColor
-                                                          : AppColors
-                                                              .greyColor
-                                                              .getSvgColor,
+
                                                 ),
                                                 customWidth(8.5.w),
                                                 Text(
-                                                  '09-05-2023',
+                                                  weekData.items[inx].date,
                                                   style: AppTextStyle
                                                       .normal12style
                                                       .copyWith(
                                                         color:
-                                                            index > 2
+                                                        inx > 2
                                                                 ? AppColors
                                                                     .defaultTxtGrey
-                                                                : index == 2
+                                                                : inx == 2
                                                                 ? AppColors
                                                                     .greenColor
                                                                 : AppColors
@@ -470,7 +504,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                     vertical: 3.h,
                                                     horizontal: 3.w,
                                                   ),
-                                                  width: 15.w,
+                                                  width: 17.w,
                                                   alignment: Alignment.center,
                                                   margin: EdgeInsets.only(
                                                     right: 2.w,
@@ -485,7 +519,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                         ),
                                                   ),
                                                   child: Text(
-                                                    'OT',
+                                                    weekData.items[inx].employeeTypeAbbreviation,
                                                     style: AppTextStyle
                                                         .normal10style
                                                         .copyWith(
@@ -495,27 +529,25 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                   ),
                                                 ),
                                                 Spacer(),
-                                                if (index < 2) ...[
-                                                  SvgPicture.asset(
+                                                  weekData.items[inx].isCompleted ?  SvgPicture.asset(
                                                     AppAsset.checkDoneSvgIcon,
                                                     colorFilter:
                                                         ColorFilter.mode(
                                                           AppColors.hintGrey,
                                                           BlendMode.srcIn,
                                                         ),
-                                                  ),
+                                                  ) : Offstage(),
                                                   customWidth(5.w),
-                                                ],
                                                 Text(
-                                                  '9.00AM-11.00AM',
+                                                  weekData.items[inx].timeRange,
                                                   style: AppTextStyle
                                                       .normal12style
                                                       .copyWith(
                                                         color:
-                                                            index > 2
+                                                        inx > 2
                                                                 ? AppColors
                                                                     .defaultTxtGrey
-                                                                : index == 2
+                                                                : inx == 2
                                                                 ? AppColors
                                                                     .greenColor
                                                                 : AppColors
@@ -539,7 +571,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                   ],
                 ),
               ),
-            ),
+            );}),
           ],
         ),
         floatingActionButton: ChatFABWidget(),
@@ -554,7 +586,6 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
             height: 38.h,
             padding: EdgeInsets.symmetric(horizontal: 20.w),
             margin: EdgeInsets.only(top: 10.h),
-
             child: Row(
               children: [
                 Expanded(

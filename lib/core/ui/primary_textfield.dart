@@ -61,6 +61,7 @@ class PrimaryTextField extends StatelessWidget {
     this.validationLength,
     this.prefixIconConstraints,
     this.isCapital = false,
+    this.isUsPhone = false,
   });
   final AutovalidateMode? autovalidateMode;
   final String? hintText;
@@ -114,6 +115,7 @@ class PrimaryTextField extends StatelessWidget {
   final bool isLandLine;
   final List<BoxShadow>? boxShadow;
   final bool isCapital;
+  final bool isUsPhone;
 
   /// Validate Textfield after given number of length
   final int? validationLength;
@@ -130,16 +132,22 @@ class PrimaryTextField extends StatelessWidget {
         focusNode: focusNode,
         maxLines: maxLines,
         initialValue: initialValue,
-        keyboardType: keyboardType,
+        keyboardType:  isUsPhone ? TextInputType.phone : keyboardType,
         textCapitalization: textCapitalization,
         obscureText: obscureText,
         autovalidateMode:
             autovalidateMode ?? AutovalidateMode.onUserInteraction,
         enabled: enabled,
         validator: validator,
-        maxLength: maxLength,
+        maxLength:  isUsPhone ? 14 : maxLength,
         textInputAction: textInputAction ?? TextInputAction.next,
-        inputFormatters: [...inputFormatters ?? []],
+        inputFormatters: [
+          if (isUsPhone) ...[
+            FilteringTextInputFormatter.digitsOnly,
+            UsPhoneInputFormatter(),
+          ],
+          ...inputFormatters ?? [],
+        ],
         buildCounter: (
           context, {
           required currentLength,
@@ -237,8 +245,113 @@ class PrimaryTextField extends StatelessWidget {
           labelStyle: labelStyle,
           labelText: labelText,
           helperText: helperText,
+
         ),
+
       ),
     );
   }
 }
+
+
+
+
+/// USA Phone Input Formatter
+class UsPhoneInputFormatter extends TextInputFormatter {
+  static final _nonDigit = RegExp(r'\D');
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    // 1) Extract digits
+    final newDigits = newValue.text.replaceAll(_nonDigit, '');
+    final oldDigits = oldValue.text.replaceAll(_nonDigit, '');
+
+    // Limit to 10 digits
+    if (newDigits.length > 10) return oldValue;
+
+    // 2) Count how many digits are before the cursor in the NEW value
+    final digitsBeforeCursor = _countDigitsBefore(
+      newValue.text,
+      newValue.selection.baseOffset,
+    );
+
+    // 3) Build formatted text
+    final formatted = _formatUsPhone(newDigits);
+
+    // 4) Compute cursor position in formatted text corresponding to digitsBeforeCursor
+    final newCursor = _cursorOffsetForDigitIndex(formatted, digitsBeforeCursor);
+
+    // 5) Special case: if user is deleting and cursor lands on a separator, move left
+    final isDeleting = newDigits.length < oldDigits.length;
+    final adjustedCursor = isDeleting
+        ? _skipSeparatorsLeft(formatted, newCursor)
+        : newCursor;
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(
+        offset: adjustedCursor.clamp(0, formatted.length),
+      ),
+    );
+  }
+
+  int _countDigitsBefore(String text, int cursor) {
+    if (cursor <= 0) return 0;
+    final end = cursor.clamp(0, text.length);
+    return text.substring(0, end).replaceAll(_nonDigit, '').length;
+  }
+
+  String _formatUsPhone(String digits) {
+    if (digits.isEmpty) return '';
+
+    final sb = StringBuffer();
+
+    // (XXX
+    sb.write('(');
+    sb.write(digits.substring(0, digits.length.clamp(0, 3)));
+
+    if (digits.length >= 3) {
+      sb.write(') ');
+      // XXX
+      sb.write(digits.substring(3, digits.length.clamp(3, 6)));
+
+      if (digits.length >= 6) {
+        sb.write('-');
+        // XXXX
+        sb.write(digits.substring(6));
+      }
+    }
+
+    return sb.toString();
+  }
+
+  int _cursorOffsetForDigitIndex(String formatted, int digitIndex) {
+    if (digitIndex <= 0) return 0;
+
+    int digitsSeen = 0;
+    for (int i = 0; i < formatted.length; i++) {
+      if (_isDigit(formatted.codeUnitAt(i))) {
+        digitsSeen++;
+        if (digitsSeen == digitIndex) {
+          // place cursor right AFTER this digit
+          return i + 1;
+        }
+      }
+    }
+    return formatted.length;
+  }
+
+  int _skipSeparatorsLeft(String formatted, int cursor) {
+    int c = cursor;
+    while (c > 0 && !_isDigit(formatted.codeUnitAt(c - 1))) {
+      c--;
+    }
+    return c;
+  }
+
+  bool _isDigit(int codeUnit) => codeUnit >= 48 && codeUnit <= 57;
+}
+
