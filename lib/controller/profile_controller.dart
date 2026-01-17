@@ -22,6 +22,7 @@ class ProfileController extends GetxController{
   final isEmployeeLoading = false.obs;
   final isEmployeedetailsLoading = false.obs;
   final isEmployeeSaveLoading = false.obs;
+  final isVisitUpdateLoding = false.obs;
   final error = ''.obs;
   int employeeId = 0;
   final ImagePicker _picker = ImagePicker();
@@ -464,5 +465,52 @@ class ProfileController extends GetxController{
     }
     // ✅ return ONLY here
     return itemData;
+  }
+
+  /// Attach employee imageBase64
+  Future<ApiData> postVisitUpdate({
+    required int visitId,
+    required String rejectedReason,
+    required bool isVisitAccepted,
+  }) async {
+    try {
+      isVisitUpdateLoding.value = true;
+      error.value = '';
+      final res = await _api.post(ProfileRepository.postVisitAceptReject(),
+          isVisitAccepted ? {
+            "visitId": visitId,
+            "isVisitAccepted": isVisitAccepted
+          } : {
+            "visitId": visitId,
+            "rejectedReason": rejectedReason,
+            "isVisitAccepted": isVisitAccepted
+          }
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }else{
+        error.value = res.statusMessage!;
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isVisitUpdateLoding.value = false;
+    }
   }
 }

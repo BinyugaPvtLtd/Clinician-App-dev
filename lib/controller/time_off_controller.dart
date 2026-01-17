@@ -20,6 +20,7 @@ class TimeController extends GetxController {
   RxInt timeOfTypeId = 0.obs;
   RxString leaveType = ''.obs;
   RxInt leaveTypeId = 0.obs;
+  RxBool halfDayaLeave = false.obs;
   RxString recordType = ''.obs;
   RxString zoneType = ''.obs;
   final timeOffHistory = TimeOffHistory(timeOffData: []).obs;
@@ -109,21 +110,36 @@ class TimeController extends GetxController {
     required int empId,
     required int timeOffTypeId,
     required int leaveTypeId,
+    required String leaveType,
     required String startDate,
     required String endDate,
     required String reason,
+    required bool firstHalf,
   }) async {
     try {
       isTimeOffSaveLoading.value = true;
       error.value = '';
 
-      final res = await _api.post(ProfileRepository.postAddTimeOffRequest(), {
+      final res = await _api.post(ProfileRepository.postAddTimeOffRequest(), leaveType == 'One day' ?
+      {
+        "employeeId": empId,
+        "timeOffTypeId": timeOffTypeId,
+        "leaveTypeId": leaveTypeId,
+        "startDate": startDate,
+        "reason": reason,
+      } : leaveType == "Multi days" ? {
         "employeeId": empId,
         "timeOffTypeId": timeOffTypeId,
         "leaveTypeId": leaveTypeId,
         "startDate": startDate,
         "endDate": endDate,
         "reason": reason
+      } : {
+        "employeeId": empId,
+        "timeOffTypeId": timeOffTypeId,
+        "leaveTypeId": leaveTypeId,
+        "reason": reason,
+        "firstHalf": firstHalf
       });
 
       if (res.statusCode == 200 || res.statusCode == 201) {
@@ -184,6 +200,7 @@ class TimeController extends GetxController {
               startDate: i['startDate'] != null ? formatIOSDate(i['startDate']) : '',
               endDate: i['endDate'] != null ? formatIOSDate(i['endDate']) : '',
               reason: i['reason'] ?? '',
+              status: i['status'] ?? '',
               createdAt: i['createdAt'] ?? '',
             ),
           );

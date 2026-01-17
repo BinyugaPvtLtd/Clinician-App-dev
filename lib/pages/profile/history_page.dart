@@ -107,7 +107,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    "Pending",
+                                    historydata.status,
                                     style: AppTextStyle.normal10style.copyWith(
                                       fontWeight: FontWeight.w500,
                                       color: AppColors.defaultTxtGrey,
@@ -137,6 +137,8 @@ class _HistoryPageState extends State<HistoryPage> {
                               customWidth(15.w),
                               Expanded(
                                 child: Text(
+                                  historydata.endDate.isEmpty ? "${historydata.startDate}"
+                                      :
                                   "${historydata.startDate}  to ${historydata.endDate}",
                                   style: AppTextStyle.normal12style.copyWith(
                                     color: AppColors.defaultTxtGrey,

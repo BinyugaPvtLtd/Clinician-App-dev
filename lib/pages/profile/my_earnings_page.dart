@@ -19,6 +19,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
   void initState() {
     // TODO: implement initState
     earningsController.fetchMyTotalEarningData();
+    earningsController.fetchMyTotalEarningTodayData();
     super.initState();
   }
 
@@ -41,7 +42,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
             ),
             Divider(),
           Obx((){
-            if (earningsController.isEarningLoading.value) {
+            if (earningsController.isEarningLoading.value  ) {
               return Expanded(
                 child: Center(
                   child: CircularProgressIndicator(
@@ -222,13 +223,32 @@ class _MyEarningPageState extends State<MyEarningPage> {
                         style: AppTextStyle.bold12style,
                       ),
                     ),
-                    Padding(
+                  Obx((){
+                    if (earningsController.isEarningLoadingList.value  ) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 100.h ),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primaryAppColor,
+                          ),
+                        ),
+                      );
+                    }
+                    final items = earningsController.myEarningTodayVisitModel;
+                    if (items.isEmpty) {
+                      return Padding(
+                        padding:  EdgeInsets.symmetric(vertical: 100.h ),
+                        child: Center(child: Text("No Records Found!")),
+                      );
+                    }
+                    return Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
-                        itemCount: 10,
+                        itemCount: earningsController.myEarningTodayVisitModel.length,
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
+                          var listData = earningsController.myEarningTodayVisitModel[index];
                           return Padding(
                             padding: EdgeInsets.only(top: 15.h),
                             child: Container(
@@ -252,12 +272,11 @@ class _MyEarningPageState extends State<MyEarningPage> {
                                 children: [
                                   CircleAvatar(
                                     radius: 25,
-                                    backgroundImage: AssetImage(
-                                      AppAsset.avatarImg,
-                                    ),
+                                    backgroundImage: listData.patientAvatarUrl.isEmpty ? AssetImage(
+                                      AppAsset.profilePicImg,
+                                    ):NetworkImage(listData.patientAvatarUrl),
                                   ),
                                   customWidth(10.w),
-
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -265,7 +284,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                                       SizedBox(
                                         width: 90.w,
                                         child: Text(
-                                          "Ralph Edwards",
+                                          listData.patientName,
                                           style: AppTextStyle.bold12style
                                               .copyWith(
                                                 fontWeight: FontWeight.w600,
@@ -282,7 +301,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                                           ),
                                           customWidth(5.w),
                                           Text(
-                                            "Today's",
+                                            listData.dayLabel,
                                             style: AppTextStyle.regular10style
                                                 .copyWith(
                                                   fontWeight: FontWeight.w400,
@@ -294,7 +313,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                                   ),
                                   Spacer(),
                                   Text(
-                                    "12:00AM-01:00AM",
+                                    "${listData.startTime}-${listData.endTime}",
                                     style: AppTextStyle.regular10style.copyWith(
                                       fontWeight: FontWeight.w400,
                                       fontSize: 10.sp,
@@ -315,7 +334,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                           );
                         },
                       ),
-                    ),
+                    );}),
                     customHeight(20.h),
                   ],
                 ),

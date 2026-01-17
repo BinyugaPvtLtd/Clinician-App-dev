@@ -7,14 +7,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/profile_controller.dart';
+import '../../../core/ui/const_sucess_popup.dart';
+
 class AcceptDialogWidget extends StatefulWidget {
-  const AcceptDialogWidget({super.key});
+  final int visitId;
+  const AcceptDialogWidget({super.key, required this.visitId});
 
   @override
   State<AcceptDialogWidget> createState() => _AcceptDialogWidgetState();
 }
 
 class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
+  ProfileController controller = Get.find<ProfileController>();
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
@@ -81,18 +86,55 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                           ),
                         ),
                         customWidth(6.w),
-                        PrimaryButton(
+                        Obx(
+                                () =>
+                            controller.isVisitUpdateLoding.value
+                                ? SizedBox(
+                              width: 54.w,
+                              height: 15.h,
+                                  child: Padding(
+                                    padding:  EdgeInsets.symmetric(horizontal: 19.w),
+                                    child: CircularProgressIndicator(
+                                                                  color: AppColors.primaryAppColor,
+                                                                ),
+                                  ),
+                                )
+                                :   PrimaryButton(
                           width: 54.w,
                           label: 'Save',
                           borderRadius: 6.r,
-                          onTap: () {},
+                          onTap: () async{
+
+                              var response = await controller
+                                  .postVisitUpdate(
+                                visitId: widget.visitId,
+                                rejectedReason:
+                                "",
+                                isVisitAccepted: true,
+                              );
+                              if (response.statusCode == 200 ||
+                                  response.statusCode == 201) {
+                                Get.back();
+                                showSucessDialog(
+                                  context: context,
+                                  message:
+                                  'Visit accepted successfully',
+                                  title: 'Successfully',
+                                );
+                                controller.fetchRecordType();
+                                //Get.to(() => HomeScreen());
+                              } else {
+                                print('Validation failed');
+                              }
+
+                          },
                           padding: EdgeInsets.zero,
                           labelStyle: AppTextStyle.normal10style.copyWith(
                             fontSize: 6.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
-                        ),
+                        )),
                       ],
                     ),
                   ),

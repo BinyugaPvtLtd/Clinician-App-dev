@@ -594,7 +594,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                     text: 'Reject',
                     buttonColor: AppColors.rejectionRedColor,
                     onPressed: () {
-                      Get.dialog(RejectDialogWidget());
+                      Get.dialog(RejectDialogWidget(visitId: widget.visitId,));
                     },
                     textStyle: AppTextStyle.normal12style.copyWith(
                       color: AppColors.rejectionRedColor,
@@ -619,7 +619,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                 Expanded(
                   child: PrimaryButton(
                     onTap: () {
-                      Get.dialog(AcceptDialogWidget());
+                      Get.dialog(AcceptDialogWidget(visitId: widget.visitId,));
                     },
                     padding: EdgeInsets.all(0),
                     label: 'Accept',

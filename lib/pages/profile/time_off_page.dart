@@ -357,6 +357,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                                       groupValue: timeController.recordType.value,
                                       value: "SOC",
                                       onChanged: (v) {
+                                        timeController.halfDayaLeave.value = true;
                                         timeController.recordType.value = v!;
                                       },
                                     ),
@@ -373,6 +374,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                                       groupValue: timeController.recordType.value,
                                       value: "Revisit",
                                       onChanged: (v) {
+                                        timeController.halfDayaLeave.value = false;
                                         timeController.recordType.value = v!;
                                       },
                                     ),
@@ -435,8 +437,10 @@ class _TimeOffPageState extends State<TimeOffPage> {
                                           timeOffTypeId: timeController.timeOfTypeId.value,
                                           leaveTypeId: timeController.leaveTypeId.value,
                                           startDate: pickDate.text,
-                                          endDate: '2026-12-12',
-                                          reason: reasonController.text
+                                          endDate: lastDate.text,
+                                          reason: reasonController.text,
+                                          leaveType: timeController.leaveType.value,
+                                          firstHalf: timeController.halfDayaLeave.value
                                           );
                                       if(response.success){
                                         Navigator.pop(context);

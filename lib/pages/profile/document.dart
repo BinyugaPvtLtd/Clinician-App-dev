@@ -13,8 +13,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../controller/update_documents_controller.dart';
+
 class DocumnetPage extends StatefulWidget {
-  const DocumnetPage({super.key});
+  final int empId;
+  const DocumnetPage({super.key, required this.empId});
 
   @override
   State<DocumnetPage> createState() => _DocumnetPageState();
@@ -26,6 +29,12 @@ class _DocumnetPageState extends State<DocumnetPage>
 
   final homeController = Get.find<HomeController>();
   RxInt selectedIndex = 0.obs;
+  final UpdateDocumentsController updateController = Get.put(UpdateDocumentsController());
+  @override
+  void initState() {
+    updateController.fetchDocListDetails(empId: widget.empId, approveOnly: 'no', searchText: 'all');
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +50,6 @@ class _DocumnetPageState extends State<DocumnetPage>
                 // ------ header -------
                 CommonAppbar(
                   label: "Document Update",
-
                   padding: EdgeInsets.only(
                     left: 20.w,
                     right: 20.w,
@@ -61,6 +69,13 @@ class _DocumnetPageState extends State<DocumnetPage>
                         child: SizedBox(
                           height: 30.h,
                           child: PrimaryTextField(
+                            onChanged: (value){
+                              if (value.trim().isEmpty) {
+                                updateController.fetchDocListDetails(empId: widget.empId, approveOnly: 'no', searchText: 'all');
+                              } else {
+                                updateController.fetchDocListDetails(empId: widget.empId, approveOnly: 'no', searchText: value.trim());
+                              }
+                            },
                             borderRadius: 6,
                             hintText: 'Search',
                             filledColor: Color(0xffE9E9E9),
@@ -100,7 +115,7 @@ class _DocumnetPageState extends State<DocumnetPage>
                     child: Row(
                       children: [
                         Text(
-                          "Today , 25 December 2024",
+                          "Licensure & Certifications",
                           style: AppTextStyle.normal12style.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -116,165 +131,192 @@ class _DocumnetPageState extends State<DocumnetPage>
                     ),
                   ),
                 ),
-                Expanded(
-                  child: ListView.separated(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 10.h,
-                      horizontal: 20.w,
-                    ),
-                    separatorBuilder: (context, index) {
-                      return Divider();
-                    },
-                    itemCount: 40,
-                    itemBuilder: (context, index) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          customHeight(20.h),
-                          Text(
-                            "Essential Licensure & Certifications",
-                            style: AppTextStyle.bold12style,
-                          ),
-                          customHeight(6.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.file_copy_outlined,
-                                          size: 12,
-                                          color: AppColors.defaultTxtGrey,
-                                        ),
-                                        customWidth(5.w),
-                                        Expanded(
-                                          child: Text(
-                                            "Licensed Practical Nurse",
-                                            style: AppTextStyle.normal12style
-                                                .copyWith(
-                                                  color: AppColors.grey,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          "05/13/2025",
-                                          style: AppTextStyle.normal12style
-                                              .copyWith(
-                                                color: AppColors.grey,
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    customHeight(8.h),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.file_copy_outlined,
-                                          size: 12,
-                                          color: AppColors.defaultTxtGrey,
-                                        ),
-                                        customWidth(5.w),
-                                        Expanded(
-                                          child: Text(
-                                            "National Provider Identifier (NPI)",
-                                            style: AppTextStyle.normal12style
-                                                .copyWith(
-                                                  color: AppColors.grey,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          "05/13/2025",
-                                          style: AppTextStyle.normal12style
-                                              .copyWith(
-                                                color: AppColors.grey,
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    customHeight(8.h),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.file_copy_outlined,
-                                          size: 12,
-                                          color: AppColors.defaultTxtGrey,
-                                        ),
-                                        customWidth(5.w),
-                                        Expanded(
-                                          child: Text(
-                                            "Board Certification",
-                                            style: AppTextStyle.normal12style
-                                                .copyWith(
-                                                  color: AppColors.grey,
-                                                  fontWeight: FontWeight.w400,
-                                                ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text(
-                                          "05/13/2025",
-                                          style: AppTextStyle.normal12style
-                                              .copyWith(
-                                                color: AppColors.redBackGColor,
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
+                Obx(() {
+                  if (updateController.isDocListLoading.value) {
+                    return Expanded(
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryAppColor,
+                        ),
+                      ),
+                    );
+                  }
 
-                                    customHeight(8.h),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        PrimaryButton(
-                                          label: "Update",
-                                          buttonColor:
-                                              AppColors.primaryLightBackGColor,
-                                          labelStyle: AppTextStyle
-                                              .regular10style
-                                              .copyWith(
-                                                color:
-                                                    AppColors.primaryAppColor,
-                                              ),
-                                          padding: EdgeInsets.zero,
-                                          height: 25.h,
-                                          width: 50.w,
-                                          borderRadius: 4,
-                                        ),
-                                      ],
-                                    ),
-                                    customHeight(10.h),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                  final items = updateController.documentResponseModel.value.document;
+                  if (items.isEmpty) {
+                    return const Expanded(
+                      child: Center(child: Text("No Document Found!")),
+                    );
+                  }
+                 return Expanded(
+                   child: ListView.separated(
+                     padding: EdgeInsets.symmetric(
+                       vertical: 10.h,
+                       horizontal: 20.w,
+                     ),
+                     separatorBuilder: (context, index) {
+                       return Divider();
+                     },
+                     itemCount: updateController.documentResponseModel.value.document.length,
+                     itemBuilder: (context, index) {
+                       var docItem = updateController.documentResponseModel.value.document[index];
+                       return Column(
+                         crossAxisAlignment: CrossAxisAlignment.start,
+                         children: [
+                           customHeight(20.h),
+                           Text(
+                             docItem.docName,
+                             style: AppTextStyle.bold12style,
+                           ),
+                           customHeight(6.h),
+                           Row(
+                             children: [
+                               Expanded(
+                                 child: Column(
+                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                   children: [
+                                      ...List.generate(docItem.docList.length,
+                                         (index)=>docItem.docList.isEmpty ? Center(child: Text("No Document Found!")) : Column(
+                                           children: [
+                                             Row(
+                                               crossAxisAlignment:
+                                               CrossAxisAlignment.center,
+                                               children: [
+                                                 Icon(
+                                                   Icons.file_copy_outlined,
+                                                   size: 12,
+                                                   color: AppColors.defaultTxtGrey,
+                                                 ),
+                                                 customWidth(5.w),
+                                                 Expanded(
+                                                   child: Text(
+                                                     docItem.docList[index].documentName,
+                                                     style: AppTextStyle.normal12style
+                                                         .copyWith(
+                                                       color: AppColors.grey,
+                                                       fontWeight: FontWeight.w400,
+                                                     ),
+                                                     maxLines: 2,
+                                                     overflow: TextOverflow.ellipsis,
+                                                   ),
+                                                 ),
+                                                 SizedBox(width: 8),
+                                                 Text(
+                                                   docItem.docList[index].expiryDate,
+                                                   style: AppTextStyle.normal12style
+                                                       .copyWith(
+                                                     color: docItem.docList[index].docStatus == "Active" ? AppColors.grey : AppColors.redBackGColor,
+                                                     fontWeight: FontWeight.w400,
+                                                   ),
+                                                 ),
+                                               ],
+                                             ),
+                                             docItem.docList[index].docStatus == "Active" ?customHeight(0.h) :customHeight(8.h),
+                                             docItem.docList[index].docStatus == "Active" ?Offstage() : Row(
+                                               mainAxisAlignment: MainAxisAlignment.end,
+                                               children: [
+                                                 PrimaryButton(
+                                                   label: "Update",
+                                                   buttonColor:
+                                                   AppColors.primaryLightBackGColor,
+                                                   labelStyle: AppTextStyle
+                                                       .regular10style
+                                                       .copyWith(
+                                                     color:
+                                                     AppColors.primaryAppColor,
+                                                   ),
+                                                   padding: EdgeInsets.zero,
+                                                   height: 25.h,
+                                                   width: 50.w,
+                                                   borderRadius: 4,
+                                                 ),
+                                               ],
+                                             ),
+                                             docItem.docList[index].docStatus == "Active" ?customHeight(0.h) : customHeight(10.h),
+                                           ],
+                                         ),),
+                                     // customHeight(8.h),
+                                     // Row(
+                                     //   crossAxisAlignment:
+                                     //   CrossAxisAlignment.center,
+                                     //   children: [
+                                     //     Icon(
+                                     //       Icons.file_copy_outlined,
+                                     //       size: 12,
+                                     //       color: AppColors.defaultTxtGrey,
+                                     //     ),
+                                     //     customWidth(5.w),
+                                     //     Expanded(
+                                     //       child: Text(
+                                     //         "National Provider Identifier (NPI)",
+                                     //         style: AppTextStyle.normal12style
+                                     //             .copyWith(
+                                     //           color: AppColors.grey,
+                                     //           fontWeight: FontWeight.w400,
+                                     //         ),
+                                     //         maxLines: 2,
+                                     //         overflow: TextOverflow.ellipsis,
+                                     //       ),
+                                     //     ),
+                                     //     SizedBox(width: 8),
+                                     //     Text(
+                                     //       "05/13/2025",
+                                     //       style: AppTextStyle.normal12style
+                                     //           .copyWith(
+                                     //         color: AppColors.grey,
+                                     //         fontWeight: FontWeight.w400,
+                                     //       ),
+                                     //     ),
+                                     //   ],
+                                     // ),
+                                     // customHeight(8.h),
+                                     // Row(
+                                     //   crossAxisAlignment:
+                                     //   CrossAxisAlignment.center,
+                                     //   children: [
+                                     //     Icon(
+                                     //       Icons.file_copy_outlined,
+                                     //       size: 12,
+                                     //       color: AppColors.defaultTxtGrey,
+                                     //     ),
+                                     //     customWidth(5.w),
+                                     //     Expanded(
+                                     //       child: Text(
+                                     //         "Board Certification",
+                                     //         style: AppTextStyle.normal12style
+                                     //             .copyWith(
+                                     //           color: AppColors.grey,
+                                     //           fontWeight: FontWeight.w400,
+                                     //         ),
+                                     //         maxLines: 2,
+                                     //         overflow: TextOverflow.ellipsis,
+                                     //       ),
+                                     //     ),
+                                     //     SizedBox(width: 8),
+                                     //     Text(
+                                     //       "05/13/2025",
+                                     //       style: AppTextStyle.normal12style
+                                     //           .copyWith(
+                                     //         color: AppColors.redBackGColor,
+                                     //         fontWeight: FontWeight.w400,
+                                     //       ),
+                                     //     ),
+                                     //   ],
+                                     // ),
+
+
+
+                                   ],
+                                 ),
+                               ),
+                             ],
+                           ),
+                         ],
+                       );
+                     },
+                   ),
+                 );
+                }
                 ),
               ],
             ),

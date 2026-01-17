@@ -118,7 +118,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: textMenuWidget(
                         title: "Document Update",
                         ontap: () {
-                          Get.to(() => DocumnetPage());
+                          Get.to(() => DocumnetPage(empId: controller.employeeId,));
                         },
                         imageicon: AppAsset.document,
                       ),

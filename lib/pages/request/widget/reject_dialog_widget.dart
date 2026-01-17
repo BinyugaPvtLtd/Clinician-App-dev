@@ -8,14 +8,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/profile_controller.dart';
+import '../../../core/ui/const_sucess_popup.dart';
+import '../../../utils/validator.dart';
+
 class RejectDialogWidget extends StatefulWidget {
-  const RejectDialogWidget({super.key});
+  final int visitId;
+  const RejectDialogWidget({super.key, required this.visitId});
 
   @override
   State<RejectDialogWidget> createState() => _RejectDialogWidgetState();
 }
 
 class _RejectDialogWidgetState extends State<RejectDialogWidget> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  ProfileController controller = Get.find<ProfileController>();
+  TextEditingController rejectResone = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
@@ -32,78 +40,128 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                 color: Color(0xffF9FAFB),
                 borderRadius: BorderRadius.circular(6.r),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Reject',
-                        style: AppTextStyle.normal12style.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Spacer(),
-                      InkWell(
-                        onTap: () {
-                          Get.back();
-                        },
-                        child: SvgPicture.asset(AppAsset.closeSvgIcon),
-                      ),
-                    ],
-                  ),
-                  customHeight(18.h),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Reason*',
-                      style: AppTextStyle.normal10style.copyWith(
-                        fontSize: 8.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.defaultTxtGrey,
-                      ),
-                    ),
-                  ),
-                  customHeight(3.h),
-                  PrimaryTextField(maxLines: 4),
-                  customHeight(10.h),
-                  SizedBox(
-                    height: 20.h,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        PrimaryOutlinedButton(
-                          width: 54.w,
-                          text: 'Cancel',
-                          radius: 6.r,
-                          borderWidth: 1.r,
-                          onPressed: () {
+                        Text(
+                          'Reject',
+                          style: AppTextStyle.normal12style.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Spacer(),
+                        InkWell(
+                          onTap: () {
                             Get.back();
                           },
-                          textStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 6.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primaryAppColor,
-                          ),
-                        ),
-                        customWidth(6.w),
-                        PrimaryButton(
-                          width: 54.w,
-                          label: 'Save',
-                          borderRadius: 6.r,
-                          onTap: () {},
-                          padding: EdgeInsets.zero,
-                          labelStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 6.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                          child: SvgPicture.asset(AppAsset.closeSvgIcon),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    customHeight(18.h),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Reason*',
+                        style: AppTextStyle.normal10style.copyWith(
+                          fontSize: 8.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.defaultTxtGrey,
+                        ),
+                      ),
+                    ),
+                    customHeight(3.h),
+                    PrimaryTextField(
+                      controller: rejectResone,
+                      maxLines: 4,
+                      validator:
+                          (value) =>
+                              Validators.validateRequired(value!, 'Reason'),
+                    ),
+                    customHeight(10.h),
+                    SizedBox(
+                      height: 20.h,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          PrimaryOutlinedButton(
+                            width: 54.w,
+                            text: 'Cancel',
+                            radius: 6.r,
+                            borderWidth: 1.r,
+                            onPressed: () {
+                              Get.back();
+                            },
+                            textStyle: AppTextStyle.normal10style.copyWith(
+                              fontSize: 6.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primaryAppColor,
+                            ),
+                          ),
+                          customWidth(6.w),
+                          Obx(
+                            () =>
+                                controller.isVisitUpdateLoding.value
+                                    ? SizedBox(
+                                  width: 54.w,
+                                  height: 15.h,
+                                  child: Padding(
+                                    padding:  EdgeInsets.symmetric(horizontal: 19.w),
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.primaryAppColor,
+                                    ),
+                                  ),
+                                )
+                                    : PrimaryButton(
+                                      width: 54.w,
+                                      label: 'Save',
+                                      borderRadius: 6.r,
+                                      onTap: () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          var response = await controller
+                                              .postVisitUpdate(
+                                                visitId: widget.visitId,
+                                                rejectedReason:
+                                                    rejectResone.text,
+                                                isVisitAccepted: false,
+                                              );
+                                          if (response.statusCode == 200 ||
+                                              response.statusCode == 201) {
+                                            Get.back();
+                                            showSucessDialog(
+                                              context: context,
+                                              message:
+                                                  'Visit rejected successfully',
+                                              title: 'Successfully',
+                                            );
+                                            controller.fetchRecordType();
+                                            //Get.to(() => HomeScreen());
+                                          } else {
+                                            print('Validation failed');
+                                          }
+                                        } else {
+                                          print('Validation failed');
+                                        }
+                                      },
+                                      padding: EdgeInsets.zero,
+                                      labelStyle: AppTextStyle.normal10style
+                                          .copyWith(
+                                            fontSize: 6.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                    ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

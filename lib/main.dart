@@ -1,13 +1,20 @@
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/pages/auth/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ScreenUtil.ensureScreenSize();
   await GetStorage.init();
+  // if (Firebase.apps.isEmpty) {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const ClinicalApp());
 }
 

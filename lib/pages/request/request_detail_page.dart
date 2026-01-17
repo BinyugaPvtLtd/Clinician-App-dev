@@ -295,7 +295,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                     text: 'Reject',
                     buttonColor: AppColors.rejectionRedColor,
                     onPressed: () {
-                      Get.dialog(RejectDialogWidget());
+                      Get.dialog(RejectDialogWidget(visitId: 0,));
                     },
                     textStyle: AppTextStyle.normal12style.copyWith(
                       color: AppColors.rejectionRedColor,
@@ -320,7 +320,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 Expanded(
                   child: PrimaryButton(
                     onTap: () {
-                      Get.dialog(AcceptDialogWidget());
+                      Get.dialog(AcceptDialogWidget(visitId: 0,));
                     },
                     padding: EdgeInsets.all(0),
                     label: 'Accept',

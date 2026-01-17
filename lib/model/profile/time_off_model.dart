@@ -32,6 +32,7 @@ class TimeOffData{
   final String startDate;
   final String endDate;
   final String reason;
+  final String status;
   final String createdAt;
   TimeOffData({
     required this.timeOffRequestId,
@@ -42,6 +43,7 @@ class TimeOffData{
     required this.startDate,
     required this.endDate,
     required this.reason,
+    required this.status,
     required this.createdAt,
   });
 }

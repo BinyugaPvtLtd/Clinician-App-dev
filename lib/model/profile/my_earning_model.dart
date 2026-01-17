@@ -8,3 +8,25 @@ class MyTotalEarningModel{
     required this.thisMonth,
   });
 }
+
+class MyEarningTodayVisitModel{
+  final int visitId;
+  final int patientId;
+  final String patientName;
+  final String patientAvatarUrl;
+  final String startTime;
+  final String endTime;
+  final String dayLabel;
+  final double visit_charge;
+  MyEarningTodayVisitModel({
+    required this.visitId,
+    required this.patientId,
+    required this.patientName,
+    required this.patientAvatarUrl,
+    required this.startTime,
+    required this.endTime,
+    required this.dayLabel,
+    required this.visit_charge,
+  });
+
+}

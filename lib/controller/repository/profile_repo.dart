@@ -4,6 +4,7 @@ class ProfileRepository{
   static String employeeAttachProfileImage = '/employees/attach-photobase64';
   static String patientVisits = '/patient-visits/clinician';
   static String visitdetaiils = '/patient-visits';
+  static String visitAcceptReject = '/rejected-visits';
 
   // Time Off
   static String leaveType = '/leave-types';
@@ -13,6 +14,10 @@ class ProfileRepository{
 
   // My Earning
   static String myEarning = '/patient-visits/clinician/completed-visits-stats';
+  static String myEarningToday = '/patient-visits/clinician/completed-visits-stats';
+
+  /// Update documents
+  static String updateListDocument = '/employee-documents/ByemployeeIdGrouped';
 
 
 
@@ -32,6 +37,10 @@ class ProfileRepository{
     return '$visitdetaiils/$visitId/visible-details';
   }
 
+  static String postVisitAceptReject() {
+    return '$visitAcceptReject';
+  }
+
   /// Time Off
   static String getLeaveType() {
     return '$leaveType';
@@ -49,5 +58,13 @@ class ProfileRepository{
   /// My Earning
   static String getMyEarning(){
     return '$myEarning';
+  }
+  static String getMyEarningTodayVisit(){
+    return '$myEarningToday';
+  }
+
+  /// Update documents
+  static String getUpdateListDocument({required int employeeId, required String approveOnly, required String search}) {
+    return '$updateListDocument/$employeeId/$approveOnly/$search';
   }
 }
