@@ -405,7 +405,9 @@ class _TimeOffPageState extends State<TimeOffPage> {
                               Expanded(
                                 child: PrimaryOutlinedButton(
                                   text: "Cancel",
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Get.back();
+                                  },
                                   fillColor: Colors.white,
                                   textStyle: AppTextStyle.bold14style.copyWith(
                                     fontWeight: FontWeight.w600,

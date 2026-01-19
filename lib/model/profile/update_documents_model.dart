@@ -43,3 +43,27 @@ class EmployeeDocument {
     required this.docStatus,
   });
 }
+
+/// Employee Doc dropdown
+class EmployeeDubDocumentDropDownModel{
+  final int employeeDocumentTypeSetupId;
+  final String documentName;
+  final String expiry;
+  final String reminderThreshold;
+  final int employeeDocumentTypeMetaDataId;
+  final String idOfDocument;
+  final int companyId;
+  final String expiry_type;
+  final int threshold;
+  EmployeeDubDocumentDropDownModel({
+    required this.employeeDocumentTypeSetupId,
+    required this.documentName,
+    required this.expiry,
+    required this.reminderThreshold,
+    required this.employeeDocumentTypeMetaDataId,
+    required this.idOfDocument,
+    required this.companyId,
+    required this.expiry_type,
+    required this.threshold,
+  });
+}

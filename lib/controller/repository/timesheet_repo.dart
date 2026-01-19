@@ -1,6 +1,6 @@
 class TimeSheetRepository{
   static String recordType = '/add-visit/record-types';
-  static String visitMaster = '/visit-master';
+  static String visitMaster = '/visits/visitList';
   static String visitAdd = '/patient-visits/add-visit';
   static String timeSheetData = '/patient-visits/recordTypeVisits';
   static String patientName = '/patient-visits/patients-basic';

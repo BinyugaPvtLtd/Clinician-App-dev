@@ -14,13 +14,21 @@ class PatientNameData{
 }
 class VisitMasterData{
   final int visitMasterId;
-  final String visitName;
-  final String visitDescription;
+  final String typeOfVisit;
+  final String serviceId;
+  final List<EligibleClinician> eligibleClinicians;
 
   VisitMasterData({
     required this.visitMasterId,
-    required this.visitName,
-    required this.visitDescription});
+    required this.typeOfVisit,
+    required this.serviceId,
+    required this.eligibleClinicians,});
+}
+class EligibleClinician{
+  final int empTypeId;
+  final String empName;
+  final String color;
+  EligibleClinician({required this.empTypeId, required this.color,required this.empName});
 }
 
 class TimeSheetAllData{

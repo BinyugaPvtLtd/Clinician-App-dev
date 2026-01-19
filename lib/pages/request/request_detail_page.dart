@@ -13,8 +13,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 class RequestDetailPage extends StatefulWidget {
-  const RequestDetailPage({super.key, required this.data});
-  final RequestDataModel data;
+  const RequestDetailPage({super.key,  this.data});
+  final RequestDataModel? data;
 
   @override
   State<RequestDetailPage> createState() => _RequestDetailPageState();
@@ -52,13 +52,13 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
               ],
             ),
             customHeight(14.h),
-            (widget.data.noteTxt ?? "").isNotEmpty
+            (widget.data!.noteTxt ?? "").isNotEmpty
                 ? Container(
                   width: double.maxFinite,
                   decoration: BoxDecoration(color: AppColors.warningBackgColor),
                   padding: EdgeInsets.symmetric(vertical: 5.h),
                   child: Text(
-                    widget.data.noteTxt ?? "",
+                    widget.data!.noteTxt ?? "",
                     textAlign: TextAlign.center,
                     style: AppTextStyle.normal10style.copyWith(
                       fontWeight: FontWeight.w600,

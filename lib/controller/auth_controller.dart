@@ -4,10 +4,11 @@ import 'package:get/get.dart';
 import '../model/request/request_data_model.dart';
 import '../services/auth_api_services/auth_services.dart';
 import '../services/token_manager/token_manager_service.dart';
+import 'calling_controller.dart';
 
 class AuthController extends GetxController {
   final ApiService _api = Get.put(ApiService());
-
+  final callController = Get.put(CallingController());
   final isLoading = false.obs;
   final error = ''.obs;
  final RxString _otpError = ''.obs;
@@ -36,7 +37,7 @@ class AuthController extends GetxController {
         int companyId = res.data['user']["company_id"] ?? 0;
         int userId = res.data['user']["userId"] ?? 0;
         String userEmail = res.data['user']["email"] ?? email;
-
+        callController.initFCM(deviceName: 'MOBILE',);
         TokenManager.setAccessToken(
           token: token,
           username: username,

@@ -21,7 +21,18 @@ class RequestPage extends StatefulWidget {
 }
 
 class _RequestPageState extends State<RequestPage> {
-  final homeController = Get.find<HomeController>();
+  final HomeController homeController = Get.put(HomeController());
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    homeController.fetchListAllDetails(
+        clinicianId: 51,
+        visitStatus: 'pending',
+        patientName: 'all');
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -38,6 +49,19 @@ class _RequestPageState extends State<RequestPage> {
                   child: SizedBox(
                     height: 35.h,
                     child: PrimaryTextField(
+                      onChanged: (value){
+                        if (value.trim().isEmpty) {
+                          homeController.fetchListAllDetails(
+                              clinicianId: 51,
+                              visitStatus: homeController.statusVal.value,
+                              patientName: 'all');
+                        } else {
+                          homeController.fetchListAllDetails(
+                              clinicianId: 51,
+                              visitStatus: homeController.statusVal.value,
+                              patientName: value.trim());
+                        }
+                      },
                       hintText: 'Search',
                       filledColor: Color(0xffE9E9E9),
                       borderRadius: 6.75.r,
@@ -60,13 +84,13 @@ class _RequestPageState extends State<RequestPage> {
                         icon: SvgPicture.asset(AppAsset.downArrowFillSvgIcon),
                       ),
                       items: [
-                        ...List.generate(5, (index) {
+                        ...List.generate(4, (index) {
                           var list = [
                             'Pending',
                             'Accepted',
                             'Rejected',
                             'Completed',
-                            'Rescheduled',
+                            // 'Rescheduled',
                           ];
                           return DropdownMenuItem(
                             value: list[index],
@@ -82,6 +106,14 @@ class _RequestPageState extends State<RequestPage> {
                       ],
                       onChanged: (value) {
                         homeController.statusVal.value = value ?? "";
+                        searchController.text.isEmpty ?
+                        homeController.fetchListAllDetails(
+                            clinicianId: 51,
+                            visitStatus: value!,
+                            patientName: 'all') : homeController.fetchListAllDetails(
+                            clinicianId: 51,
+                            visitStatus: value!,
+                            patientName: searchController.text) ;
                       },
                     ),
                   ),
@@ -91,35 +123,53 @@ class _RequestPageState extends State<RequestPage> {
           ),
           customHeight(17.h),
           // ------- request list ---------
-          Expanded(
-            child: Obx(
-              () => GroupedListView(
-                elements: homeController.selectedReqTypeList.value,
+        Obx((){
+          if (homeController.isRequestLoading.value) {
+            return Expanded(
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primaryAppColor,
+                ),
+              ),
+            );
+          }
+
+          final items = homeController.todayVisitsModel.value.visits;
+          if (items.isEmpty) {
+            return const Expanded(
+              child: Center(child: Text("No Data Found!")),
+            );
+          }
+          return Expanded(
+            child: ListView.builder(
+                itemCount: homeController.todayVisitsModel.value.visits.length,
                 physics: BouncingScrollPhysics(),
                 padding: EdgeInsets.symmetric(horizontal: 10.w),
-                groupBy: (element) {
-                  return CommonMethods.formatDateWithDate(
-                    element.dateTime ?? DateTime.now(),
-                  );
-                },
-                groupSeparatorBuilder: (value) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(vertical: 5.h),
-                    child: Text(
-                      value,
-                      style: AppTextStyle.normal14style.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.defaultTxtGrey,
-                      ),
-                    ),
-                  );
-                },
+                // groupBy: (element) {
+                //   return CommonMethods.formatDateWithDate(
+                //     element.dateTime ?? DateTime.now(),
+                //   );
+                // },
+                // groupSeparatorBuilder: (value) {
+                //   return Padding(
+                //     padding: EdgeInsets.symmetric(vertical: 5.h),
+                //     child: Text(
+                //       value,
+                //       style: AppTextStyle.normal14style.copyWith(
+                //         fontWeight: FontWeight.w600,
+                //         color: AppColors.defaultTxtGrey,
+                //       ),
+                //     ),
+                //   );
+                // },
                 itemBuilder: (context, element) {
-                  return RequestInfoWidget(data: element);
+                  var data =
+                  homeController.todayVisitsModel.value.visits[element];
+                  return RequestInfoWidget(data: data);
                 },
               ),
-            ),
-          ),
+          );
+        }),
         ],
       ),
     );

@@ -5,9 +5,11 @@ import 'package:clinician_app/pages/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/calling_controller.dart';
 import '../../../services/token_manager/token_manager_service.dart';
 
 void showLogoutConfirmationDialog(BuildContext context) {
+  final callController = Get.put(CallingController());
   showDialog(
     context: context,
     barrierDismissible: true,
@@ -74,8 +76,21 @@ void showLogoutConfirmationDialog(BuildContext context) {
                       ),
                       buttonColor: Colors.red,
                       onPressed: () async{
+                        String fcmToken = await TokenManager.getFcmTokenRegister();
+                        if(fcmToken.isEmpty){
+                          TokenManager.removeAccessToken();
+                          Get.offAll(()=>LoginScreen());
+                        }else{
+                          var response = await callController.unRegisterDevice(context: context, fcmToken: fcmToken);
+                          if(response.statusCode == 201 || response.statusCode == 200){
+                            TokenManager.removeFCMToken();
+                            TokenManager.removeAccessToken();
+                            Get.offAll(()=>LoginScreen());
+                          }
+                        }
+
                         TokenManager.removeAccessToken();
-                        Get.offAll(()=>LoginScreen());
+
                       },
                     ),
                     customWidth(12.w),

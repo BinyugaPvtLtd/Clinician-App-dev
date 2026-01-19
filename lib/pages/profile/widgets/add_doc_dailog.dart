@@ -6,7 +6,10 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/update_documents_controller.dart';
+
 void showAddDocumentDialog(BuildContext context) {
+  final docCtrl = Get.put(UpdateDocumentsController());
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -32,26 +35,35 @@ void showAddDocumentDialog(BuildContext context) {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _uploadCaptureOption(
+                    Obx(()=>docCtrl.fileName.isEmpty ? _uploadCaptureOption(
                         label2: "Upload document",
                         icon: AppAsset.upload,
                         label: "Upload here",
                         onTap: () {
+                          docCtrl.pickDocument();
                           // Handle file picker
                         },
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text("\nor"),
-                      ),
-                      _uploadCaptureOption(
-                        label2: "Capture document",
-                        icon: AppAsset.captured,
-                        label: "Capture here",
-                        onTap: () {
-                          // Handle camera capture
-                        },
-                      ),
+                      ) : _uploadCaptureOption(
+                      label2: docCtrl.fileName.value,
+                      icon: AppAsset.upload,
+                      label: "Upload here",
+                      onTap: () {
+                        docCtrl.pickDocument();
+                        // Handle file picker
+                      },
+                    )),
+                      // Padding(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      //   child: Text("\nor"),
+                      // ),
+                      // _uploadCaptureOption(
+                      //   label2: "Capture document",
+                      //   icon: AppAsset.captured,
+                      //   label: "Capture here",
+                      //   onTap: () {
+                      //     // Handle camera capture
+                      //   },
+                      // ),
                     ],
                   ),
                   SizedBox(height: 24),

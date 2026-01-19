@@ -18,6 +18,9 @@ class ProfileRepository{
 
   /// Update documents
   static String updateListDocument = '/employee-documents/ByemployeeIdGrouped';
+  static String empSubDoc = "/employee-document-type-setup/ByDocumentTypeMetaDataId";
+  static String uploadDocument = "/employee-documents/uploadDocument";
+  static String uploadDocBase64 = "/employee-documents/uploadDocumentbase64";
 
 
 
@@ -66,5 +69,16 @@ class ProfileRepository{
   /// Update documents
   static String getUpdateListDocument({required int employeeId, required String approveOnly, required String search}) {
     return '$updateListDocument/$employeeId/$approveOnly/$search';
+  }
+
+  static String getSubDocListDocument({required int docMetaId,}) {
+    return '$empSubDoc/$docMetaId';
+  }
+  static String postUploadDocument({required int docMetaId,required int docTypeSetupId, required int empId}) {
+    return '$uploadDocBase64/$docMetaId/$docTypeSetupId/$empId';
+  }
+
+  static String postUploadDocumentBase64({required int docMetaId,required int docTypeSetupId, required int empId}) {
+    return '$uploadDocument/$docMetaId/$docTypeSetupId/$empId';
   }
 }

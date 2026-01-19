@@ -214,11 +214,11 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                 //     : addVisitController.selectedRecordName.value,
                                 items: addVisitController.visitMaster.map((item) {
                                   return DropdownMenuItem<String>(
-                                    value: item.visitName ?? '',
+                                    value: item.typeOfVisit ?? '',
                                     child: Padding(
                                       padding:  EdgeInsets.all(8.h),
                                       child: Text(
-                                        item.visitName,
+                                        item.typeOfVisit,
                                         style: AppTextStyle.normal12style
                                             .copyWith(
                                           fontWeight: FontWeight.w400,
@@ -230,7 +230,7 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                 }).toList(),
                                 onChanged: (value) {
                                   for (var a in addVisitController.visitMaster) {
-                                    if (a.visitName == value) {
+                                    if (a.typeOfVisit == value) {
                                       addVisitController.selectedMasterVisitName.value = value ?? '';
                                       addVisitController.selectedMasterVisitId.value = a.visitMasterId ?? 0;
                                     }

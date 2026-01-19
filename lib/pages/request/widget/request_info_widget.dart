@@ -12,26 +12,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/route_manager.dart';
 
+import '../../../model/request/requestList_model.dart';
+
 class RequestInfoWidget extends StatefulWidget {
   const RequestInfoWidget({super.key, required this.data});
-  final RequestDataModel data;
+  final PatientVisitModel data;
 
   @override
   State<RequestInfoWidget> createState() => _RequestInfoWidgetState();
 }
 
 class _RequestInfoWidgetState extends State<RequestInfoWidget> {
+  // ✅ ADDED: expand/collapse state for visitList
+  bool _isExpanded = false;
+
   Color getColor(ZoneType type) {
     switch (type) {
       case ZoneType.warning:
         return AppColors.appYellowColor;
       case ZoneType.inZone:
         return Colors.green;
-
       case ZoneType.outOfZone:
         return AppColors.primaryAppColor;
     }
-    // return index.isOdd ? Colors.green : AppColors.ratingYellowColor;
   }
 
   String getIconStatus(String status) {
@@ -48,19 +51,25 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final totalVisits = widget.data.visitList.length;
+
+    // ✅ show only first 3 if more than 3 and not expanded
+    final visibleCount = (!_isExpanded && totalVisits > 3) ? 3 : totalVisits;
+
+    // ✅ remaining for More text
+    final remaining = totalVisits - visibleCount;
+
     return InkWell(
-      onTap:
-          widget.data.status?.toLowerCase() == 'pending'
-              ? () {
-                Get.to(() => RequestDetailPage(data: widget.data));
-              }
-              : null,
+      onTap: (){},
+      //     () {
+      //   Get.to(() => RequestDetailPage());
+      // },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 3.5.h),
         decoration: BoxDecoration(
           border: Border.all(
             color: getColor(
-              widget.data.zone ?? ZoneType.inZone,
+              widget.data.inZone ? ZoneType.inZone : ZoneType.outOfZone,
             ).withValues(alpha: 0.5),
             width: 2.w,
           ),
@@ -71,42 +80,42 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                (widget.data.noteTxt ?? '').isNotEmpty
+                (widget.data.visitNote ?? '').isNotEmpty
                     ? Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Color(0xffB26322),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        margin: EdgeInsets.symmetric(
-                          vertical: 4.h,
-                          horizontal: 4.w,
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 5.w,
-                          vertical: 5.h,
-                        ),
-                        child: Text(
-                          widget.data.noteTxt ?? "",
-                          style: AppTextStyle.normal10style.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xffB26322),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    margin: EdgeInsets.symmetric(
+                      vertical: 4.h,
+                      horizontal: 4.w,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 5.w,
+                      vertical: 5.h,
+                    ),
+                    child: Text(
+                      widget.data.visitNote,
+                      style: AppTextStyle.normal10style.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
-                    )
-                    : Expanded(child: SizedBox.shrink()),
-
-                // Spacer(),
+                    ),
+                  ),
+                )
+                    : const Expanded(child: SizedBox.shrink()),
                 customWidth(15.w),
                 Align(
                   child: Text(
                     CommonMethods.getZoneName(
-                      widget.data.zone ?? ZoneType.inZone,
+                      widget.data.inZone ? ZoneType.inZone : ZoneType.outOfZone,
                     ),
                     style: AppTextStyle.normal12style.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: getColor(widget.data.zone ?? ZoneType.inZone),
+                      color: getColor(
+                        widget.data.inZone ? ZoneType.inZone : ZoneType.outOfZone,
+                      ),
                     ),
                   ),
                 ),
@@ -114,6 +123,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
               ],
             ),
             customHeight(8.h),
+
             // user info
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -121,30 +131,38 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                 children: [
                   Container(
                     width: 56.w,
-                    decoration: BoxDecoration(shape: BoxShape.circle),
+                    decoration: const BoxDecoration(shape: BoxShape.circle),
                     clipBehavior: Clip.hardEdge,
-                    child: Image.asset(AppAsset.avatarImg, fit: BoxFit.cover),
+                    child: widget.data.patientImage.isEmpty
+                        ? Image.asset(
+                      AppAsset.profilePicImg,
+                      fit: BoxFit.cover,
+                    )
+                        : Image.network(
+                      widget.data.patientImage,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   customWidth(10.w),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Lucas Jackson',
+                        widget.data.patientName,
                         style: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppColors.defaultTxtGrey,
                         ),
                       ),
                       Text(
-                        'Male | 24y',
+                        '${widget.data.genderName} | ${widget.data.patientAge}y',
                         style: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w300,
                           color: AppColors.defaultTxtGrey,
                         ),
                       ),
                       Text(
-                        'Anxiety',
+                        widget.data.primaryDiagnosisName,
                         style: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w300,
                           color: AppColors.defaultTxtGrey,
@@ -152,7 +170,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                       ),
                     ],
                   ),
-                  Spacer(),
+                  const Spacer(),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -164,7 +182,8 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                         ),
                       ),
                       Text(
-                        '\$55.00',
+                        // ✅ show 2 decimals
+                        '\$${widget.data.visitCharge.toStringAsFixed(2)}',
                         style: AppTextStyle.normal12style.copyWith(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.w600,
@@ -172,7 +191,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                         ),
                       ),
                       Text(
-                        'Sacramento Zone 4',
+                        widget.data.zoneName,
                         style: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w700,
                           color: AppColors.primaryAppColor,
@@ -184,6 +203,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
               ),
             ),
             customHeight(6.h),
+
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
@@ -191,7 +211,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                   SvgPicture.asset(AppAsset.locationFillSvgIcon),
                   customWidth(4.w),
                   Text(
-                    '132 My Street, Kingston, New York 12401',
+                    widget.data.patientAddress,
                     style: AppTextStyle.normal12style.copyWith(
                       color: AppColors.defaultTxtGrey,
                     ),
@@ -200,134 +220,99 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
               ),
             ),
             customHeight(6.h),
-            // --pending
-            widget.data.status == 'Pending'
-                ? Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    children: [
-                      ListView.builder(
-                        itemCount: 3,
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          return ScheduleRowWidget();
+
+            // Schedule section
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                children: [
+                  ListView.builder(
+                    // ✅ CHANGED: visibleCount instead of full length
+                    itemCount: visibleCount,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      var listData = widget.data.visitList[index];
+                      return ScheduleRowWidget(listData: listData);
+                    },
+                  ),
+
+                  // ✅ CHANGED: show only when more than 3 visits
+                  if (totalVisits > 3) ...[
+                    customHeight(5.h),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _isExpanded = !_isExpanded;
+                          });
                         },
-                      ),
-                      customHeight(5.h),
-                      Align(
-                        alignment: Alignment.centerRight,
                         child: Text(
-                          '10+ More',
+                          _isExpanded ? 'Less' : '${remaining}+ More',
                           style: AppTextStyle.normal12style.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppColors.primaryAppColor,
                           ),
                         ),
                       ),
-                      customHeight(5.h),
-                      SizedBox(
-                        height: 38.h,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: PrimaryOutlinedButton(
-                                radius: 6.r,
-                                text: 'Reject',
-                                buttonColor: AppColors.rejectionRedColor,
-                                onPressed: () {
-                                  Get.dialog(RejectDialogWidget(visitId: 0,));
-                                },
-                                textStyle: AppTextStyle.normal12style.copyWith(
-                                  color: AppColors.rejectionRedColor,
-                                ),
-                              ),
-                            ),
-                            customWidth(5.w),
-                            Expanded(
-                              child: PrimaryOutlinedButton(
-                                radius: 6.r,
-                                text: 'Reschedule',
-                                buttonColor: AppColors.primaryAppColor,
-                                onPressed: () {
-                                  Get.dialog(RescheduleDialogWidget());
-                                },
-                                textStyle: AppTextStyle.normal12style.copyWith(
-                                  color: AppColors.primaryAppColor,
-                                ),
-                              ),
-                            ),
-                            customWidth(5.w),
-                            Expanded(
-                              child: PrimaryButton(
-                                onTap: () {
-                                  Get.dialog(AcceptDialogWidget(visitId: 0,));
-                                },
-                                padding: EdgeInsets.all(0),
-                                label: 'Accept',
-                                borderRadius: 6.r,
-                                labelStyle: AppTextStyle.normal12style.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-                : Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      customHeight(9.h),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                    ),
+                  ],
 
-                        children: [
-                          SvgPicture.asset(
-                            widget.data.statusTxt?.contains(
-                                      'Pending to reschedule',
-                                    ) ??
-                                    false
-                                ? AppAsset.pendingSvgIcon
-                                : getIconStatus(widget.data.status ?? ""),
-                            width: 18.w,
-                            height: 18.h,
-                          ),
-                          customWidth(4.w),
-                          Flexible(
-                            child: Text(
-                              widget.data.statusTxt ?? "N/A",
-                              style: AppTextStyle.normal12style.copyWith(
-                                color: AppColors.defaultTxtGrey,
-                              ),
+                  customHeight(5.h),
+                  SizedBox(
+                    height: 38.h,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: PrimaryOutlinedButton(
+                            radius: 6.r,
+                            text: 'Reject',
+                            buttonColor: AppColors.rejectionRedColor,
+                            onPressed: () {
+                              Get.dialog(RejectDialogWidget(visitId: 0));
+                            },
+                            textStyle: AppTextStyle.normal12style.copyWith(
+                              color: AppColors.rejectionRedColor,
                             ),
                           ),
-                        ],
-                      ),
-                      if (widget.data.status == 'Rejected') ...[
-                        customHeight(16.h),
-                        Align(
-                          alignment: Alignment.centerRight,
+                        ),
+                        customWidth(5.w),
+                        Expanded(
                           child: PrimaryOutlinedButton(
-                            width: 176.w,
-                            height: 40.h,
-                            text: 'Request for Re-assignment',
                             radius: 6.r,
+                            text: 'Reschedule',
+                            buttonColor: AppColors.primaryAppColor,
+                            onPressed: () {
+                              Get.dialog(RescheduleDialogWidget());
+                            },
                             textStyle: AppTextStyle.normal12style.copyWith(
                               color: AppColors.primaryAppColor,
                             ),
-                            onPressed: () {},
+                          ),
+                        ),
+                        customWidth(5.w),
+                        Expanded(
+                          child: PrimaryButton(
+                            onTap: () {
+                              Get.dialog(AcceptDialogWidget(visitId: 0));
+                            },
+                            padding: const EdgeInsets.all(0),
+                            label: 'Accept',
+                            borderRadius: 6.r,
+                            labelStyle: AppTextStyle.normal12style.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
+
             customHeight(20.h),
           ],
         ),

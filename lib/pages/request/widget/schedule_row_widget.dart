@@ -2,8 +2,11 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../../model/request/requestList_model.dart';
+
 class ScheduleRowWidget extends StatefulWidget {
-  const ScheduleRowWidget({super.key});
+  final VisitDetailsModel? listData;
+  const ScheduleRowWidget({super.key,  this.listData});
 
   @override
   State<ScheduleRowWidget> createState() => _ScheduleRowWidgetState();
@@ -19,7 +22,7 @@ class _ScheduleRowWidgetState extends State<ScheduleRowWidget> {
           SvgPicture.asset(AppAsset.scheduleSvgIcon, width: 15.w),
           customWidth(8.5.w),
           Text(
-            '09-05-2023',
+            widget.listData!.visitDateFrom,
             style: AppTextStyle.normal12style.copyWith(
               color: AppColors.defaultTxtGrey,
             ),
@@ -35,7 +38,7 @@ class _ScheduleRowWidgetState extends State<ScheduleRowWidget> {
               borderRadius: BorderRadius.circular(2.r),
             ),
             child: Text(
-              'OT',
+              widget.listData!.employeeTypeAbbreviation,
               style: AppTextStyle.normal10style.copyWith(
                 fontSize: 7.sp,
                 color: Colors.white,
@@ -44,7 +47,7 @@ class _ScheduleRowWidgetState extends State<ScheduleRowWidget> {
           ),
           Spacer(),
           Text(
-            '9.00AM-11.00AM',
+            '${widget.listData!.visitStartTime}-${widget.listData!.visitEndTime}',
             style: AppTextStyle.normal12style.copyWith(
               color: AppColors.defaultTxtGrey,
             ),

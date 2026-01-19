@@ -285,11 +285,24 @@ class TimeSheetController extends GetxController {
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         for (var i in res.data) {
+          List<EligibleClinician> cliniciansList = [];
+
+          if (i['eligibleClinicians'] != null) {
+            for (var c in i['eligibleClinicians']) {
+              cliniciansList.add(
+                EligibleClinician(
+                 empTypeId: c['employeeTypeId'] ?? 0,
+                  color: c['color'] ?? '',
+                  empName: c['eligibleClinician'] ?? '',),
+              );
+            }
+          }
           itemData.add(
             VisitMasterData(
-              visitMasterId: i['visitMasterId'] ?? 0,
-              visitName: i['visitName'] ?? '',
-              visitDescription: i['visitDescription'] ?? '',
+              visitMasterId: i['visitId'] ?? 0,
+              typeOfVisit:  i['typeOfVisit'] ?? '',
+              serviceId:  i['serviceId'] ?? '',
+              eligibleClinicians: cliniciansList,
             ),
           );
         }
