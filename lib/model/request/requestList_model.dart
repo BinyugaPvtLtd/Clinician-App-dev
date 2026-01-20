@@ -9,6 +9,10 @@ class TodayVisitsModel {
 }
 
 class PatientVisitModel {
+  final int visitId;
+  final String visitStatus;
+  final String visitDateTime;
+  final String visitTime;
   final int ptId;
   final String patientName;
   final String patientImage;
@@ -26,6 +30,10 @@ class PatientVisitModel {
   final List<VisitDetailsModel> visitList;
 
   PatientVisitModel({
+    required this.visitTime,
+    required this.visitId,
+    required this.visitStatus,
+    required this.visitDateTime,
     required this.ptId,
     required this.patientName,
     required this.patientImage,

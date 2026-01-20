@@ -60,10 +60,10 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
     final remaining = totalVisits - visibleCount;
 
     return InkWell(
-      onTap: (){},
-      //     () {
-      //   Get.to(() => RequestDetailPage());
-      // },
+      onTap:
+          () {
+        Get.to(() => RequestDetailPage(visitId: widget.data.visitId, noteText: widget.data.visitNote,));
+      },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 3.5.h),
         decoration: BoxDecoration(
@@ -222,7 +222,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
             customHeight(6.h),
 
             // Schedule section
-            Padding(
+          widget.data.visitStatus == 'pending' ?  Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
                 children: [
@@ -270,7 +270,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                             text: 'Reject',
                             buttonColor: AppColors.rejectionRedColor,
                             onPressed: () {
-                              Get.dialog(RejectDialogWidget(visitId: 0));
+                              Get.dialog(RejectDialogWidget(visitId:widget.data.visitId ));
                             },
                             textStyle: AppTextStyle.normal12style.copyWith(
                               color: AppColors.rejectionRedColor,
@@ -295,7 +295,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                         Expanded(
                           child: PrimaryButton(
                             onTap: () {
-                              Get.dialog(AcceptDialogWidget(visitId: 0));
+                              Get.dialog(AcceptDialogWidget(visitId: widget.data.visitId));
                             },
                             padding: const EdgeInsets.all(0),
                             label: 'Accept',
@@ -311,7 +311,20 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                   ),
                 ],
               ),
-            ),
+            )
+              : Padding( padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Row(
+            children: [
+              widget.data.visitStatus == 'rejected' ? SvgPicture.asset(AppAsset.rejectedSvgIcon) :
+              widget.data.visitStatus == 'accepted' ? SvgPicture.asset(AppAsset.acceptedSvgIcon) :
+             SvgPicture.asset(AppAsset.acceptedSvgIcon),
+              customWidth(4.w),
+              Text('${(widget.data.visitStatus ?? '')[0].toUpperCase()}${(widget.data.visitStatus ?? '').substring(1)} on ${widget.data.visitTime}, ${widget.data.visitDateTime}',
+                style: AppTextStyle.normal10style.copyWith(
+                  color: AppColors.defaultTxtGrey,
+                ),)
+            ],
+          ),),
 
             customHeight(20.h),
           ],

@@ -6,14 +6,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../model/liveMap/live_data_model.dart';
+
 class ClinicianInfoDialog extends StatefulWidget {
-  const ClinicianInfoDialog({super.key});
+  final VisitDashboardDetailsModel data;
+  const ClinicianInfoDialog({super.key, required this.data});
 
   @override
   State<ClinicianInfoDialog> createState() => _ClinicianInfoDialogState();
 }
 
 class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
+  Color hexToColor(String? hex) {
+    if (hex == null || hex.trim().isEmpty) return AppColors.chatRedColor;
+
+    String value = hex.trim();
+
+    // Accept "#RRGGBB"
+    if (value.startsWith("#")) {
+      value = value.replaceFirst("#", "");
+      return Color(int.parse("0xFF$value"));
+    }
+
+    // Accept "0xffRRGGBB" or "0xFFRRGGBB"
+    if (value.startsWith("0x") || value.startsWith("0X")) {
+      return Color(int.parse(value));
+    }
+
+    // fallback: raw "RRGGBB"
+    if (value.length == 6) {
+      return Color(int.parse("0xFF$value"));
+    }
+
+    return AppColors.chatRedColor;
+  }
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -64,8 +90,11 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                             width: 56.w,
                             decoration: BoxDecoration(shape: BoxShape.circle),
                             clipBehavior: Clip.hardEdge,
-                            child: Image.asset(
-                              AppAsset.avatarImg,
+                            child: widget.data.patient.imageUrl.isEmpty ? Image.asset(
+                              AppAsset.profilePicImg,
+                              fit: BoxFit.cover,
+                            ): Image.network(
+                              widget.data.patient.imageUrl,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -74,21 +103,21 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Lucas Jackson',
+                                widget.data.patient.name,
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.defaultTxtGrey,
                                 ),
                               ),
                               Text(
-                                'Male | 24y',
+                                '${widget.data.patient.gender} | ${widget.data.patient.age}y',
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.defaultTxtGrey,
                                 ),
                               ),
                               Text(
-                                'Anxiety',
+                                widget.data.patient.primaryDiagnosis,
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.defaultTxtGrey,
@@ -108,7 +137,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                                 ),
                               ),
                               Text(
-                                '\$55.00',
+                                '\$${widget.data.visit.visitCharge}',
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontSize: 20.sp,
                                   fontWeight: FontWeight.w600,
@@ -129,7 +158,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                       Row(
                         children: [
                           Text(
-                            'Visit  6/10',
+                            'Visit  ${widget.data.visit.visitCount}',
                             style: AppTextStyle.normal12style.copyWith(
                               color: AppColors.textGreyColor,
                             ),
@@ -151,7 +180,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                           customWidth(4.w),
                           Expanded(
                             child: Text(
-                              '132 My Street, Kingston, New York 12401',
+                              widget.data.patient.address,
                               style: AppTextStyle.normal12style.copyWith(
                                 color: AppColors.defaultTxtGrey,
                               ),
@@ -168,7 +197,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                       ),
                       customHeight(8.h),
                       Text(
-                        'Lorem Ipsum about',
+                        widget.data.patient.about,
                         style: AppTextStyle.normal12style.copyWith(
                           color: AppColors.defaultTxtGrey,
                         ),
@@ -184,28 +213,22 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                       customHeight(10.h),
                       Row(
                         children: [
-                          ...List.generate(3, (index) {
-                            var list = [
-                              KeyValueModel(key: 'OT', value: 'FEBD4D'),
-                              KeyValueModel(key: 'PT', value: 'F6928A'),
-                              KeyValueModel(key: 'ST', value: '527FB9'),
-                            ];
+                          ...List.generate(widget.data.planOfCare.length, (index) {
+                            var list = widget.data.planOfCare[index];
                             return Container(
                               padding: EdgeInsets.symmetric(
-                                vertical: 4.h,
+                                vertical: 2.h,
                                 horizontal: 4.w,
                               ),
-                              width: 23.w,
+                              width: 24.w,
                               alignment: Alignment.center,
                               margin: EdgeInsets.only(right: 2.w),
                               decoration: BoxDecoration(
-                                color: Color(
-                                  int.tryParse('0xff${list[index].value}') ?? 0,
-                                ),
+                                color: hexToColor(list.color),
                                 borderRadius: BorderRadius.circular(2.r),
                               ),
                               child: Text(
-                                list[index].key,
+                                list.abbreviation,
                                 style: AppTextStyle.normal10style.copyWith(
                                   color: Colors.white,
                                 ),

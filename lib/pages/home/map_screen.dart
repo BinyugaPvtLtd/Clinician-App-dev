@@ -12,6 +12,8 @@ import 'package:get/get.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:image_stack/image_stack.dart';
 
+import '../../controller/live_map_controller.dart';
+
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -29,13 +31,64 @@ class _MapScreenState extends State<MapScreen> {
     UserProgress('Wade Warren', '\$55.00', false, false),
     UserProgress('Bessie Cooper', '\$55.00', false, false),
   ];
+  final LiveMapController liveMapController = Get.put(LiveMapController());
+  @override
+  void initState() {
+    liveMapController.fetchClinicianDashoardDetails();
+    // liveMapController.fetchListOfVisitMap();
+    liveMapController.startVisitListening();
+    super.initState();
+  }
+  @override
+  void dispose() {
+    liveMapController.stopVisitListening();
+    super.dispose();
+  }
+  Color hexToColor(String? hex) {
+    if (hex == null || hex.trim().isEmpty) return AppColors.chatRedColor;
 
+    String value = hex.trim();
+
+    // Accept "#RRGGBB"
+    if (value.startsWith("#")) {
+      value = value.replaceFirst("#", "");
+      return Color(int.parse("0xFF$value"));
+    }
+
+    // Accept "0xffRRGGBB" or "0xFFRRGGBB"
+    if (value.startsWith("0x") || value.startsWith("0X")) {
+      return Color(int.parse(value));
+    }
+
+    // fallback: raw "RRGGBB"
+    if (value.length == 6) {
+      return Color(int.parse("0xFF$value"));
+    }
+
+    return AppColors.chatRedColor;
+  }
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         HomeAppbarWidget(),
-        Expanded(
+      Obx((){
+        if (liveMapController.isDashboardLoading.value) {
+          return Expanded(child: const Center(child: CircularProgressIndicator(color: AppColors.primaryAppColor,)));
+        }
+        // if (controller.error.value.isNotEmpty) {
+        //   return Center(
+        //     child: Text(
+        //       controller.error.value,
+        //       style: AppTextStyle.normal12style,
+        //     ),
+        //   );
+        // }
+
+        if (liveMapController.clinicianStats.value.clinician == null) {
+          return Expanded(child: const Center(child: Text("No data found")));
+        }
+        return Expanded(
           child: Stack(
             children: [
               Positioned.fill(
@@ -52,18 +105,18 @@ class _MapScreenState extends State<MapScreen> {
                           Flexible(
                             child: ListView.builder(
                               shrinkWrap: true,
-                              itemCount: userList.length,
+                              itemCount: liveMapController.visitsMapModel.value.visits.length,
                               itemBuilder: (_, index) {
-                                final user = userList[index];
+                                final user = liveMapController.visitsMapModel.value.visits[index];
                                 return CustomTimelineCard(
-                                  name: user.name,
-                                  time: '1:00 PM 1:34 PM',
-                                  amount: '\$55.00',
+                                  name: user.patientName,
+                                  time: '${user.visitDateTimeTo} ${user.visiteDateTimeFrom}',
+                                  amount: '\$${user.visitCharge}',
                                   index: index,
-                                  isDone: index < 3,
-                                  isCurrent: index == 3,
-                                  imageUrl: user.imageUrl,
-                                  length: userList.length,
+                                  isDone: user.isVisitCompleted,
+                                  isCurrent: user.onWay,
+                                  imageUrl: user.patientImgUrl,
+                                  length: liveMapController.visitsMapModel.value.visits.length,
                                 );
                               },
                             ),
@@ -199,7 +252,7 @@ class _MapScreenState extends State<MapScreen> {
                     InkWell(
                       onTap: () {
                         Get.dialog(
-                          ClinicianInfoDialog(),
+                          ClinicianInfoDialog(data: liveMapController.visitDashboardDetails.value,),
                           barrierColor: Colors.white38,
                         );
                       },
@@ -229,31 +282,31 @@ class _MapScreenState extends State<MapScreen> {
                                     width: 46.w,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      border: GradientBoxBorder(
-                                        width: 1.w,
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.black,
-                                            Color(0xffCE9E2F),
-                                            Color(0xffE4AC31),
-                                            Color(0xff9F7302),
-                                            Color(0xffC08503),
-                                            Color(
-                                              0xffBB720A,
-                                            ).withValues(alpha: 0.69),
-                                            Color(0xffBE892F),
-                                            Color(
-                                              0xffC47B13,
-                                            ).withValues(alpha: 0.69),
-                                            Color(
-                                              0xffC58413,
-                                            ).withValues(alpha: 0.807),
-                                            Color(0xffB8830F),
-                                            Color(0xffDD9D34),
-                                            Colors.black,
-                                          ],
-                                        ),
-                                      ),
+                                      // border: GradientBoxBorder(
+                                      //   width: 1.w,
+                                      //   // gradient: LinearGradient(
+                                      //   //   colors: [
+                                      //   //     Colors.black,
+                                      //   //     Color(0xffCE9E2F),
+                                      //   //     Color(0xffE4AC31),
+                                      //   //     Color(0xff9F7302),
+                                      //   //     Color(0xffC08503),
+                                      //   //     Color(
+                                      //   //       0xffBB720A,
+                                      //   //     ).withValues(alpha: 0.69),
+                                      //   //     Color(0xffBE892F),
+                                      //   //     Color(
+                                      //   //       0xffC47B13,
+                                      //   //     ).withValues(alpha: 0.69),
+                                      //   //     Color(
+                                      //   //       0xffC58413,
+                                      //   //     ).withValues(alpha: 0.807),
+                                      //   //     Color(0xffB8830F),
+                                      //   //     Color(0xffDD9D34),
+                                      //   //     Colors.black,
+                                      //   //   ],
+                                      //   // ),
+                                      // ),
                                       boxShadow: [
                                         BoxShadow(
                                           offset: Offset(2.w, 2.h),
@@ -265,7 +318,13 @@ class _MapScreenState extends State<MapScreen> {
                                       ],
                                     ),
                                     clipBehavior: Clip.hardEdge,
-                                    child: Image.asset(AppAsset.avatarImg),
+                                    child: liveMapController.clinicianStats.value.clinician.imageUrl.isEmpty
+                                        ? Image.network(
+                                            liveMapController.clinicianStats.value.clinician.imageUrl,
+                                            fit: BoxFit.cover,
+                                          )
+                                        :
+                                    Image.asset(AppAsset.profilePicImg,),
                                   ),
                                   Positioned(
                                     right: 0,
@@ -279,10 +338,10 @@ class _MapScreenState extends State<MapScreen> {
                                         borderRadius: BorderRadius.circular(
                                           3.r,
                                         ),
-                                        color: AppColors.appYellowColor,
+                                        color: hexToColor(liveMapController.clinicianStats.value.clinician.employeeTypeColor),
                                       ),
                                       child: Text(
-                                        'OT',
+                                        liveMapController.clinicianStats.value.clinician.employeeTypeAbbreviation,
                                         style: AppTextStyle.normal10style
                                             .copyWith(
                                               fontWeight: FontWeight.w600,
@@ -299,14 +358,14 @@ class _MapScreenState extends State<MapScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Christina William',
+                                  liveMapController.clinicianStats.value.clinician.name,
                                   style: AppTextStyle.normal10style.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 customHeight(6.h),
                                 Text(
-                                  'Potential Earning  -  \$451',
+                                  'Potential Earning  -  \$${liveMapController.clinicianStats.value.potentialEarning}',
                                   style: AppTextStyle.normal10style.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -317,30 +376,41 @@ class _MapScreenState extends State<MapScreen> {
                             Column(
                               children: [
                                 ImageStack.providers(
-                                  providers: [
-                                    AssetImage(AppAsset.avatarImg),
-                                    AssetImage(AppAsset.avatarImg),
-                                    AssetImage(AppAsset.avatarImg),
-                                  ],
+                                  providers: liveMapController.clinicianStats.value.activePatients
+                                      .take(3)
+                                      .map<ImageProvider<Object>>((p) {
+                                    if (p.imageUrl.isNotEmpty) {
+                                      return NetworkImage(p.imageUrl) as ImageProvider<Object>;
+                                    } else {
+                                      return const AssetImage(AppAsset.avatarImg) as ImageProvider<Object>;
+                                    }
+                                  }).toList(),
+
+
                                   extraCountBorderColor: Colors.transparent,
-                                  extraCountTextStyle: AppTextStyle
-                                      .normal10style
+                                  extraCountTextStyle: AppTextStyle.normal10style
                                       .copyWith(fontWeight: FontWeight.w600),
                                   imageBorderColor: AppColors.primaryAppColor,
-                                  totalCount: 9,
+
+                                  totalCount: liveMapController.clinicianStats.value.activePatients.length, // ✅ total active patients
                                   imageRadius: 20.r,
-                                  imageCount: 3,
+                                  imageCount: liveMapController.clinicianStats.value.activePatients.length > 3
+                                      ? 3
+                                      : liveMapController.clinicianStats.value.activePatients.length, // ✅ max 3 show
                                   imageBorderWidth: 0.5.w,
                                 ),
+
                                 customHeight(4.h),
+
                                 Text(
-                                  'Active Patients',
+                                  'Active Patients (${liveMapController.clinicianStats.value.activePatients.length})', // ✅ show count
                                   style: AppTextStyle.normal10style.copyWith(
                                     fontWeight: FontWeight.w300,
                                   ),
                                 ),
                               ],
-                            ),
+                            )
+
                           ],
                         ),
                       ),
@@ -433,7 +503,7 @@ class _MapScreenState extends State<MapScreen> {
               Positioned(right: 25.w, bottom: 58.h, child: ChatFABWidget()),
             ],
           ),
-        ),
+        );}),
       ],
     );
   }
@@ -526,7 +596,9 @@ class CustomTimelineCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              CircleAvatar(backgroundImage: AssetImage(AppAsset.avatarImg)),
+              CircleAvatar(
+                  backgroundImage: imageUrl.isEmpty ? AssetImage(AppAsset.profilePicImg) : NetworkImage(imageUrl)
+              ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

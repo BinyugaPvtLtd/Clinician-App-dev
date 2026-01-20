@@ -12,15 +12,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../controller/profile_controller.dart';
+
 class RequestDetailPage extends StatefulWidget {
-  const RequestDetailPage({super.key,  this.data});
-  final RequestDataModel? data;
+  const RequestDetailPage({super.key, required this.visitId, required this.noteText});
+  final int visitId;
+  final String noteText;
+
 
   @override
   State<RequestDetailPage> createState() => _RequestDetailPageState();
 }
 
 class _RequestDetailPageState extends State<RequestDetailPage> {
+  ProfileController controller = Get.put(ProfileController());
+  @override
+  void initState() {
+    // TODO: implement initState
+    controller.fetchVisitDetails(visitId: widget.visitId);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -52,13 +63,13 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
               ],
             ),
             customHeight(14.h),
-            (widget.data!.noteTxt ?? "").isNotEmpty
+            (widget.noteText ?? "").isNotEmpty
                 ? Container(
                   width: double.maxFinite,
                   decoration: BoxDecoration(color: AppColors.warningBackgColor),
                   padding: EdgeInsets.symmetric(vertical: 5.h),
                   child: Text(
-                    widget.data!.noteTxt ?? "",
+                    widget.noteText ?? "",
                     textAlign: TextAlign.center,
                     style: AppTextStyle.normal10style.copyWith(
                       fontWeight: FontWeight.w600,
@@ -68,7 +79,24 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 )
                 : CommonDivider(),
             customHeight(9.h),
-            Expanded(
+          Obx((){
+            if (controller.isEmployeedetailsLoading.value) {
+              return Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryAppColor,
+                  ),
+                ),
+              );
+            }
+
+            final items = controller.visitDetailModel == null;
+            if (items == true) {
+              return const Expanded(
+                child: Center(child: Text("No Details Found!")),
+              );
+            }
+            return Expanded(
               child: SingleChildScrollView(
                 physics: BouncingScrollPhysics(),
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -80,8 +108,12 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                           width: 56.w,
                           decoration: BoxDecoration(shape: BoxShape.circle),
                           clipBehavior: Clip.hardEdge,
-                          child: Image.asset(
-                            AppAsset.avatarImg,
+                          child: controller.visitDetailModel.value!.patient.imageUrl.isEmpty ?
+                          Image.asset(
+                            AppAsset.profilePicImg,
+                            fit: BoxFit.cover,
+                          ):Image.network(
+                            controller.visitDetailModel.value!.patient.imageUrl,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -90,14 +122,14 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Lucas Jackson',
+                        controller.visitDetailModel.value!.patient.name,
                               style: AppTextStyle.normal12style.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.defaultTxtGrey,
                               ),
                             ),
                             Text(
-                              'Anxiety',
+                                controller.visitDetailModel.value!.patient.primaryDiagnosis,
                               style: AppTextStyle.normal12style.copyWith(
                                 fontWeight: FontWeight.w300,
                                 color: AppColors.defaultTxtGrey,
@@ -162,7 +194,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                       children: [
                         RichText(
                           text: TextSpan(
-                            text: 'Sacramento Zone 4 ',
+                            text: controller.visitDetailModel.value!.patient.address,
                             style: AppTextStyle.normal12style.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.primaryAppColor,
@@ -194,7 +226,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                         SvgPicture.asset(AppAsset.locationFillSvgIcon),
                         customWidth(4.w),
                         Text(
-                          '132 My Street, Kingston, New York 12401',
+                          controller.visitDetailModel.value!.patient.address,
                           style: AppTextStyle.normal12style.copyWith(
                             color: AppColors.defaultTxtGrey,
                           ),
@@ -203,13 +235,14 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                     ),
                     customHeight(10.h),
                     ListView.separated(
-                      itemCount: 4,
+                      itemCount: controller.visitDetailModel.value!.weeks.length,
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
                       separatorBuilder: (context, index) {
                         return CommonDivider();
                       },
                       itemBuilder: (context, index) {
+                        var weekItem = controller.visitDetailModel.value!.weeks[index];
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -217,7 +250,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                             Row(
                               children: [
                                 Text(
-                                  'Week ${index + 1}',
+                                  'Week ${weekItem.weekNo}',
                                   style: AppTextStyle.normal12style.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.defaultTxtGrey,
@@ -237,7 +270,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                                     borderRadius: BorderRadius.circular(2.r),
                                   ),
                                   child: Text(
-                                    'SOC',
+                                    weekItem.socLabel,
                                     style: AppTextStyle.normal10style.copyWith(
                                       fontSize: 7.sp,
                                       color: Colors.white,
@@ -247,19 +280,19 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                               ],
                             ),
                             customHeight(8.h),
-                            ...List.generate(2, (index) {
+                            ...List.generate(weekItem.items.length, (index) {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Text(
-                                    'Visit Type ${index + 1}',
+                                    'Visit Type ${weekItem.items[index].employeeTypeAbbreviation}',
                                     style: AppTextStyle.normal12style.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.defaultTxtGrey,
                                     ),
                                   ),
                                   customHeight(8.h),
-                                  ScheduleRowWidget(),
+                                  // ScheduleRowWidget(),
                                   customHeight(8.h),
                                 ],
                               );
@@ -271,7 +304,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                   ],
                 ),
               ),
-            ),
+            );}),
           ],
         ),
         floatingActionButton: ChatFABWidget(),

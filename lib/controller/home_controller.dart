@@ -56,7 +56,7 @@ class HomeController extends GetxController {
 
       DateTime dateTime = DateTime.parse(iosDate);
 
-      return DateFormat('dd-MM-yyyy')
+      return DateFormat('dd MMM yyyy')
           .format(dateTime)
           .toLowerCase();
     }
@@ -103,6 +103,10 @@ class HomeController extends GetxController {
 
           allVisits.add(
             PatientVisitModel(
+              visitId: v['visitId'] ?? 0,
+              visitDateTime: v['visitDateTime'] != null ?formatIOSDate(v['visitDateTime']):'',
+              visitStatus: v['visitStatus'] ?? '',
+              visitTime:  v['visitDateTime'] != null ?formatTimeToAMPM(v['visitDateTime']):'',
               ptId: v['pt_id'] ?? 0,
               patientName: v['patientName'] ?? '',
               patientImage: v['patientImage'] ?? '',
