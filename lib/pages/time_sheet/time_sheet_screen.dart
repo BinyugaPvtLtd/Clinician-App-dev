@@ -36,7 +36,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
     super.initState();
     _tabController = TabController(vsync: this, length: 4);
     timeSheetController.selectedTypeRecord.value = 'All';
-    timeSheetController.selectedDate.value = '2025-12-19';
+    timeSheetController.selectedDate.value = timeSheetController.selectedDate.value;
     timeSheetController.searchText.value = 'all';
   }
   @override

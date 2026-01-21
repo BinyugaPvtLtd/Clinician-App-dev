@@ -21,5 +21,6 @@ class ApiData{
   final String message;
   final int statusCode;
   final Object? data;
-  ApiData({required this.success, required this.message, required this.statusCode, this.data});
+  final int? chatId;
+  ApiData({this.chatId,required this.success, required this.message, required this.statusCode, this.data});
 }

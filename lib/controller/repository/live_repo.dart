@@ -2,6 +2,7 @@ class LiveMapRepo{
   static String liveMapDashboard = "/patient-visits/clinician/dashboard";
   static String liveMapDetails = "/patient-visits/clinician/active-patient";
   static String liveMapTodayList = "/patient-visits/clinician/today/list";
+  static String viditData = "/patient-visits/todaysVisitData";
 
   static String getLiveMapDashboart() {
     return '$liveMapDashboard';
@@ -12,5 +13,8 @@ class LiveMapRepo{
   }
   static String getLiveMapTodayList() {
     return '$liveMapTodayList';
+  }
+  static String getVisitData({required int clinicianId}) {
+    return '$viditData/$clinicianId';
   }
 }

@@ -6,12 +6,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:clinician_app/controller/repository/chat_repo.dart';
+import 'package:clinician_app/services/token_manager/token_manager_service.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../core/constant/app_string.dart';
 import '../model/chatScreen/chatList_model.dart';
 import '../model/chatScreen/empChat_model.dart';
 import '../model/chatScreen/groupChat_model.dart';
+import '../model/request/request_data_model.dart';
 import '../services/auth_api_services/auth_services.dart';
 
 class ChatDataController extends GetxController {
@@ -19,8 +22,10 @@ class ChatDataController extends GetxController {
 
   // ===================== CHAT LIST =====================
   final isLoadingChatList = false.obs;
+  final isChatSendLoading = false.obs;
   final error = ''.obs;
   final chatListItem = <ChatListItem>[].obs;
+  final userId = 0.obs;
 
   Timer? _timer;
   bool _isFirstLoad = true;
@@ -44,6 +49,7 @@ class ChatDataController extends GetxController {
     required int clinicianId,
     required bool showLoader,
   }) async {
+    userId.value = await TokenManager.getUserId();
     final data = await getChatListData(
       clinicianId: clinicianId,
       showLoader: showLoader,
@@ -467,7 +473,7 @@ class ChatDataController extends GetxController {
     required int rows,
   }) async {
     try {
-      if (showLoader && _chatScreenFirstLoad) {
+      if (showLoader) {
         isLoadingChatScreen.value = true;
       }
       chatScreenError.value = '';
@@ -508,10 +514,68 @@ class ChatDataController extends GetxController {
     }
   }
 
+  Future<ApiData> postSendChatData({
+    required int ptGroupId,
+    required String textContent,
+    required bool restrictPatientFromView,
+    required bool sentAsSms,
+    required int receiverEmpId,
+    required String empTextContent,
+    required bool isGroup,
+  }) async {
+    try {
+      isChatSendLoading.value = true;
+      error.value = '';
+
+      final res = await _api.post(ChatRepository.postSendChat(isGroup: isGroup),
+          isGroup ?
+          {
+            "pt_group_id": ptGroupId,
+            "text_content": textContent,
+            "restrict_patient_from_view": restrictPatientFromView,
+            "sent_as_sms": sentAsSms,
+            // "voice_note_url": null
+          } : {
+            "receiver_emp_id": receiverEmpId,
+            "text_content": empTextContent,
+          });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        var uploadResponse = res.data;
+        int ChatId = isGroup ?uploadResponse['pt_chat_id']:uploadResponse['emp_chat_id'];
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!,
+            chatId: ChatId
+        );
+      }else{
+        error.value = res.statusMessage!;
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isChatSendLoading.value = false;
+    }
+  }
+
   @override
   void onClose() {
     stopChatListListening();
     stopChatScreenListening();
     super.onClose();
   }
+  
+  
 }

@@ -19,7 +19,7 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-  final ChatDataController controller = Get.put(ChatDataController());
+   ChatDataController controller = Get.put(ChatDataController());
 
   @override
   initState() {
@@ -90,6 +90,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     return InkWell(
                       onTap: () {
                         Get.to(() => ChatScreen(
+                          userId: controller.userId.value,
                           isGroup: item.isGroup,
                           ptGroupId: item.ptGroupId,
                           otherEmpId: item.partnerEmpId,

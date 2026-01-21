@@ -4,6 +4,9 @@
 <dict>
 <key>NSPhotoLibraryUsageDescription</key>
 <string>Allow access to photos</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app needs location to show your position on the map.</string>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

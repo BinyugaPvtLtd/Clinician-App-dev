@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dash/flutter_dash.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:image_stack/image_stack.dart';
 
@@ -102,7 +103,8 @@ class _MapScreenState extends State<MapScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           customHeight(140.h),
-                          Flexible(
+                          liveMapController.visitsMapModel.value.visits.isEmpty ?  
+                              Flexible(child: Center(child: Text('No data found!'),)):Flexible(
                             child: ListView.builder(
                               shrinkWrap: true,
                               itemCount: liveMapController.visitsMapModel.value.visits.length,
@@ -228,20 +230,47 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                     // Map view
-                    child: InkWell(
-                      onTap: () {
-                        GlobalOverlay().show(
-                          context: context,
-                          backgroundColor: Colors.white.withValues(alpha: 0.3),
-                          child: Positioned(
-                            right: 0,
-                            top: 200.h,
-                            child: VisitOverlayWidget(),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: GoogleMap(
+                            initialCameraPosition: const CameraPosition(
+                              target: LatLng(19.0760, 72.8777), // change to your default lat/lng
+                              zoom: 14,
+                            ),
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: false,
+                            zoomControlsEnabled: false,
+                            mapToolbarEnabled: false,
+                            onMapCreated: (GoogleMapController controller) {
+                              // store controller if you want
+                            },
                           ),
-                        );
-                      },
-                      child: Image.asset(AppAsset.mapImg, fit: BoxFit.cover),
-                    ),
+                        )  ,
+                        Positioned(
+                          right: 0.w,
+                          top: 150.h,
+                          child: InkWell(
+                            onTap: () {
+                              GlobalOverlay().show(
+                                context: context,
+                                backgroundColor: Colors.white.withValues(alpha: 0.3),
+                                child: Positioned(
+                                  right: 0,
+                                  top: 200.h,
+                                  child: VisitOverlayWidget(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              height: 100.h,
+                              width: 8.w,
+                              color: AppColors.primaryAppColor,
+                            )
+                          ),
+                        ),
+                      ],
+                    )
                   ),
                 ),
               ),

@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../model/liveMap/live_data_model.dart';
+import '../model/liveMap/visit_data_model.dart';
 import '../services/auth_api_services/auth_services.dart';
 
 class LiveMapController extends GetxController{
@@ -18,6 +19,11 @@ class LiveMapController extends GetxController{
   final error = ''.obs;
 
   final visitsMapModel = VisitsMapModel(visits: []).obs;
+  final mapVisitDataModel = MapVisitDataModel(
+      visitDone: 0,
+      visitsRemaining: 0,
+      earned: 0,
+      visitExpected: 0).obs;
   final visitDashboardDetails = VisitDashboardDetailsModel(
     visit: VisitDashData(
       visitType: '',
@@ -77,6 +83,10 @@ visitsMapModel.value = await getMapListVisit();
   Future<void> fetchClinicianDashoardDetails() async {
     clinicianStats.value = await getLiveMapDashboardData();
     await fetchVisitMapDetails(visitId: 199);
+  }
+
+  Future<void> fetchVisitData({required int clinitianId}) async {
+    mapVisitDataModel.value = await getVisitData(clinicianId: clinitianId);
   }
 
 
@@ -291,5 +301,50 @@ visitsMapModel.value = await getMapListVisit();
     return itemData ?? VisitsMapModel(visits: []);
   }
 
+  Future<MapVisitDataModel> getVisitData({required int clinicianId}) async {
+    MapVisitDataModel? itemData;
+    String formatTimeToAMPM(String? dateTimeString) {
+      if (dateTimeString == null || dateTimeString.isEmpty) return '';
+
+      try {
+        final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
+        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+      } catch (e) {
+        return '';
+      }
+    }
+    try {
+      isMapListLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(
+        LiveMapRepo.getVisitData(clinicianId: clinicianId),
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+
+
+        // ✅ Final Model
+        itemData = MapVisitDataModel(
+            visitDone: res.data['visitsDone'] ?? 0,
+            visitsRemaining: res.data['visitsRemaining'] ?? 0,
+            earned: res.data['earned'] ?? 0,
+            visitExpected: res.data['visitExpected'] ?? 0);
+      } else {
+        error.value = "failed to load data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+      debugPrint('error live map details: $e');
+    } finally {
+      isMapListLoading.value = false;
+    }
+
+    return itemData ?? MapVisitDataModel(
+        visitDone: 0,
+        visitsRemaining: 0,
+        earned: 0,
+        visitExpected: 0);
+  }
 
 }

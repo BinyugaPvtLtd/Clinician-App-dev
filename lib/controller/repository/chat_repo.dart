@@ -7,9 +7,14 @@ class ChatRepository {
   static String empChatList = "chat-list";
   static String empdetails = 'employee-details';
   static String empAllMsgChat = 'chat-screen';
+  static String postChat = "clinicians_chat";
 
   static String getChatList({required int clinicianId,}) {
     return '$chatList/$clinicianId';
+  }
+
+  static String postSendChat({required bool isGroup,}) {
+    return '$postChat/$isGroup';
   }
 
   static String getChatsScreenList({required int ptGroupId,required int pageNbr,required int NbrofRow}){

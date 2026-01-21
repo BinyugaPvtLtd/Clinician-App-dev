@@ -3,6 +3,10 @@ import 'dart:ui';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/model/key_value_model.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../../controller/live_map_controller.dart';
+import '../../../controller/profile_controller.dart';
 
 class VisitOverlayWidget extends StatefulWidget {
   const VisitOverlayWidget({super.key});
@@ -12,6 +16,14 @@ class VisitOverlayWidget extends StatefulWidget {
 }
 
 class _VisitOverlayWidgetState extends State<VisitOverlayWidget> {
+  final LiveMapController liveMapController = Get.put(LiveMapController());
+  ProfileController controller = Get.put(ProfileController());
+  @override
+  void initState() {
+    // TODO: implement initState
+    liveMapController.fetchVisitData(clinitianId: controller.employeeId);
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
@@ -39,45 +51,55 @@ class _VisitOverlayWidgetState extends State<VisitOverlayWidget> {
                 ),
               ),
               customHeight(7.h),
-              ListView.separated(
-                itemCount: 4,
-                shrinkWrap: true,
-                separatorBuilder: (context, index) => customHeight(8.h),
-                padding: EdgeInsets.zero,
-                itemBuilder: (context, index) {
-                  var list = [
-                    KeyValueModel(key: '5', value: 'Done'),
-                    KeyValueModel(key: '4', value: 'Remaining'),
-                    KeyValueModel(key: '\$451', value: 'Earned'),
-                    KeyValueModel(key: '\$500', value: 'Expected'),
-                  ];
-                  return Container(
-                    width: double.maxFinite,
-                    padding: EdgeInsets.symmetric(vertical: 15.h),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    // height: 64.h,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          list[index].key,
-                          style: AppTextStyle.normal10style.copyWith(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.w600,
+              Obx(() {
+                final data = liveMapController.mapVisitDataModel.value;
+
+                // ✅ if API not loaded yet (all values are 0)
+                final bool isLoaded = !(data.visitDone == 0 &&
+                    data.visitsRemaining == 0 &&
+                    data.earned == 0 &&
+                    data.visitExpected == 0);
+
+                var list = [
+                  KeyValueModel(key: isLoaded ? data.visitDone.toString() : '--', value: 'Done'),
+                  KeyValueModel(key: isLoaded ? data.visitsRemaining.toString() : '--', value: 'Remaining'),
+                  KeyValueModel(key: isLoaded ? '\$${data.earned}' : '--', value: 'Earned'),
+                  KeyValueModel(key: isLoaded ? '\$${data.visitExpected}' : '--', value: 'Expected'),
+                ];
+
+                return ListView.separated(
+                  itemCount: list.length,
+                  shrinkWrap: true,
+                  separatorBuilder: (context, index) => customHeight(8.h),
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      width: double.maxFinite,
+                      padding: EdgeInsets.symmetric(vertical: 15.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            list[index].key,
+                            style: AppTextStyle.normal10style.copyWith(
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        Text(
-                          list[index].value,
-                          style: AppTextStyle.normal10style,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                          Text(
+                            list[index].value,
+                            style: AppTextStyle.normal10style,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }),
               customHeight(10.h),
             ],
           ),

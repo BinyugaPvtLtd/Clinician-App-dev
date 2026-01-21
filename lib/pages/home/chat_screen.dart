@@ -1,21 +1,20 @@
 // ===========================
-// chat_screen.dart
+// chat_screen.dart  (NO DATE HEADERS, ONLY MSG)
 // ===========================
 
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
-import 'package:clinician_app/utils/common_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:grouped_list/grouped_list.dart';
 
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/common_divider.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
 import 'package:clinician_app/pages/home/widget/chat_element_widget.dart';
 
-import '../../controller/chat_controller.dart';// <-- update import path as per your project
+import '../../controller/chat_controller.dart'; // <-- update path
+import '../../core/common/calling_class.dart';
 import '../../model/chatScreen/chatList_model.dart';
 import '../../model/chatScreen/empChat_model.dart';
 import '../../model/chatScreen/groupChat_model.dart';
@@ -25,20 +24,22 @@ class ChatScreen extends StatefulWidget {
     super.key,
     required this.isGroup,
     this.ptGroupId,
-    this.otherEmpId, required this.title, required this.avatarUrl,
-    // ✅ NEW
+    this.otherEmpId,
+    required this.title,
+    required this.avatarUrl,
     this.abbrList,
+    required this.userId,
   });
+
   final String title;
   final String avatarUrl;
   final bool isGroup;
+  final int userId;
 
-
-  // ✅ for group chat
   final int? ptGroupId;
-  final List<AbbrChipModel>? abbrList;
-  // ✅ for emp chat
   final int? otherEmpId;
+
+  final List<AbbrChipModel>? abbrList;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -46,6 +47,10 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final ChatDataController controller = Get.find<ChatDataController>();
+  final TextEditingController sendMessageController = TextEditingController();
+
+  // ✅ Local optimistic messages (shows immediately after send)
+  final RxList<ChatModel> _pendingLocal = <ChatModel>[].obs;
 
   @override
   void initState() {
@@ -63,42 +68,37 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     controller.stopChatScreenListening();
+    sendMessageController.dispose();
     super.dispose();
   }
 
   // ===========================
-// IMPORTANT: Update mappers in ChatScreen to fill senderName + senderAvatarUrl
-// ===========================
-
-// GROUP chat mapper (use sender in your Message model)
+  // MAPPERS
+  // ===========================
   List<ChatModel> _mapGroupMessages(PatientGroupChatData? data) {
     if (data == null) return [];
 
     return data.messages.map((m) {
       final dt = DateTime.tryParse(m.dateCreated) ?? DateTime.now();
-
-      final senderName =
-      '${m.sender.firstName} ${m.sender.lastName}'.trim();
+      final senderName = '${m.sender.firstName} ${m.sender.lastName}'.trim();
 
       return ChatModel(
         msg: m.textContent,
-        isSender: false, // if you have isMine in group then replace here
+        isSender: false, // backend doesn't give isMine for group
         time: dt,
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: m.sender.imgUrl.isEmpty ? null : m.sender.imgUrl,
+        localTempId: null,
       );
     }).toList();
   }
 
-// EMP chat mapper (senderName optional, avatar optional)
   List<ChatModel> _mapEmpMessages(ChatDepartmentGroupCommunicationData? data) {
     if (data == null) return [];
 
     return data.messages.map((m) {
       final dt = DateTime.tryParse(m.dateCreated) ?? DateTime.now();
-
-      final senderName =
-      '${m.sender.firstName} ${m.sender.lastName}'.trim();
+      final senderName = '${m.sender.firstName} ${m.sender.lastName}'.trim();
 
       return ChatModel(
         msg: m.textContent,
@@ -106,34 +106,119 @@ class _ChatScreenState extends State<ChatScreen> {
         time: dt,
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: (m.sender.imgUrl.isEmpty) ? null : m.sender.imgUrl,
+        localTempId: null,
       );
     }).toList();
   }
+
+  // ===========================
+  // COLOR PARSER
+  // ===========================
   Color hexToColor(String? hex) {
     if (hex == null || hex.trim().isEmpty) return AppColors.chatRedColor;
 
     String value = hex.trim();
-
-    // Accept "#RRGGBB"
     if (value.startsWith("#")) {
       value = value.replaceFirst("#", "");
       return Color(int.parse("0xFF$value"));
     }
-
-    // Accept "0xffRRGGBB" or "0xFFRRGGBB"
     if (value.startsWith("0x") || value.startsWith("0X")) {
       return Color(int.parse(value));
     }
-
-    // fallback: raw "RRGGBB"
     if (value.length == 6) {
       return Color(int.parse("0xFF$value"));
     }
-
     return AppColors.chatRedColor;
   }
 
+  // ===========================
+  // MERGE API + LOCAL
+  // ===========================
+  List<ChatModel> _mergeMessages(List<ChatModel> apiMessages, List<ChatModel> local) {
+    bool existsInApi(ChatModel loc) {
+      for (final api in apiMessages) {
+        if (api.isSender != loc.isSender) continue;
+        if (api.msg.trim() != loc.msg.trim()) continue;
+        final diff = api.time.difference(loc.time).inSeconds.abs();
+        if (diff <= 8) return true;
+      }
+      return false;
+    }
 
+    final keptLocal = local.where((l) => !existsInApi(l)).toList();
+
+    final merged = <ChatModel>[
+      ...apiMessages,
+      ...keptLocal,
+    ];
+
+    // newest first (because reverse: true)
+    merged.sort((a, b) => b.time.compareTo(a.time));
+    return merged;
+  }
+
+  // ===========================
+  // SEND MESSAGE (Optimistic)
+  // ===========================
+  Future<void> _handleSend() async {
+    final text = sendMessageController.text.trim();
+    if (text.isEmpty) return;
+
+    final tempId = '${DateTime.now().microsecondsSinceEpoch}';
+
+    final optimistic = ChatModel(
+      msg: text,
+      isSender: true,
+      time: DateTime.now(),
+      localTempId: tempId,
+      senderName: null,
+      senderAvatarUrl: null,
+    );
+
+    _pendingLocal.insert(0, optimistic);
+    sendMessageController.clear();
+
+    try {
+      if (widget.isGroup) {
+        final res = await controller.postSendChatData(
+          ptGroupId: controller.groupChatData.value!.groupInfo.ptGroupId,
+          textContent: text,
+          restrictPatientFromView: false,
+          sentAsSms: false,
+          receiverEmpId: 0,
+          empTextContent: '',
+          isGroup: true,
+        );
+
+        if (!(res.statusCode == 200 || res.statusCode == 201)) {
+          _pendingLocal.removeWhere((m) => m.localTempId == tempId);
+          Get.snackbar('Failed', 'Message not sent');
+        }
+      } else {
+        final res = await controller.postSendChatData(
+          ptGroupId: 0,
+          textContent: '',
+          restrictPatientFromView: false,
+          sentAsSms: false,
+          receiverEmpId: controller.empChatData.value!.empInfoData.employeeId,
+          empTextContent: text,
+          isGroup: false,
+        );
+
+        if (!(res.statusCode == 200 || res.statusCode == 201)) {
+          _pendingLocal.removeWhere((m) => m.localTempId == tempId);
+          Get.snackbar('Failed', 'Message not sent');
+        }
+      }
+    } catch (e) {
+      _pendingLocal.removeWhere((m) => m.localTempId == tempId);
+      Get.snackbar('Error', e.toString());
+    }
+  }
+
+  // ===========================
+  // UI
+  // ===========================
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -154,6 +239,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 customWidth(12.w),
+
+                // Avatar
                 SizedBox(
                   width: 45.w,
                   height: 40.h,
@@ -164,9 +251,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         height: 40.w,
                         decoration: const BoxDecoration(shape: BoxShape.circle),
                         clipBehavior: Clip.hardEdge,
-                        child: (widget.avatarUrl != null && widget.avatarUrl!.trim().isNotEmpty)
+                        child: (widget.avatarUrl.trim().isNotEmpty)
                             ? Image.network(
-                          widget.avatarUrl!,
+                          widget.avatarUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Image.asset(
                             AppAsset.chatAvatarImg,
@@ -178,41 +265,19 @@ class _ChatScreenState extends State<ChatScreen> {
                           fit: BoxFit.cover,
                         ),
                       ),
-
-                      if (!widget.isGroup)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 2.h,
-                              horizontal: 4.w,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.chatRedColor,
-                              borderRadius: BorderRadius.circular(3.r),
-                            ),
-                            child: Text(
-                              controller.groupChatData.value!.participants[1].employeeTypeAbbreviation!,
-                              style: AppTextStyle.normal12style.copyWith(
-                                fontSize: 9.sp,
-                                color: hexToColor(controller.groupChatData.value!.participants[1].employeeTypeColor),
-                              ),
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                 ),
 
                 customWidth(18.w),
 
+                // Title + Abbreviations
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.title, // ✅ selected name / group name
+                        widget.title,
                         style: AppTextStyle.normal12style.copyWith(
                           color: AppColors.defaultTxtGrey,
                           fontWeight: FontWeight.w600,
@@ -223,15 +288,12 @@ class _ChatScreenState extends State<ChatScreen> {
                         Obx(() {
                           final data = controller.groupChatData.value;
 
-                          // ✅ chips from API participants (SHOW ALL)
                           final chips = <AbbrChipModel>[];
-
                           if (data != null) {
                             for (final p in data.participants) {
                               final abbr =
                               (p.employeeTypeAbbreviation ?? '').toString().trim();
                               final colorHex = p.employeeTypeColor?.toString();
-
                               if (abbr.isNotEmpty) {
                                 chips.add(
                                   AbbrChipModel(
@@ -246,7 +308,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           if (chips.isEmpty) return const SizedBox();
 
                           return SizedBox(
-                            height: 18.h, // ✅ small height for chips row
+                            height: 18.h,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               physics: const BouncingScrollPhysics(),
@@ -275,12 +337,11 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                           );
                         }),
-
-
                     ],
                   ),
                 ),
 
+                // Call buttons
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -290,16 +351,60 @@ class _ChatScreenState extends State<ChatScreen> {
                         AppAsset.audioCallSvgIcon,
                         AppAsset.threeDotSvgIcon,
                       ];
-                      return Container(
-                        width: 29.w,
-                        height: 29.h,
-                        margin: EdgeInsets.only(right: 6.w),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xffF3F3F3),
+                      return InkWell(
+                        splashColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        onTap: list[index].contains(AppAsset.videoCallSvgIcon)
+                            ? () {
+                          widget.isGroup
+                              ? InitiateClass().CallInitiateFunction(
+                            context: context,
+                            participentId: controller.groupChatData.value!.participants
+                                .map((e) => e.userId)
+                                .where((id) => id != widget.userId)
+                                .toList(),
+                            callType: 'GROUP',
+                            isVideo: true,
+                          )
+                              : InitiateClass().CallInitiateFunction(
+                            context: context,
+                            participentId: [controller.empChatData.value!.empInfoData.userId],
+                            callType: 'ONE_TO_ONE',
+                            isVideo: true,
+                          );
+                        }
+                            : list[index].contains(AppAsset.audioCallSvgIcon)
+                            ? () {
+                          widget.isGroup
+                              ? InitiateClass().CallInitiateFunction(
+                            context: context,
+                            participentId: controller.groupChatData.value!.participants
+                                .map((e) => e.userId)
+                                .where((id) => id != widget.userId)
+                                .toList(),
+                            callType: 'GROUP',
+                            isVideo: false,
+                          )
+                              : InitiateClass().CallInitiateFunction(
+                            context: context,
+                            participentId: [controller.empChatData.value!.empInfoData.userId],
+                            callType: 'ONE_TO_ONE',
+                            isVideo: false,
+                          );
+                        }
+                            : () {},
+                        child: Container(
+                          width: 29.w,
+                          height: 29.h,
+                          margin: EdgeInsets.only(right: 6.w),
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Color(0xffF3F3F3),
+                          ),
+                          alignment: Alignment.center,
+                          child: SvgPicture.asset(list[index]),
                         ),
-                        alignment: Alignment.center,
-                        child: SvgPicture.asset(list[index]),
                       );
                     }),
                   ],
@@ -307,53 +412,49 @@ class _ChatScreenState extends State<ChatScreen> {
                 customWidth(10.w),
               ],
             ),
+
             customHeight(16.h),
             const CommonDivider(),
 
-            // ===================== MESSAGES UI =====================
+            // ===================== MESSAGES UI (NO DATE HEADERS) =====================
             Expanded(
               child: Obx(() {
-                if (controller.isLoadingChatScreen.value) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (controller.chatScreenError.value.isNotEmpty) {
-                  return Center(child: Text(controller.chatScreenError.value));
-                }
-
-                final elements = widget.isGroup
+                final apiElements = widget.isGroup
                     ? _mapGroupMessages(controller.groupChatData.value)
                     : _mapEmpMessages(controller.empChatData.value);
 
-                if (elements.isEmpty) {
+                final merged = _mergeMessages(apiElements, _pendingLocal);
+
+                if (controller.chatScreenError.value.isNotEmpty && merged.isEmpty) {
+                  return Center(child: Text(controller.chatScreenError.value));
+                }
+
+                if (controller.isLoadingChatScreen.value && merged.isEmpty) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.primaryAppColor),
+                  );
+                }
+
+                if (merged.isEmpty) {
                   return const Center(child: Text("No messages"));
                 }
 
-                return GroupedListView<ChatModel, String>(
+                return controller.isLoadingChatScreen.value ?Container(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(
+                    color: AppColors.primaryAppColor,
+                  ),
+                ) : ListView.builder(
                   reverse: true,
                   physics: const BouncingScrollPhysics(),
-                  padding:
-                  EdgeInsets.symmetric(horizontal: 15.w, vertical: 20.h),
-                  elements: elements,
-                  groupBy: (element) {
-                    return CommonMethods.formatDateWithDate(element.time);
-                  },
-                  itemBuilder: (context, element) {
+                  padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 20.h),
+                  itemCount: merged.length,
+                  itemBuilder: (context, index) {
+                    final element = merged[index];
                     return ChatElementWidget(
                       isGroup: widget.isGroup,
                       chat: element,
-                    );
-                  },
-                  groupSeparatorBuilder: (value) {
-                    return Container(
-                      height: 30.h,
-                      alignment: Alignment.center,
-                      child: Text(
-                        value,
-                        style: AppTextStyle.normal12style.copyWith(
-                          color: AppColors.defaultTxtGrey,
-                        ),
-                      ),
                     );
                   },
                 );
@@ -377,6 +478,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ],
                       ),
                       child: PrimaryTextField(
+                        controller: sendMessageController,
                         hintText: 'Type a message',
                         hintStyle: AppTextStyle.normal10style.copyWith(
                           fontSize: 11.sp,
@@ -399,12 +501,18 @@ class _ChatScreenState extends State<ChatScreen> {
                                 AppAsset.sendMsgSvgIcon,
                                 AppAsset.downArrowFillSvgIcon,
                               ];
-                              return Container(
-                                width: 20.w,
-                                height: 20.h,
-                                margin: EdgeInsets.only(right: 9.w),
-                                alignment: Alignment.center,
-                                child: SvgPicture.asset(list[index]),
+
+                              return InkWell(
+                                onTap: list[index].contains(AppAsset.sendMsgSvgIcon)
+                                    ? _handleSend
+                                    : () {},
+                                child: Container(
+                                  width: 20.w,
+                                  height: 20.h,
+                                  margin: EdgeInsets.only(right: 9.w),
+                                  alignment: Alignment.center,
+                                  child: SvgPicture.asset(list[index]),
+                                ),
                               );
                             }),
                           ],
@@ -433,12 +541,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
+// ===========================
+// ChatModel
+// ===========================
 class ChatModel {
   final String msg;
   final bool isSender;
   final DateTime time;
-  final String? senderName;        // ✅ for group chat
-  final String? senderAvatarUrl;   // ✅ for group chat
+  final String? senderName;
+  final String? senderAvatarUrl;
+  final String? localTempId;
 
   ChatModel({
     required this.msg,
@@ -446,5 +558,6 @@ class ChatModel {
     required this.time,
     this.senderName,
     this.senderAvatarUrl,
+    this.localTempId,
   });
 }

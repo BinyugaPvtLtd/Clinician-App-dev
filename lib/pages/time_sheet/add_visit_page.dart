@@ -458,6 +458,7 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                 text: "Save",
                                 onPressed: () async{
                                   if (_formKey.currentState!.validate()){
+                                    print('Select visit master id: ${addVisitController.selectedMasterVisitId.value}');
                                   var response = await addVisitController.postAddVisitData(
                                         ptId: addVisitController.selectedPatientId.value,
                                         recordTypeId: addVisitController.selectedRecordTypeId.value,
