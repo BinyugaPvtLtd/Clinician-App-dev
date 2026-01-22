@@ -44,7 +44,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       // Form is valid
                       if(controller.selectedImage.value != null){
                         var response = await controller.patchEmployeeDataData(
-                            empId: controller.employeeId,
+                            empId: controller.employeeId.value,
                             employeeFirstName: controller.firstNameController
                                 .value.text,
                             employeeLastName: controller.lastNameController.value
@@ -56,7 +56,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             response.statusCode == 201) {
                           var imageResponse = await controller
                               .attachEmployeIamge(
-                              empId: controller.employeeId);
+                              empId: controller.employeeId.value);
                           if (imageResponse.statusCode == 200 ||
                               imageResponse.statusCode == 201) {
                             showSucessDialog(
@@ -73,7 +73,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         }
                       }else{
                         var response = await controller.patchEmployeeDataData(
-                            empId: controller.employeeId,
+                            empId: controller.employeeId.value,
                             employeeFirstName: controller.firstNameController
                                 .value.text,
                             employeeLastName: controller.lastNameController.value

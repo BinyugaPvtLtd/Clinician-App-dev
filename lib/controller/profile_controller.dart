@@ -24,12 +24,13 @@ class ProfileController extends GetxController{
   final isEmployeeSaveLoading = false.obs;
   final isVisitUpdateLoding = false.obs;
   final error = ''.obs;
-  int employeeId = 0;
+  final employeeId = 0.obs;
   final ImagePicker _picker = ImagePicker();
   final patientVisitNoteData = PatientVisitsNoteModel(
       employeeId: 0,
       date: '', items: []).obs;
   final Rxn<VisitDetailModel> visitDetailModel = Rxn<VisitDetailModel>();
+  final employeeIdByEmail = EmployeeIdByEmail(employeeId: 0).obs;
 
 
   final Rx<File?> selectedImage = Rx<File?>(null);
@@ -97,10 +98,10 @@ class ProfileController extends GetxController{
   }
   Future<void> fetchRecordType() async {
     selectedImage.value = null;
-    final empId = await getEmployeeIdMaster();
-    print('Login Employee ID: $empId');
-    employeeId = empId.employeeId;
-    final data = await getEmployeePrefillMaster(empId: empId.employeeId);
+    employeeIdByEmail.value = await getEmployeeIdMaster();
+    print('Login Employee ID: $employeeIdByEmail.value');
+    employeeId.value = employeeIdByEmail.value.employeeId;
+    final data = await getEmployeePrefillMaster(empId:employeeIdByEmail.value.employeeId);
 
     // if (recordTypes.isNotEmpty) {
     //   selectedRecordTypeId.value = recordTypes.first.recordId; // int

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/route_manager.dart';
 
+import '../../controller/profile_controller.dart';
 import '../../controller/splash_controller.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -26,7 +27,9 @@ class _SplashScreenState extends State<SplashScreen> {
     //   Get.offAll(() => authToken.isEmpty ? LoginScreen() : HomeScreen());
     // });
   }
+  ProfileController profileController = Get.put(ProfileController());
   final SplashController controller = Get.put(SplashController());
+
 
   @override
   Widget build(BuildContext context) {

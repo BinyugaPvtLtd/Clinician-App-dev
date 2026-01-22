@@ -12,7 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../controller/home_controller.dart';
 import '../../controller/profile_controller.dart';
+import '../../core/common/hex_color_decoder.dart';
 
 class RequestDetailPage extends StatefulWidget {
   const RequestDetailPage({super.key, required this.visitId, required this.noteText});
@@ -25,11 +27,13 @@ class RequestDetailPage extends StatefulWidget {
 }
 
 class _RequestDetailPageState extends State<RequestDetailPage> {
-  ProfileController controller = Get.put(ProfileController());
+  // ProfileController controller = Get.put(ProfileController());
+   HomeController homeController = Get.put(HomeController());
   @override
   void initState() {
     // TODO: implement initState
-    controller.fetchVisitDetails(visitId: widget.visitId);
+    // controller.fetchVisitDetails(visitId: widget.visitId);
+    homeController.fetchPatientScheduleData(visitId: widget.visitId);
     super.initState();
   }
   @override
@@ -80,7 +84,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 : CommonDivider(),
             customHeight(9.h),
           Obx((){
-            if (controller.isEmployeedetailsLoading.value) {
+            if (homeController.isScheduleLoading.value) {
               return Expanded(
                 child: Center(
                   child: CircularProgressIndicator(
@@ -90,7 +94,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
               );
             }
 
-            final items = controller.visitDetailModel == null;
+            final items = homeController.patientScheduleModel == null;
             if (items == true) {
               return const Expanded(
                 child: Center(child: Text("No Details Found!")),
@@ -108,28 +112,30 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                           width: 56.w,
                           decoration: BoxDecoration(shape: BoxShape.circle),
                           clipBehavior: Clip.hardEdge,
-                          child: controller.visitDetailModel.value!.patient.imageUrl.isEmpty ?
+                           child:
+                           //homeController.patientScheduleModel.value..isEmpty ?
                           Image.asset(
                             AppAsset.profilePicImg,
                             fit: BoxFit.cover,
-                          ):Image.network(
-                            controller.visitDetailModel.value!.patient.imageUrl,
-                            fit: BoxFit.cover,
-                          ),
+                          )
+                          //     :Image.network(
+                          //   controller.visitDetailModel.value!.patient.imageUrl,
+                          //   fit: BoxFit.cover,
+                          // ),
                         ),
                         customWidth(10.w),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                        controller.visitDetailModel.value!.patient.name,
+                              homeController.patientScheduleModel.value.patientName,
                               style: AppTextStyle.normal12style.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.defaultTxtGrey,
                               ),
                             ),
                             Text(
-                                controller.visitDetailModel.value!.patient.primaryDiagnosis,
+                              homeController.patientScheduleModel.value.diagnosisName,
                               style: AppTextStyle.normal12style.copyWith(
                                 fontWeight: FontWeight.w300,
                                 color: AppColors.defaultTxtGrey,
@@ -157,7 +163,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                               ),
                               customWidth(5.w),
                               Text(
-                                '\$55.00',
+                                '\$${homeController.patientScheduleModel.value.visitCharge}',
                                 style: AppTextStyle.normal10style.copyWith(
                                   fontSize: 22.sp,
                                   fontWeight: FontWeight.w600,
@@ -194,17 +200,23 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                       children: [
                         RichText(
                           text: TextSpan(
-                            text: controller.visitDetailModel.value!.patient.address,
+                            text: homeController.patientScheduleModel.value.zoneName,
                             style: AppTextStyle.normal12style.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.primaryAppColor,
                             ),
                             children: [
-                              TextSpan(
+                              homeController.patientScheduleModel.value.inZone ?  TextSpan(
                                 text: '(In Zone)',
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.primaryAppColor,
+                                ),
+                              ) : TextSpan(
+                                text: '(Out of Zone)',
+                                style: AppTextStyle.normal12style.copyWith(
+                                  fontWeight: FontWeight.w300,
+                                  color: AppColors.appYellowColor,
                                 ),
                               ),
                             ],
@@ -212,7 +224,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                         ),
                         Spacer(),
                         Text(
-                          'Evalution',
+                          homeController.patientScheduleModel.value.visitTypeName,
                           style: AppTextStyle.normal12style.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppColors.appYellowColor,
@@ -226,7 +238,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                         SvgPicture.asset(AppAsset.locationFillSvgIcon),
                         customWidth(4.w),
                         Text(
-                          controller.visitDetailModel.value!.patient.address,
+                          homeController.patientScheduleModel.value.address,
                           style: AppTextStyle.normal12style.copyWith(
                             color: AppColors.defaultTxtGrey,
                           ),
@@ -235,14 +247,14 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                     ),
                     customHeight(10.h),
                     ListView.separated(
-                      itemCount: controller.visitDetailModel.value!.weeks.length,
+                      itemCount: homeController.patientScheduleModel.value.weeks.length,
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
                       separatorBuilder: (context, index) {
                         return CommonDivider();
                       },
                       itemBuilder: (context, index) {
-                        var weekItem = controller.visitDetailModel.value!.weeks[index];
+                        var weekItem = homeController.patientScheduleModel.value.weeks[index];
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -250,49 +262,88 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                             Row(
                               children: [
                                 Text(
-                                  'Week ${weekItem.weekNo}',
+                                  'Week ${weekItem.week}',
                                   style: AppTextStyle.normal12style.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.defaultTxtGrey,
                                   ),
                                 ),
-                                customWidth(5.w),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: 2.h,
-                                    horizontal: 8.w,
-                                  ),
-                                  // width: 15.w,
-                                  alignment: Alignment.center,
-                                  margin: EdgeInsets.only(right: 2.w),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.chatGreenColor,
-                                    borderRadius: BorderRadius.circular(2.r),
-                                  ),
-                                  child: Text(
-                                    weekItem.socLabel,
-                                    style: AppTextStyle.normal10style.copyWith(
-                                      fontSize: 7.sp,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
+                                // customWidth(5.w),
+                                // Container(
+                                //   padding: EdgeInsets.symmetric(
+                                //     vertical: 2.h,
+                                //     horizontal: 8.w,
+                                //   ),
+                                //   // width: 15.w,
+                                //   alignment: Alignment.center,
+                                //   margin: EdgeInsets.only(right: 2.w),
+                                //   decoration: BoxDecoration(
+                                //     color: AppColors.chatGreenColor,
+                                //     borderRadius: BorderRadius.circular(2.r),
+                                //   ),
+                                //   child: Text(
+                                //     weekItem.socLabel,
+                                //     style: AppTextStyle.normal10style.copyWith(
+                                //       fontSize: 7.sp,
+                                //       color: Colors.white,
+                                //     ),
+                                //   ),
+                                // ),
                               ],
                             ),
                             customHeight(8.h),
-                            ...List.generate(weekItem.items.length, (index) {
+                            ...List.generate(weekItem.visits.length, (index) {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Text(
-                                    'Visit Type ${weekItem.items[index].employeeTypeAbbreviation}',
+                                    weekItem.visits[index].visitName,
                                     style: AppTextStyle.normal12style.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.defaultTxtGrey,
                                     ),
                                   ),
                                   customHeight(8.h),
-                                  // ScheduleRowWidget(),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+                                    child: Row(
+                                      children: [
+                                        SvgPicture.asset(AppAsset.scheduleSvgIcon, width: 15.w),
+                                        customWidth(8.5.w),
+                                        Text(
+                                          weekItem.visits[index].visitDate,
+                                          style: AppTextStyle.normal12style.copyWith(
+                                            color: AppColors.defaultTxtGrey,
+                                          ),
+                                        ),
+                                        customWidth(2.w),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(vertical: 3.h, horizontal: 3.w),
+                                          width: 18.w,
+                                          alignment: Alignment.center,
+                                          margin: EdgeInsets.only(right: 2.w),
+                                          decoration: BoxDecoration(
+                                            color: hexToColor(weekItem.visits[index].employeeTypeColor),
+                                            borderRadius: BorderRadius.circular(2.r),
+                                          ),
+                                          child: Text(
+                                            weekItem.visits[index].employeeTypeAbbreviation,
+                                            style: AppTextStyle.normal10style.copyWith(
+                                              fontSize: 7.sp,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                        Spacer(),
+                                        Text(
+                                          '${weekItem.visits[index].visitTimeFrom}-${weekItem.visits[index].visitTimeTo}',
+                                          style: AppTextStyle.normal12style.copyWith(
+                                            color: AppColors.defaultTxtGrey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   customHeight(8.h),
                                 ],
                               );

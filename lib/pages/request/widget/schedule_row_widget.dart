@@ -1,3 +1,4 @@
+import 'package:clinician_app/core/common/hex_color_decoder.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -30,11 +31,11 @@ class _ScheduleRowWidgetState extends State<ScheduleRowWidget> {
           customWidth(2.w),
           Container(
             padding: EdgeInsets.symmetric(vertical: 3.h, horizontal: 3.w),
-            width: 18.w,
+            width: 19.w,
             alignment: Alignment.center,
             margin: EdgeInsets.only(right: 2.w),
             decoration: BoxDecoration(
-              color: AppColors.appYellowColor,
+              color: hexToColor(widget.listData!.employeeTypeColor),
               borderRadius: BorderRadius.circular(2.r),
             ),
             child: Text(

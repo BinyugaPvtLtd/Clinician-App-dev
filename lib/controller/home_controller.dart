@@ -4,15 +4,27 @@ import 'package:clinician_app/model/request/request_data_model.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../model/request/patient_schedule_model.dart';
 import '../model/request/requestList_model.dart';
 import '../services/auth_api_services/auth_services.dart';
 
 class HomeController extends GetxController {
   final ApiService _api = Get.put(ApiService());
   final isRequestLoading = false.obs;
+  final isScheduleLoading = false.obs;
   final error = ''.obs;
   final todayVisitsModel = TodayVisitsModel(
       todaysDate: '', visits: []).obs;
+  final patientScheduleModel = PatientScheduleModel(
+    patientName: '',
+    diagnosisName: '',
+    zoneName: '',
+    inZone: false,
+    visitTypeName: '',
+    address: '',
+    visitCharge: 0.0,
+    weeks: [],
+  ).obs;
   @override
   void onInit() {
     super.onInit();
@@ -41,9 +53,13 @@ class HomeController extends GetxController {
   Future<void> fetchListAllDetails({required int clinicianId,
     required String visitStatus,
     required String patientName,}) async {
-    todayVisitsModel.value = await getSubDocumentListDropdown(clinicianId: clinicianId, visitStatus: visitStatus, patientName: patientName);
+    todayVisitsModel.value = await getRequestListData(clinicianId: clinicianId, visitStatus: visitStatus, patientName: patientName);
   }
-  Future<TodayVisitsModel> getSubDocumentListDropdown({
+
+  Future<void> fetchPatientScheduleData({required int visitId,}) async {
+    patientScheduleModel.value = await getVisitScheduleData(visitId: visitId);
+  }
+  Future<TodayVisitsModel> getRequestListData({
     required int clinicianId,
     required String visitStatus,
     required String patientName,
@@ -115,7 +131,8 @@ class HomeController extends GetxController {
               patientAge: v['patientAge'] ?? 0,
               primaryDiagnosisId: v['primaryDiagnosisId'] ?? 0,
               primaryDiagnosisName: v['primaryDiagnosisName'] ?? '--',
-              inZone: v['inZone'] ?? false,
+              inZone: v['inZone'] ?? '',
+              warning: v['warning'] ?? '',
               zoneId: v['zoneId'] ?? 0,
               zoneName: v['zoneName'] ?? '--',
               patientAddress: v['patientAddress'] ?? '--',
@@ -141,4 +158,88 @@ class HomeController extends GetxController {
     // ✅ GUARANTEED NON-NULL RETURN
     return itemData ?? TodayVisitsModel(todaysDate: '', visits: []);
   }
+
+  Future<PatientScheduleModel> getVisitScheduleData({
+    required int visitId,
+  }) async {
+    PatientScheduleModel? itemData;
+
+    try {
+      isScheduleLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(
+        RequestTabRepo.getRequestSchedule(visitId: visitId)
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final data = res.data;
+
+        // ✅ Weeks mapping
+        final List<WeekSchedule> weeksList = [];
+
+        if (data['weeks'] != null) {
+          for (var w in data['weeks']) {
+            final List<VisitScheduleItem> visitList = [];
+
+            if (w['visits'] != null) {
+              for (var v in w['visits']) {
+                visitList.add(
+                  VisitScheduleItem(
+                    visitId: v['visitId'] ?? 0,
+                    visitName: v['visitName'] ?? '',
+                    visitDate: v['visitDate'] ?? '',
+                    visitTimeFrom: v['visitTimeFrom'] ?? '',
+                    visitTimeTo: v['visitTimeTo'] ?? '',
+                    employeeTypeId: v['employeeTypeId'] ?? 0,
+                    employeeTypeAbbreviation: v['employeeTypeAbbreviation'] ?? '',
+                    employeeTypeColor: v['employeeTypeColor'] ?? '',
+                  ),
+                );
+              }
+            }
+
+            weeksList.add(
+              WeekSchedule(
+                week: w['week'] ?? 0,
+                visits: visitList,
+              ),
+            );
+          }
+        }
+
+        // ✅ Final Model
+        itemData = PatientScheduleModel(
+          patientName: data['patientName'] ?? '',
+          diagnosisName: data['diagnosisName'] ?? '',
+          zoneName: data['zoneName'] ?? '',
+          inZone: data['inZone'] ?? false,
+          visitTypeName: data['visitTypeName'] ?? '',
+          address: data['address'] ?? '',
+          visitCharge: (data['visitCharge'] ?? 0).toDouble(),
+          weeks: weeksList,
+        );
+      } else {
+        error.value = "Failed to list data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isScheduleLoading.value = false;
+    }
+
+    // ✅ guaranteed return
+    return itemData ??
+        PatientScheduleModel(
+          patientName: '',
+          diagnosisName: '',
+          zoneName: '',
+          inZone: false,
+          visitTypeName: '',
+          address: '',
+          visitCharge: 0.0,
+          weeks: [],
+        );
+  }
+
 }

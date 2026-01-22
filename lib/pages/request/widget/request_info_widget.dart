@@ -69,7 +69,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
         decoration: BoxDecoration(
           border: Border.all(
             color: getColor(
-              widget.data.inZone ? ZoneType.inZone : ZoneType.outOfZone,
+              widget.data.inZone == "true" ? ZoneType.inZone :widget.data.inZone == "false" ? ZoneType.outOfZone : ZoneType.warning,
             ).withValues(alpha: 0.5),
             width: 2.w,
           ),
@@ -80,7 +80,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                (widget.data.visitNote ?? '').isNotEmpty
+                widget.data.visitNote .isNotEmpty
                     ? Expanded(
                   child: Container(
                     decoration: BoxDecoration(
@@ -104,17 +104,41 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                     ),
                   ),
                 )
-                    : const Expanded(child: SizedBox.shrink()),
+                    : widget.data.warning.isNotEmpty ? Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xffB26322),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    margin: EdgeInsets.symmetric(
+                      vertical: 4.h,
+                      horizontal: 4.w,
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 5.w,
+                      vertical: 5.h,
+                    ),
+                    child: Text(
+                      widget.data.warning,
+                      style: AppTextStyle.normal10style.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ):Expanded(child: SizedBox.shrink()),
                 customWidth(15.w),
                 Align(
                   child: Text(
                     CommonMethods.getZoneName(
-                      widget.data.inZone ? ZoneType.inZone : ZoneType.outOfZone,
+                      widget.data.inZone == "true" ? ZoneType.inZone :widget.data.inZone == "false" ? ZoneType.outOfZone : ZoneType.warning,
+
                     ),
                     style: AppTextStyle.normal12style.copyWith(
                       fontWeight: FontWeight.w700,
                       color: getColor(
-                        widget.data.inZone ? ZoneType.inZone : ZoneType.outOfZone,
+                        widget.data.inZone == "true" ? ZoneType.inZone :widget.data.inZone == "false" ? ZoneType.outOfZone : ZoneType.warning,
+
                       ),
                     ),
                   ),

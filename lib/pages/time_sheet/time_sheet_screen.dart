@@ -27,7 +27,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
   late TabController _tabController;
   VisitController visitController = Get.put(VisitController());
   TimeSheetController timeSheetController = Get.put(TimeSheetController());
-  final homeController = Get.find<HomeController>();
+  // final homeController = Get.find<HomeController>();
   RxInt selectedIndex = 0.obs;
   TextEditingController searchController = TextEditingController();
 

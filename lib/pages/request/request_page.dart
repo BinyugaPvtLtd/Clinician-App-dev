@@ -23,17 +23,23 @@ class RequestPage extends StatefulWidget {
 }
 
 class _RequestPageState extends State<RequestPage> {
-  final HomeController homeController = Get.put(HomeController());
-  TextEditingController searchController = TextEditingController();
   ProfileController controller = Get.put(ProfileController());
+   HomeController homeController = Get.put(HomeController());
+  TextEditingController searchController = TextEditingController();
+  //
+  // ProfileController controller = Get.find<ProfileController>();
+  // HomeController homeController = Get.find<HomeController>();
+
   @override
   void initState() {
-    // TODO: implement initState
-    homeController.fetchListAllDetails(
-        clinicianId: controller.employeeId,
-        visitStatus: 'pending',
-        patientName: 'all');
     super.initState();
+
+    // ✅ wait until employeeId is available (not 0)
+    homeController.fetchListAllDetails(
+      clinicianId: controller.employeeIdByEmail.value.employeeId,
+      visitStatus: 'Pending',
+      patientName: 'all',
+    );
   }
   @override
   Widget build(BuildContext context) {
@@ -54,12 +60,12 @@ class _RequestPageState extends State<RequestPage> {
                       onChanged: (value){
                         if (value.trim().isEmpty) {
                           homeController.fetchListAllDetails(
-                              clinicianId: controller.employeeId,
+                              clinicianId: controller.employeeId.value,
                               visitStatus: homeController.statusVal.value,
                               patientName: 'all');
                         } else {
                           homeController.fetchListAllDetails(
-                              clinicianId: controller.employeeId,
+                              clinicianId: controller.employeeId.value,
                               visitStatus: homeController.statusVal.value,
                               patientName: value.trim());
                         }
@@ -110,10 +116,10 @@ class _RequestPageState extends State<RequestPage> {
                         homeController.statusVal.value = value ?? "";
                         searchController.text.isEmpty ?
                         homeController.fetchListAllDetails(
-                            clinicianId: controller.employeeId,
+                            clinicianId: controller.employeeId.value,
                             visitStatus: value!,
                             patientName: 'all') : homeController.fetchListAllDetails(
-                            clinicianId: controller.employeeId,
+                            clinicianId: controller.employeeId.value,
                             visitStatus: value!,
                             patientName: searchController.text) ;
                       },

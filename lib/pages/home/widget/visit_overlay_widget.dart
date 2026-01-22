@@ -21,7 +21,7 @@ class _VisitOverlayWidgetState extends State<VisitOverlayWidget> {
   @override
   void initState() {
     // TODO: implement initState
-    liveMapController.fetchVisitData(clinitianId: controller.employeeId);
+    liveMapController.fetchVisitData(clinitianId: controller.employeeId.value);
     super.initState();
   }
   @override

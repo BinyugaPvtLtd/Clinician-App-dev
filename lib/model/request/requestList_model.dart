@@ -21,15 +21,17 @@ class PatientVisitModel {
   final int patientAge;
   final int primaryDiagnosisId;
   final String primaryDiagnosisName;
-  final bool inZone;
+  final String inZone;
   final int zoneId;
   final String zoneName;
   final String patientAddress;
   final String visitNote;
+  final String warning;
   final double visitCharge;
   final List<VisitDetailsModel> visitList;
 
   PatientVisitModel({
+    required this.warning,
     required this.visitTime,
     required this.visitId,
     required this.visitStatus,

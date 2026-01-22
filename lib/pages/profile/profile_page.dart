@@ -33,7 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
               trailing: InkWell(
                 onTap: () {
                   controller.fetchRecordType();
-                  Get.to(() => EditProfilePage(employeeId: controller.employeeId,));
+                  Get.to(() => EditProfilePage(employeeId: controller.employeeId.value,));
                 },
                 child: Text(
                   "Edit Profile",
@@ -118,7 +118,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: textMenuWidget(
                         title: "Document Update",
                         ontap: () {
-                          Get.to(() => DocumnetPage(empId: controller.employeeId,));
+                          Get.to(() => DocumnetPage(empId: controller.employeeId.value,));
                         },
                         imageicon: AppAsset.document,
                       ),
@@ -128,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: textMenuWidget(
                         ontap: () {
-                          Get.to(() => TimeOffPage(employeeId: controller.employeeId,));
+                          Get.to(() => TimeOffPage(employeeId: controller.employeeId.value,));
                         },
                         title: "Time Off",
                         imageicon: AppAsset.timer,
