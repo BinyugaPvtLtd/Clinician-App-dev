@@ -67,3 +67,14 @@ class EmployeeDubDocumentDropDownModel{
     required this.threshold,
   });
 }
+
+/// Document meta data model
+class DocumentMetaDataModel {
+  final int employeeDocumentTypeMetaDataId;
+  final String documentName;
+
+  DocumentMetaDataModel({
+    required this.employeeDocumentTypeMetaDataId,
+    required this.documentName,
+  });
+}

@@ -91,7 +91,7 @@ class _DocumnetPageState extends State<DocumnetPage>
                         spaceBetweenIconText: 2,
                         text: "Add New",
                         onPressed: () {
-                          showAddDocumentDialog(context);
+                          showAddDocumentDialog(context,widget.empId);
                         },
                         textStyle: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w700,

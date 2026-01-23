@@ -643,10 +643,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                   ];
                                   return InkWell(
                                     onTap:
-                                    // list[index]
-                                    //     .contains(AppAsset.sendMsgSvgIcon)
-                                    //     ? _handleSend
-                                    //     :
+                                    list[index]
+                                        .contains(AppAsset.sendMsgSvgIcon)
+                                        ? _handleSend
+                                        :
                                         () {},
                                     child: Container(
                                       width: 20.w,

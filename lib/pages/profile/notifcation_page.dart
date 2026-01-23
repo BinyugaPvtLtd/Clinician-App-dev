@@ -1,6 +1,9 @@
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/common_appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../../controller/notification_controller.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -10,64 +13,17 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
+  final NotificationController notificationController =
+  Get.put(NotificationController());
+
+  @override
+  void initState() {
+    super.initState();
+    notificationController.fetchNotificationListData();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final notifications = [
-      NotificationItem(
-        icon: Icons.traffic,
-        color: Colors.grey.shade800,
-        title: "Route Updated Due to Traffic Conditions",
-        subtitle:
-            "Your route has been adjusted based on real-time traffic and daily congestion for an optimized visit schedule.",
-        time: "1h ago",
-      ),
-      NotificationItem(
-        icon: Icons.check_circle,
-        color: Colors.teal,
-        title: "Visits Completed",
-        subtitle: "5 done, 3 remaining",
-        time: "1h ago",
-      ),
-      NotificationItem(
-        icon: Icons.verified,
-        color: Colors.blue,
-        title: "Certificate updated",
-        subtitle:
-            "Your certificate has been successfully updated and saved in the system.",
-        time: "1h ago",
-      ),
-      NotificationItem(
-        icon: Icons.warning,
-        color: Colors.purple,
-        title: "Your certificate has expired",
-        subtitle: "Access may be restricted until it's updated",
-        time: "1h ago",
-        buttonText: "Update",
-      ),
-      NotificationItem(
-        icon: Icons.hourglass_empty,
-        color: Colors.indigo,
-        title: "Visits Pending",
-        subtitle: "3 remaining",
-        time: "2:35 PM",
-      ),
-      NotificationItem(
-        icon: Icons.attach_money,
-        color: Colors.orange,
-        title: "\$ Earning",
-        subtitle: "\$250 earned, \$150 expected",
-        time: "3:20 PM",
-      ),
-      NotificationItem(
-        icon: Icons.calendar_month,
-        color: Colors.blue.shade100,
-        title: "Rescheduled Appointment",
-        subtitle:
-            "Your visit with Christina William has been rescheduled to 9:00 pm",
-        time: "5:58 PM",
-      ),
-    ];
-
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -83,12 +39,83 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
             Divider(),
             Expanded(
-              child: ListView.builder(
-                itemCount: notifications.length,
-                itemBuilder: (context, index) {
-                  return NotificationTile(notifications[index]);
-                },
-              ),
+              child: Obx(() {
+                // ✅ Loading
+                if (notificationController.isNotificationList.value) {
+                  return const Center(child: CircularProgressIndicator(
+                    color: AppColors.primaryAppColor,
+                  ));
+                }
+                if(notificationController.notificationModelData.isEmpty){
+                  return Center(
+                    child: Text(
+                      "No notifications",
+                      style: AppTextStyle.regular12style.copyWith(
+                        color: AppColors.defaultTxtGrey,
+                      ),
+                    ),
+                  );
+                }
+                // ✅ Error
+                if (notificationController.error.value.isNotEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            notificationController.error.value,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyle.regular12style.copyWith(
+                              color: AppColors.defaultTxtGrey,
+                            ),
+                          ),
+                          SizedBox(height: 12.h),
+                          TextButton(
+                            onPressed: () {
+                              notificationController.fetchNotificationListData();
+                            },
+                            child: const Text("Retry"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                // ✅ Empty State
+                if (notificationController.notificationModelData.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "No notifications",
+                      style: AppTextStyle.regular12style.copyWith(
+                        color: AppColors.defaultTxtGrey,
+                      ),
+                    ),
+                  );
+                }
+
+                // ✅ Convert API data -> NotificationItem (UI model)
+                final notifications = notificationController.notificationModelData
+                    .map((i) => NotificationItem(
+                  icon: Icons.notifications,
+                  color: Colors.blue,
+                  title: i.title,
+                  subtitle: i.body,
+                  time: i.createdAt,
+                  // buttonText: i.type == "certificate_expired" ? "Update" : null, // optional
+                ))
+                    .toList();
+
+                // ✅ Render list
+                return ListView.builder(
+                  itemCount: notifications.length,
+                  itemBuilder: (context, index) {
+                    return NotificationTile(notifications[index]);
+                  },
+                );
+              }),
             ),
           ],
         ),
@@ -96,6 +123,8 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 }
+
+// ---------------- UI CLASSES (UNCHANGED) ----------------
 
 class NotificationItem {
   final IconData icon;
@@ -160,7 +189,6 @@ class NotificationTile extends StatelessWidget {
                           foregroundColor: Colors.blue,
                           padding: EdgeInsets.symmetric(
                             horizontal: 21.w,
-                            // vertical: 2.h,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(3.r),

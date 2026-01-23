@@ -14,50 +14,112 @@ import '../services/auth_api_services/auth_services.dart';
 class UpdateDocumentsController extends GetxController {
   final ApiService _api = Get.put(ApiService());
   final isDocListLoading = false.obs;
+  final isMetaDocListLoading = false.obs;
+  final isSubDocListLoading = false.obs;
   final isDocumentSaveLoading = false.obs;
   final error = ''.obs;
   final documentResponseModel = DocumentResponseModel(
       document: []).obs;
+  final Rxn<File> selectedPdfFile = Rxn<File>();
   final RxString fileName = ''.obs;
   final RxString filePath = ''.obs;
+  final RxString fileNameValidation = ''.obs;
+  final isExpDateShown = false.obs;
+  final docSubList = <EmployeeDubDocumentDropDownModel>[].obs;
+  final docMetaList = <DocumentMetaDataModel>[].obs;
+  final RxString expiryIsoDate = ''.obs;
 
-  Future<void> pickDocument() async {
+  // ✅ selected dropdown value (use id)
+  final selectedSubDocId = 0.obs;
+  final selectedSubDocName = ''.obs;
+
+  // selecte master visit
+  final selectedMasterMetaDocId = 0.obs;
+  final selectedMasterMetaDocName = ''.obs;
+  @override
+  void onInit() {
+    fetchMetaDocList();
+    super.onInit();
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+  }
+
+
+   int maxBytes = 20 * 1024 * 1024; // 20MB
+
+  Future<void> pickPdf() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
+        allowedExtensions: ['pdf'], // ✅ only pdf
         allowMultiple: false,
       );
 
-      if (result == null || result.files.isEmpty) {
-        // user canceled
-        return;
-      }
+      if (result == null || result.files.isEmpty) return;
 
       final picked = result.files.first;
 
-      fileName.value = picked.name;
-      filePath.value = picked.path ?? '';
-
-      if (filePath.value.isEmpty) {
-        Get.snackbar("Error", "File path not found");
+      // ✅ Ensure PDF only
+      final ext = picked.name.split('.').last.toLowerCase();
+      if (ext != 'pdf') {
+        // Get.snackbar('Invalid file', 'Please select a PDF file only.');
         return;
       }
 
-      // If you want File object:
-      final file = File(filePath.value);
-      // Use file for upload API...
-      // uploadFile(file);
+      // ✅ Size check (bytes)
+      if (picked.size > maxBytes) {
+        fileNameValidation.value = "File too large";
+        // Get.snackbar('File too large', 'Please select a PDF under 20MB.');
+        return;
+      }
 
-      Get.snackbar("Selected", picked.name);
+      // ✅ Must have valid path for File
+      if (picked.path == null || picked.path!.isEmpty) {
+        Get.snackbar('Error', 'File path not found.');
+        return;
+      }
+
+      final file = File(picked.path!);
+
+      // ✅ store in Rx<File?>
+      selectedPdfFile.value = file;
+      fileName.value = picked.name;
+      filePath.value = picked.path!;
+
+      // Get.snackbar('Selected PDF', picked.name);
     } catch (e) {
-      Get.snackbar("Error", e.toString());
+      Get.snackbar('Error', e.toString());
     }
   }
 
   void clearFile() {
     fileName.value = '';
     filePath.value = '';
+  }
+  void clearAll() {
+    fileName.value = '';
+    filePath.value = '';
+     selectedSubDocId.value = 0;
+     selectedSubDocName.value = '';
+     selectedMasterMetaDocId.value = 0;
+     selectedMasterMetaDocName.value = '';
+     fileNameValidation.value = '';
+    expiryIsoDate.value = '';
+     isExpDateShown.value = false;
+  }
+
+  Future<void> fetchSubDocList({required int docMetaId}) async {
+    final list = await getSubDocumentListDropdown(docMetaId: docMetaId);
+    docSubList.assignAll(list);
+
+  }
+  Future<void> fetchMetaDocList() async {
+    final list = await getMetaDocumentListDropdown();
+    docMetaList.assignAll(list);
+
   }
   Future<void> fetchDocListDetails({required int empId,
     required String approveOnly,
@@ -166,7 +228,7 @@ class UpdateDocumentsController extends GetxController {
     }
 
     try {
-      isDocListLoading.value = true;
+      isSubDocListLoading.value = true;
       error.value = '';
 
       final res = await _api.get(
@@ -194,7 +256,47 @@ class UpdateDocumentsController extends GetxController {
     } catch (e) {
       error.value = e.toString();
     } finally {
-      isDocListLoading.value = false;
+      isSubDocListLoading.value = false;
+    }
+
+    // ✅ GUARANTEED NON-NULL RETURN
+    return itemData;
+  }
+
+  Future<List<DocumentMetaDataModel>> getMetaDocumentListDropdown() async {
+    List<DocumentMetaDataModel> itemData = [];
+
+    String formatIOSDate(String iosDate) {
+      if (iosDate.isEmpty) return '';
+
+      DateTime dateTime = DateTime.parse(iosDate);
+
+      return DateFormat('dd/MM/yyyy')
+          .format(dateTime)
+          .toLowerCase();
+    }
+
+    try {
+      isMetaDocListLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(
+        ProfileRepository.getMetaDataDropdown(),
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        for(var item in res.data){
+          itemData.add(DocumentMetaDataModel(
+              employeeDocumentTypeMetaDataId: item['EmployeeDocumentTypeMetaDataId'] ?? 0,
+              documentName: item['DocumentName'] ?? ''));
+        }
+      } else {
+        error.value = "Failed to list data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isMetaDocListLoading.value = false;
     }
 
     // ✅ GUARANTEED NON-NULL RETURN
@@ -218,6 +320,7 @@ class UpdateDocumentsController extends GetxController {
       });
 
       if (res.statusCode == 200 || res.statusCode == 201) {
+        print('Doc uploaded successfully');
         // final data = res.data as Map<String, dynamic>;
         return ApiData(
             success: true,
@@ -249,14 +352,15 @@ class UpdateDocumentsController extends GetxController {
     required int docMetaId,
     required int docTypeSetupId,
     required int empId,
-    required dynamic base64File,
+    required File base64File,
     required String documentName,
-    required String expiryDate,
+     String? expiryDate,
   }) async {
     try {
       isDocumentSaveLoading.value = true;
       error.value = '';
       final String base64 = await FileUtils.fileToBase64(base64File!);
+      print('Expiry Date: $expiryDate');
       final res = await _api.post(ProfileRepository.postUploadDocumentBase64(
           docMetaId: docMetaId,
           docTypeSetupId: docTypeSetupId,

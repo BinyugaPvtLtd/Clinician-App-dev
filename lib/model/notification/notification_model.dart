@@ -1,0 +1,24 @@
+class NotificationModelData{
+  final int notifyId;
+  final int userId;
+  final String type;
+  final String title;
+  final String body;
+  final String data;
+  final bool isRead;
+  final int callId;
+  final String createdAt;
+  final String updatedAt;
+  NotificationModelData({
+    required this.type,
+    required this.notifyId,
+    required this.userId,
+    required this.title,
+    required this.body,
+    required this.data,
+    required this.isRead,
+    required this.callId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+}
