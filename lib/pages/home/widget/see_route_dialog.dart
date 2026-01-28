@@ -113,7 +113,7 @@ class _SeeRouteDialogState extends State<SeeRouteDialog> {
                       customWidth(12.w),
                       Expanded(
                         child: SizedBox(
-                          height: 35.h,
+                          height: 37.h,
                           child: PrimaryDropDown(
                             hintText: 'Select Patient',
                             iconStyleData: IconStyleData(
@@ -121,6 +121,7 @@ class _SeeRouteDialogState extends State<SeeRouteDialog> {
                                 AppAsset.downArrowFillSvgIcon,
                               ),
                             ),
+                            contentPadding: EdgeInsets.symmetric(vertical: 0.h, horizontal: 5.w),
                             dropdownStyleData: DropdownStyleData(
                               decoration: BoxDecoration(
                                 color: Colors.white,

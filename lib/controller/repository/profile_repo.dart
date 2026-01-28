@@ -5,6 +5,7 @@ class ProfileRepository{
   static String patientVisits = '/patient-visits/clinician';
   static String visitdetaiils = '/patient-visits';
   static String visitAcceptReject = '/rejected-visits';
+  static String clinitianData = "/employees/me/clinician";
 
   // Time Off
   static String leaveType = '/leave-types';
@@ -30,6 +31,9 @@ class ProfileRepository{
   }
   static String patchEmployeeData({required int empId}) {
     return '$employees/$empId';
+  }
+  static String getClinitianData() {
+    return clinitianData;
   }
   static String attachEmployeeImageData({required int empId}) {
     return '$employeeAttachProfileImage/$empId';

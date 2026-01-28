@@ -10,14 +10,17 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../core/constant/app_string.dart';
+import '../model/profile/clinitina_data_model.dart';
 import '../model/profile/patient_visitsnote_model.dart';
 import '../model/profile/visit_details_model.dart';
+import '../model/request/patient_schedule_model.dart';
 import '../model/request/request_data_model.dart';
 import '../services/auth_api_services/auth_services.dart';
 import '../services/token_manager/token_manager_service.dart';
 
 class ProfileController extends GetxController{
   final ApiService _api = Get.put(ApiService());
+  final isClinitianloading = false.obs;
   final isLoading = false.obs;
   final isEmployeeLoading = false.obs;
   final isEmployeedetailsLoading = false.obs;
@@ -29,6 +32,14 @@ class ProfileController extends GetxController{
   final patientVisitNoteData = PatientVisitsNoteModel(
       employeeId: 0,
       date: '', items: []).obs;
+  final clinitinaLoginDataModel = ClinitinaLoginDataModel(
+      clinicianFullName: '',
+      imageUrl: '',
+      employeeTypeId: 0,
+      abbreviation: '',
+      color: "",
+      employeeType: '', age: 0, gender: ''
+      ).obs;
   final Rxn<VisitDetailModel> visitDetailModel = Rxn<VisitDetailModel>();
   final employeeIdByEmail = EmployeeIdByEmail(employeeId: 0).obs;
 
@@ -118,6 +129,9 @@ class ProfileController extends GetxController{
   Future<void> fetchVisitDetails({required int visitId}) async {
     visitDetailModel.value = await getVisitDetailsData(visitId: visitId);
   }
+  Future<void> fetchClinitionLoginDetails() async {
+    clinitinaLoginDataModel.value = await getLoginClinitianData();
+  }
 
 
   /// Edit Profile Employee ID fetch method
@@ -146,6 +160,39 @@ class ProfileController extends GetxController{
   //   // ✅ return ONLY here
   //   return dataId;
   // }
+
+  Future<ClinitinaLoginDataModel> getLoginClinitianData() async {
+    // List<OfferLetterData> itemsList = [];
+    var itemsList;
+    final companyId = await TokenManager.getCompanyId();
+    final email = await TokenManager.getEmail();
+    try {
+      isClinitianloading.value = true;
+      error.value = '';
+      final response =  await _api.get(ProfileRepository.getClinitianData());
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        itemsList = ClinitinaLoginDataModel(
+            clinicianFullName: response.data['clinicianFullName'] ?? '',
+            imageUrl: response.data['imageUrl'] ?? '',
+            employeeTypeId: response.data['employeeTypeId'] ?? 0,
+            abbreviation: response.data['abbreviation'] ?? '',
+            color: response.data['color'] ?? '',
+            employeeType: response.data['employeeType'] ?? '',
+            age: response.data['age'] ?? 0,
+            gender: response.data['gender'] ?? '');
+      } else {
+        print('Api Error');
+        error.value = "failed to load data";
+      }
+      print("Response:::::${response}");
+      return itemsList;
+    } catch (e) {
+      error.value = e.toString();
+      isClinitianloading.value = false;
+      print("Error $e");
+      return itemsList;
+    }
+  }
 
   Future<EmployeeIdByEmail> getEmployeeIdMaster() async {
     // List<OfferLetterData> itemsList = [];

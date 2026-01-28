@@ -18,8 +18,10 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  ProfileController profileController = Get.put(ProfileController());
   @override
   void initState() {
+    profileController.fetchClinitionLoginDetails();
     super.initState();
     // Future.delayed(Duration(seconds: 3), () async{
     //   var authToken = await TokenManager.getAccessToken();
@@ -27,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
     //   Get.offAll(() => authToken.isEmpty ? LoginScreen() : HomeScreen());
     // });
   }
-  ProfileController profileController = Get.put(ProfileController());
+
   final SplashController controller = Get.put(SplashController());
 
 

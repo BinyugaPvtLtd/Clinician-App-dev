@@ -113,15 +113,15 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                           decoration: BoxDecoration(shape: BoxShape.circle),
                           clipBehavior: Clip.hardEdge,
                            child:
-                           //homeController.patientScheduleModel.value..isEmpty ?
+                           homeController.patientScheduleModel.value.imageUrl.isEmpty ?
                           Image.asset(
                             AppAsset.profilePicImg,
                             fit: BoxFit.cover,
                           )
-                          //     :Image.network(
-                          //   controller.visitDetailModel.value!.patient.imageUrl,
-                          //   fit: BoxFit.cover,
-                          // ),
+                              :Image.network(
+                             homeController.patientScheduleModel.value.imageUrl,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                         customWidth(10.w),
                         Column(

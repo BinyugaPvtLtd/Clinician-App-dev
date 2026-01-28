@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../controller/profile_controller.dart';
+import '../../core/common/hex_color_decoder.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -62,7 +63,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           Stack(
                             children: [
                               CircleAvatar(
-                                backgroundImage: AssetImage(AppAsset.avatarImg),
+                                backgroundColor: Colors.white,
+                                backgroundImage: controller.clinitinaLoginDataModel.value.imageUrl.isEmpty ? 
+                                AssetImage(AppAsset.profilePicImg) : NetworkImage(controller.clinitinaLoginDataModel.value.imageUrl),
                                 radius: 40,
                               ),
                               Padding(
@@ -75,12 +78,12 @@ class _ProfilePageState extends State<ProfilePage> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Color(0xffF6928A),
+                                    color: hexToColor(controller.clinitinaLoginDataModel.value.color),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Center(
                                     child: Text(
-                                      "PT",
+                                      controller.clinitinaLoginDataModel.value.abbreviation,
                                       style: AppTextStyle.normal10style
                                           .copyWith(color: Colors.white),
                                     ),
@@ -94,14 +97,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Lucas Jackson",
+                                controller.clinitinaLoginDataModel.value.clinicianFullName,
                                 style: AppTextStyle.regular16style.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.defaultTxtGrey,
                                 ),
                               ),
                               Text(
-                                "Male | 24y",
+                                "${controller.clinitinaLoginDataModel.value.gender} | ${controller.clinitinaLoginDataModel.value.age}y",
                                 style: AppTextStyle.regular16style.copyWith(
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.defaultTxtGrey,

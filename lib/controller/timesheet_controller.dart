@@ -204,8 +204,11 @@ class TimeSheetController extends GetxController {
   String _formatTime(DateTime date) {
     final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
     final minute = date.minute.toString().padLeft(2, '0');
-    return "$hour:$minute";
+    final period = date.hour >= 12 ? 'PM' : 'AM';
+
+    return "$hour:$minute $period";
   }
+
   String _twoDigits(int n) => n.toString().padLeft(2, '0');
   String _todayDate() {
     final now = DateTime.now();

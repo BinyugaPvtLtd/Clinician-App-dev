@@ -149,33 +149,45 @@ class _RequestPageState extends State<RequestPage> {
             );
           }
           return Expanded(
-            child: ListView.builder(
-                itemCount: homeController.todayVisitsModel.value.visits.length,
-                physics: BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                // groupBy: (element) {
-                //   return CommonMethods.formatDateWithDate(
-                //     element.dateTime ?? DateTime.now(),
-                //   );
-                // },
-                // groupSeparatorBuilder: (value) {
-                //   return Padding(
-                //     padding: EdgeInsets.symmetric(vertical: 5.h),
-                //     child: Text(
-                //       value,
-                //       style: AppTextStyle.normal14style.copyWith(
-                //         fontWeight: FontWeight.w600,
-                //         color: AppColors.defaultTxtGrey,
-                //       ),
-                //     ),
-                //   );
-                // },
-                itemBuilder: (context, element) {
-                  var data =
-                  homeController.todayVisitsModel.value.visits[element];
-                  return RequestInfoWidget(data: data);
-                },
-              ),
+            child: RefreshIndicator(
+              color: AppColors.primaryAppColor,
+              onRefresh: () async {
+                await homeController.fetchListAllDetails(
+                  clinicianId: controller.employeeId.value,
+                  visitStatus: homeController.statusVal.value,
+                  patientName: searchController.text.isEmpty
+                      ? 'all'
+                      : searchController.text.trim(),
+                );
+              },
+              child: ListView.builder(
+                  itemCount: homeController.todayVisitsModel.value.visits.length,
+                  physics: BouncingScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  // groupBy: (element) {
+                  //   return CommonMethods.formatDateWithDate(
+                  //     element.dateTime ?? DateTime.now(),
+                  //   );
+                  // },
+                  // groupSeparatorBuilder: (value) {
+                  //   return Padding(
+                  //     padding: EdgeInsets.symmetric(vertical: 5.h),
+                  //     child: Text(
+                  //       value,
+                  //       style: AppTextStyle.normal14style.copyWith(
+                  //         fontWeight: FontWeight.w600,
+                  //         color: AppColors.defaultTxtGrey,
+                  //       ),
+                  //     ),
+                  //   );
+                  // },
+                  itemBuilder: (context, element) {
+                    var data =
+                    homeController.todayVisitsModel.value.visits[element];
+                    return RequestInfoWidget(data: data);
+                  },
+                ),
+            ),
           );
         }),
         ],

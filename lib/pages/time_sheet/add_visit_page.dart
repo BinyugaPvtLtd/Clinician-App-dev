@@ -9,6 +9,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controller/profile_controller.dart';
 import '../../controller/timesheet_controller.dart';
 import '../../core/ui/const_sucess_popup.dart';
 import '../../core/ui/overlay_primary_textfield.dart';
@@ -32,6 +33,7 @@ class _AddVisitPageState extends State<AddVisitPage> {
   TextEditingController visitEndTimeController = TextEditingController();
   TextEditingController locationController = TextEditingController();
   TextEditingController patientNameController = TextEditingController();
+  // ProfileController controller = Get.put(ProfileController());
 
 
   @override
@@ -68,42 +70,43 @@ class _AddVisitPageState extends State<AddVisitPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 56.w,
-                                decoration: BoxDecoration(shape: BoxShape.circle),
-                                clipBehavior: Clip.hardEdge,
-                                child: Image.asset(
-                                  AppAsset.avatarImg,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              customWidth(10.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Lucas Jackson',
-                                      style: AppTextStyle.normal12style.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.defaultTxtGrey,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Anxiety',
-                                      style: AppTextStyle.normal12style.copyWith(
-                                        fontWeight: FontWeight.w300,
-                                        color: AppColors.defaultTxtGrey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          customHeight(18.h),
+                          // Row(
+                          //   children: [
+                          //     Container(
+                          //       width: 56.w,
+                          //       decoration: BoxDecoration(shape: BoxShape.circle),
+                          //       clipBehavior: Clip.hardEdge,
+                          //       child: controller.clinitinaLoginDataModel.value.imageUrl.isEmpty ?
+                          //       Image.asset(
+                          //         AppAsset.avatarImg,
+                          //         fit: BoxFit.cover,
+                          //       ) : Image.network(controller.clinitinaLoginDataModel.value.imageUrl,fit: BoxFit.cover,),
+                          //     ),
+                          //     customWidth(10.w),
+                          //     Expanded(
+                          //       child: Column(
+                          //         crossAxisAlignment: CrossAxisAlignment.start,
+                          //         children: [
+                          //           Text(
+                          //             controller.clinitinaLoginDataModel.value.clinicianFullName,
+                          //             style: AppTextStyle.normal12style.copyWith(
+                          //               fontWeight: FontWeight.w600,
+                          //               color: AppColors.defaultTxtGrey,
+                          //             ),
+                          //           ),
+                          //           Text(
+                          //             controller.clinitinaLoginDataModel.value.employeeType,
+                          //             style: AppTextStyle.normal12style.copyWith(
+                          //               fontWeight: FontWeight.w300,
+                          //               color: AppColors.defaultTxtGrey,
+                          //             ),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
+                          // customHeight(18.h),
                           Text("Record Type", style: AppTextStyle.bold14style),
                           customHeight(4.h),
                           SizedBox(
@@ -468,6 +471,7 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                         endTime: visitEndTimeController.text,
                                         status: visitController.status.value);
                                   if(response.success){
+                                    Get.back();
                                     showSucessDialog( context: context,
                                         message: 'Visit added successfully',
                                         title: 'Successfully');
@@ -484,6 +488,7 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                     visitRateController.clear();
                                     patientNameController.clear();
                                     visitController.status.value = '';
+
                                   }else{
 
                                   }

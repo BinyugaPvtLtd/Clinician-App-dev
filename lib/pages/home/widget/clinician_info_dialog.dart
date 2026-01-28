@@ -6,17 +6,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/live_map_controller.dart';
 import '../../../model/liveMap/live_data_model.dart';
 
 class ClinicianInfoDialog extends StatefulWidget {
+  final int viditId;
   final VisitDashboardDetailsModel data;
-  const ClinicianInfoDialog({super.key, required this.data});
+  const ClinicianInfoDialog({super.key, required this.data, required this.viditId});
 
   @override
   State<ClinicianInfoDialog> createState() => _ClinicianInfoDialogState();
 }
 
 class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
+   LiveMapController liveMapController = Get.put(LiveMapController());
+  @override
+  initState() {
+
+    super.initState();
+  }
   Color hexToColor(String? hex) {
     if (hex == null || hex.trim().isEmpty) return AppColors.chatRedColor;
 
@@ -43,11 +51,15 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Material(
+      child:Obx(() => liveMapController.isDetailsLoading.value ? Center(
+        child: CircularProgressIndicator(
+          color: AppColors.primaryAppColor,
+        ),
+      ) :Material(
         type: MaterialType.transparency,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-          child: Padding(
+          child:  Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.w),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -90,11 +102,11 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                             width: 56.w,
                             decoration: BoxDecoration(shape: BoxShape.circle),
                             clipBehavior: Clip.hardEdge,
-                            child: widget.data.patient.imageUrl.isEmpty ? Image.asset(
+                            child: liveMapController.visitDashboardDetails.value.patient.imageUrl.isEmpty ? Image.asset(
                               AppAsset.profilePicImg,
                               fit: BoxFit.cover,
                             ): Image.network(
-                              widget.data.patient.imageUrl,
+                              liveMapController.visitDashboardDetails.value.patient.imageUrl,
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -103,21 +115,21 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.data.patient.name,
+                                liveMapController.visitDashboardDetails.value.patient.name,
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.defaultTxtGrey,
                                 ),
                               ),
                               Text(
-                                '${widget.data.patient.gender} | ${widget.data.patient.age}y',
+                                '${liveMapController.visitDashboardDetails.value.patient.gender} | ${liveMapController.visitDashboardDetails.value.patient.age}y',
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.defaultTxtGrey,
                                 ),
                               ),
                               Text(
-                                widget.data.patient.primaryDiagnosis,
+                                liveMapController.visitDashboardDetails.value.patient.primaryDiagnosis,
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w300,
                                   color: AppColors.defaultTxtGrey,
@@ -137,7 +149,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                                 ),
                               ),
                               Text(
-                                '\$${widget.data.visit.visitCharge}',
+                                '\$${liveMapController.visitDashboardDetails.value.visit.visitCharge}',
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontSize: 20.sp,
                                   fontWeight: FontWeight.w600,
@@ -158,7 +170,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                       Row(
                         children: [
                           Text(
-                            'Visit  ${widget.data.visit.visitCount}',
+                            'Visit  ${liveMapController.visitDashboardDetails.value.visit.visitCount}',
                             style: AppTextStyle.normal12style.copyWith(
                               color: AppColors.textGreyColor,
                             ),
@@ -180,7 +192,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                           customWidth(4.w),
                           Expanded(
                             child: Text(
-                              widget.data.patient.address,
+                              liveMapController.visitDashboardDetails.value.patient.address,
                               style: AppTextStyle.normal12style.copyWith(
                                 color: AppColors.defaultTxtGrey,
                               ),
@@ -197,7 +209,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                       ),
                       customHeight(8.h),
                       Text(
-                        widget.data.patient.about,
+                        liveMapController.visitDashboardDetails.value.patient.about,
                         style: AppTextStyle.normal12style.copyWith(
                           color: AppColors.defaultTxtGrey,
                         ),
@@ -213,8 +225,8 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                       customHeight(10.h),
                       Row(
                         children: [
-                          ...List.generate(widget.data.planOfCare.length, (index) {
-                            var list = widget.data.planOfCare[index];
+                          ...List.generate(liveMapController.visitDashboardDetails.value.planOfCare.length, (index) {
+                            var list = liveMapController.visitDashboardDetails.value.planOfCare[index];
                             return Container(
                               padding: EdgeInsets.symmetric(
                                 vertical: 2.h,
@@ -244,7 +256,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }

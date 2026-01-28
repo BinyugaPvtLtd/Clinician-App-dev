@@ -82,7 +82,7 @@ visitsMapModel.value = await getMapListVisit();
 
   Future<void> fetchClinicianDashoardDetails() async {
     clinicianStats.value = await getLiveMapDashboardData();
-    await fetchVisitMapDetails(visitId: 199);
+    // await fetchVisitMapDetails(visitId: 199);
   }
 
   Future<void> fetchVisitData({required int clinitianId}) async {

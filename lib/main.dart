@@ -111,6 +111,8 @@ void setupForegroundCallListener() {
       if (!_manuallyRejected) {
         if (Get.isDialogOpen == true) {
           Get.back();
+        }else{
+          Get.back();
         }
       }
 

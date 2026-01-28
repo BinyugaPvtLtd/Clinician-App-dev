@@ -201,7 +201,7 @@ class TimeController extends GetxController {
               endDate: i['endDate'] != null ? formatIOSDate(i['endDate']) : '',
               reason: i['reason'] ?? '',
               status: i['status'] ?? '',
-              createdAt: i['createdAt'] ?? '',
+              createdAt: i['createdAt'] != null ? formatIOSDate(i['createdAt']) : '',
             ),
           );
         }

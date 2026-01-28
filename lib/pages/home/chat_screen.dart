@@ -297,12 +297,12 @@ class _ChatScreenState extends State<ChatScreen> {
                           widget.avatarUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Image.asset(
-                            AppAsset.chatAvatarImg,
+                            AppAsset.profilePicImg,
                             fit: BoxFit.cover,
                           ),
                         )
                             : Image.asset(
-                          AppAsset.chatAvatarImg,
+                          AppAsset.profilePicImg,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -645,7 +645,12 @@ class _ChatScreenState extends State<ChatScreen> {
                                     onTap:
                                     list[index]
                                         .contains(AppAsset.sendMsgSvgIcon)
-                                        ? _handleSend
+                                        ? (){
+                                      if (showEmojiPicker) {
+                                        setState(() => showEmojiPicker = false);
+                                      }
+                                      _handleSend();
+                                    }
                                         :
                                         () {},
                                     child: Container(

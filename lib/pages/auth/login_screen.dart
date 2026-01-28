@@ -1,3 +1,4 @@
+import 'package:clinician_app/controller/profile_controller.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
@@ -25,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   final auth = Get.put(AuthController());
+  final profileController = Get.put(ProfileController());
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -117,6 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             email: emailController.text,
                             password: passwordController.text);
                         if (response.success) {
+                        await profileController.fetchRecordType();
+                        await profileController.fetchClinitionLoginDetails();
                           print('Form validated successfully');
                           Get.offAll(() => HomeScreen());
                         }else{

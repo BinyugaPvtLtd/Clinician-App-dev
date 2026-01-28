@@ -125,12 +125,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                 avatarUrl,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Image.asset(
-                                  AppAsset.chatAvatarImg,
+                                  AppAsset.profilePicImg,
                                   fit: BoxFit.cover,
                                 ),
                               )
                                   : Image.asset(
-                                AppAsset.chatAvatarImg,
+                                AppAsset.profilePicImg,
                                 fit: BoxFit.cover,
                               ),
                             ),

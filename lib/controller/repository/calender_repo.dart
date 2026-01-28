@@ -3,7 +3,7 @@ class CalenderRepository{
  static String calenderData = '/patient-visits/calendar/';
 
   static String getListCalender({required String status, required String date}) {
-      return "$lsitCalender/$status/$date/accepted";
+      return "$lsitCalender/$date/accepted";
     }
 
   static String getCalenderData({required String dateFrom, required String dateTo, required String empIds}) {

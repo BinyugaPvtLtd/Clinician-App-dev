@@ -109,6 +109,7 @@ class UpdateDocumentsController extends GetxController {
      fileNameValidation.value = '';
     expiryIsoDate.value = '';
      isExpDateShown.value = false;
+    isDocumentSaveLoading.value = false;
   }
 
   Future<void> fetchSubDocList({required int docMetaId}) async {

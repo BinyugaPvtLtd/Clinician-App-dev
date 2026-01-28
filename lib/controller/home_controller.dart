@@ -16,6 +16,7 @@ class HomeController extends GetxController {
   final todayVisitsModel = TodayVisitsModel(
       todaysDate: '', visits: []).obs;
   final patientScheduleModel = PatientScheduleModel(
+    imageUrl: '',
     patientName: '',
     diagnosisName: '',
     zoneName: '',
@@ -210,6 +211,7 @@ class HomeController extends GetxController {
 
         // ✅ Final Model
         itemData = PatientScheduleModel(
+          imageUrl: data['imageUrl'] ?? '',
           patientName: data['patientName'] ?? '',
           diagnosisName: data['diagnosisName'] ?? '',
           zoneName: data['zoneName'] ?? '',
@@ -231,6 +233,7 @@ class HomeController extends GetxController {
     // ✅ guaranteed return
     return itemData ??
         PatientScheduleModel(
+          imageUrl: '',
           patientName: '',
           diagnosisName: '',
           zoneName: '',

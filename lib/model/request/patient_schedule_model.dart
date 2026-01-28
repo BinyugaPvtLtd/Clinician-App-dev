@@ -1,4 +1,5 @@
 class PatientScheduleModel {
+  final String imageUrl;
   final String patientName;
   final String diagnosisName;
   final String zoneName;
@@ -9,6 +10,7 @@ class PatientScheduleModel {
   final List<WeekSchedule> weeks;
 
   PatientScheduleModel({
+    required this.imageUrl,
     required this.patientName,
     required this.diagnosisName,
     required this.zoneName,

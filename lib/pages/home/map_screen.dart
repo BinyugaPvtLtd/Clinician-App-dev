@@ -110,15 +110,28 @@ class _MapScreenState extends State<MapScreen> {
                               itemCount: liveMapController.visitsMapModel.value.visits.length,
                               itemBuilder: (_, index) {
                                 final user = liveMapController.visitsMapModel.value.visits[index];
-                                return CustomTimelineCard(
-                                  name: user.patientName,
-                                  time: '${user.visitDateTimeTo} ${user.visiteDateTimeFrom}',
-                                  amount: '\$${user.visitCharge}',
-                                  index: index,
-                                  isDone: user.isVisitCompleted,
-                                  isCurrent: user.onWay,
-                                  imageUrl: user.patientImgUrl,
-                                  length: liveMapController.visitsMapModel.value.visits.length,
+                                return InkWell(
+                                  splashColor: Colors.transparent,
+                                  highlightColor: Colors.transparent,
+                                  hoverColor: Colors.transparent,
+                                  onTap: ()async{
+                                   await liveMapController.fetchVisitMapDetails(visitId: user.visitId);
+                                    Get.dialog(
+                                      ClinicianInfoDialog(data: liveMapController.visitDashboardDetails.value,
+                                      viditId: user.visitId),
+                                      barrierColor: Colors.white38,
+                                    );
+                                  },
+                                  child: CustomTimelineCard(
+                                    name: user.patientName,
+                                    time: '${user.visitDateTimeTo} ${user.visiteDateTimeFrom}',
+                                    amount: '\$${user.visitCharge}',
+                                    index: index,
+                                    isDone: user.isVisitCompleted,
+                                    isCurrent: user.onWay,
+                                    imageUrl: user.patientImgUrl,
+                                    length: liveMapController.visitsMapModel.value.visits.length,
+                                  ),
                                 );
                               },
                             ),
@@ -280,10 +293,7 @@ class _MapScreenState extends State<MapScreen> {
                     customHeight(10.h),
                     InkWell(
                       onTap: () {
-                        Get.dialog(
-                          ClinicianInfoDialog(data: liveMapController.visitDashboardDetails.value,),
-                          barrierColor: Colors.white38,
-                        );
+
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 16.h),
@@ -411,7 +421,7 @@ class _MapScreenState extends State<MapScreen> {
                                     if (p.imageUrl.isNotEmpty) {
                                       return NetworkImage(p.imageUrl) as ImageProvider<Object>;
                                     } else {
-                                      return const AssetImage(AppAsset.avatarImg) as ImageProvider<Object>;
+                                      return const AssetImage(AppAsset.profilePicImg) as ImageProvider<Object>;
                                     }
                                   }).toList(),
 
@@ -419,7 +429,7 @@ class _MapScreenState extends State<MapScreen> {
                                   extraCountBorderColor: Colors.transparent,
                                   extraCountTextStyle: AppTextStyle.normal10style
                                       .copyWith(fontWeight: FontWeight.w600),
-                                  imageBorderColor: AppColors.primaryAppColor,
+                                  // imageBorderColor: AppColors.primaryAppColor,
 
                                   totalCount: liveMapController.clinicianStats.value.activePatients.length, // ✅ total active patients
                                   imageRadius: 20.r,

@@ -359,17 +359,17 @@ DateTime _safeParse(String value) {
   }
 }
 
-String _visitTypeLabel(int visitType) {
-  // change labels as per your need
-  switch (visitType) {
-    case 1:
-      return "Visit";
-    case 2:
-      return "Follow-up";
-    default:
-      return "Type $visitType";
-  }
-}
+// String _visitTypeLabel(int visitType) {
+//   // change labels as per your need
+//   switch (visitType) {
+//     case 1:
+//       return "Visit";
+//     case 2:
+//       return "Follow-up";
+//     default:
+//       return "Type $visitType";
+//   }
+// }
 
 List<Appointment> getAppointments({required List<VisitModelData> dataList}) {
   debugPrint("✅ getAppointments called, length=${dataList.length}");
@@ -403,7 +403,8 @@ List<Appointment> getAppointments({required List<VisitModelData> dataList}) {
       startTime: fixedStart,
       endTime: fixedEnd,
       subject:
-      '${item.employee.firstName} ${item.employee.lastName}\n${_visitTypeLabel(item.visitType)}',
+      '${item.employee.firstName} ${item.employee.lastName}',
+          // '\n${_visitTypeLabel(item.visitType)}',
       color: hexToColor(item.employeeType.color),
     );
   });

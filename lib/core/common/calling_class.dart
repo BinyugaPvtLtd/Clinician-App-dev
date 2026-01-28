@@ -24,6 +24,8 @@ class InitiateClass{
             groupName:data['groupName'] ?? '',
             token: data['token'] ?? '',
             callId: data['callId'] ?? '',
+            userImage: data['contactImage'] ?? '',
+            userName: data['contactName'] ?? '',
             receiverImages: (data['receiverImages'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
             receiverNames: (data['receiverNames'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
             receiverIds: (data['receiverUserId'] as List<dynamic>?)?.map((e) => int.tryParse(e.toString()) ?? 0).toList() ?? [],

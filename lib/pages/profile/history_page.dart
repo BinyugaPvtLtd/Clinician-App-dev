@@ -136,7 +136,12 @@ class _HistoryPageState extends State<HistoryPage> {
                               Image.asset(AppAsset.calander, height: 16.h),
                               customWidth(15.w),
                               Expanded(
-                                child: Text(
+                                child:historydata.endDate.isEmpty && historydata.startDate.isEmpty ?Text(
+                               "${historydata.createdAt}",
+                                  style: AppTextStyle.normal12style.copyWith(
+                                    color: AppColors.defaultTxtGrey,
+                                  ),
+                                ) :Text(
                                   historydata.endDate.isEmpty ? "${historydata.startDate}"
                                       :
                                   "${historydata.startDate}  to ${historydata.endDate}",
