@@ -4,12 +4,14 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:clinician_app/controller/repository/chat_repo.dart';
 import 'package:clinician_app/services/token_manager/token_manager_service.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../core/common/base64_conversation.dart';
 import '../core/constant/app_string.dart';
 import '../model/chatScreen/chatList_model.dart';
 import '../model/chatScreen/empChat_model.dart';
@@ -549,6 +551,102 @@ class ChatDataController extends GetxController {
             message: res.statusMessage!,
             statusCode: res.statusCode!,
             chatId: ChatId
+        );
+      }else{
+        error.value = res.statusMessage!;
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isChatSendLoading.value = false;
+    }
+  }
+
+  Future<ApiData> postSendAttachmentUrl({
+    required int chatId,
+    required File base64File,
+    required String documentName,
+    required bool isGroup,
+  }) async {
+    try {
+      isChatSendLoading.value = true;
+      error.value = '';
+      final String base64 = await FileUtils.fileToBase64(base64File!);
+      final res = await _api.post(ChatRepository.postAttachMedia(isGroup: isGroup, chatId: chatId),
+          {
+          "base64": base64,
+          "fileName": documentName,
+          }
+                      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        // var uploadResponse = res.data;
+        // int ChatId = isGroup ?uploadResponse['pt_chat_id']:uploadResponse['emp_chat_id'];
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!,
+            // chatId: ChatId
+        );
+      }else{
+        error.value = res.statusMessage!;
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isChatSendLoading.value = false;
+    }
+  }
+
+  Future<ApiData> postSendVoiceNoteAttachmentUrl({
+    required int chatId,
+    required File base64File,
+    required String documentName,
+    required bool isGroup,
+    required int duration,
+  }) async {
+    try {
+      isChatSendLoading.value = true;
+      error.value = '';
+      final String base64 = await FileUtils.fileToBase64(base64File!);
+      final res = await _api.post(ChatRepository.postAttachVoiceNoteMedia(isGroup: isGroup, chatId: chatId),
+          {
+            "base64": base64,
+            "duration": duration,
+            "filename": documentName
+          }
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        // var uploadResponse = res.data;
+        // int ChatId = isGroup ?uploadResponse['pt_chat_id']:uploadResponse['emp_chat_id'];
+        return ApiData(
+          success: true,
+          message: res.statusMessage!,
+          statusCode: res.statusCode!,
+          // chatId: ChatId
         );
       }else{
         error.value = res.statusMessage!;

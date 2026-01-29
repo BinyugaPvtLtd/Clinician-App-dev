@@ -109,6 +109,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           Text(
                             "Total Visits",
@@ -116,26 +117,26 @@ class _MyEarningPageState extends State<MyEarningPage> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          Spacer(),
-                          PrimaryOutlinedButton(
-                            text: "Choose Date",
-                            onPressed: () {
-                              Get.dialog(CalenderDatePickDialogWidget());
-                            },
-                            isIconStart: true,
-                            icon: Icon(
-                              Icons.calendar_month_sharp,
-                              color: AppColors.grey,
-                            ),
-                            textStyle: AppTextStyle.regular10style.copyWith(
-                              color: AppColors.grey,
-                            ),
-                            buttonColor: AppColors.grey,
-                            borderWidth: 1,
-                            width: 120,
-                            height: 28.h,
-                            radius: 6,
-                          ),
+                          // Spacer(),
+                          // PrimaryOutlinedButton(
+                          //   text: "Choose Date",
+                          //   onPressed: () {
+                          //     Get.dialog(CalenderDatePickDialogWidget());
+                          //   },
+                          //   isIconStart: true,
+                          //   icon: Icon(
+                          //     Icons.calendar_month_sharp,
+                          //     color: AppColors.grey,
+                          //   ),
+                          //   textStyle: AppTextStyle.regular10style.copyWith(
+                          //     color: AppColors.grey,
+                          //   ),
+                          //   buttonColor: AppColors.grey,
+                          //   borderWidth: 1,
+                          //   width: 120,
+                          //   height: 28.h,
+                          //   radius: 6,
+                          // ),
                         ],
                       ),
                     ),

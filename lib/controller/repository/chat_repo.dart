@@ -8,6 +8,8 @@ class ChatRepository {
   static String empdetails = 'employee-details';
   static String empAllMsgChat = 'chat-screen';
   static String postChat = "clinicians_chat";
+  static String attachmentMedia = "/clinicians_chat";
+  static String attachVoiceNote = "/clinicians_chat";
 
   static String getChatList({required int clinicianId,}) {
     return '$chatList/$clinicianId';
@@ -23,5 +25,11 @@ class ChatRepository {
 
   static String getAllEmployeeChat({required int pageNo, required int rows, required int otherEmpid,}) {
     return "/$empChat/$empAllMsgChat/$otherEmpid/$pageNo/$rows";
+  }
+  static String postAttachMedia({required bool isGroup, required int chatId}) {
+    return '$attachmentMedia/$isGroup/$chatId/attachment';
+  }
+  static String postAttachVoiceNoteMedia({required bool isGroup, required int chatId}) {
+    return '$attachVoiceNote/$isGroup/$chatId/voice-note';
   }
 }

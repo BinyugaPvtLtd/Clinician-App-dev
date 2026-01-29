@@ -245,21 +245,73 @@ class _MapScreenState extends State<MapScreen> {
                     // Map view
                     child: Stack(
                       children: [
+
+
                         Positioned.fill(
-                          child: GoogleMap(
+                          child: Obx(() => GoogleMap(
                             initialCameraPosition: const CameraPosition(
-                              target: LatLng(19.0760, 72.8777), // change to your default lat/lng
+                              target: LatLng(19.0760, 72.8777),
                               zoom: 14,
                             ),
                             myLocationEnabled: true,
                             myLocationButtonEnabled: false,
                             zoomControlsEnabled: false,
                             mapToolbarEnabled: false,
+
+                            // ✅ ADD THESE TWO
+                            markers: liveMapController.markers.value,
+                            polylines: liveMapController.polylines.value,
+
                             onMapCreated: (GoogleMapController controller) {
-                              // store controller if you want
+                              liveMapController.mapController = controller;
+
+                              // Optional: if data already selected, draw route immediately
+                              // liveMapController.drawRoute();
                             },
-                          ),
-                        )  ,
+                          )),
+                        ),
+                        Positioned(
+                          bottom: 110.h,
+                          right: 16.w,
+                          child: Obx(() {
+                            if (liveMapController.polylines.value.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return InkWell(
+                              onTap: () {
+                                liveMapController.openInGoogleMaps();
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryAppColor,
+                                  borderRadius: BorderRadius.circular(30.r),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.25),
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.navigation, color: Colors.white),
+                                    customWidth(6.w),
+                                    Text(
+                                      'Open in Maps',
+                                      style: AppTextStyle.normal12style.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
                         Positioned(
                           right: 0.w,
                           top: 150.h,
@@ -357,7 +409,7 @@ class _MapScreenState extends State<MapScreen> {
                                       ],
                                     ),
                                     clipBehavior: Clip.hardEdge,
-                                    child: liveMapController.clinicianStats.value.clinician.imageUrl.isEmpty
+                                    child: liveMapController.clinicianStats.value.clinician.imageUrl.isNotEmpty
                                         ? Image.network(
                                             liveMapController.clinicianStats.value.clinician.imageUrl,
                                             fit: BoxFit.cover,

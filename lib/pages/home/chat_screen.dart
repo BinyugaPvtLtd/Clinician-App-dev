@@ -2,15 +2,23 @@
 // chat_screen.dart  (FULL - UPDATED)
 // ✅ Keeps SAME UI
 // ✅ FIX: EmojiPicker now shows correctly (WhatsApp style)
-//   - Hide keyboard first, then show picker
-//   - When picker visible, tapping keyboard icon shows keyboard again
-//   - Tapping TextField hides picker
-// ✅ Your existing chat logic kept
+// ✅ ADDED: VoiceNoteBubble support (renders .mpeg voice bubbles)
+//    Usage:
+//      final voiceNoteUrl = msg.voiceNoteUrl!.where((url) {
+//        final lower = url.toLowerCase();
+//        return lower.endsWith('.mpeg');
+//      }).toList();
+//    UI:
+//      ...voiceNoteUrl.map((url) => Padding(... VoiceNoteBubble(url: url, isMe: isMe)))
 // ===========================
 
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
+import 'dart:async';
+import 'dart:io';
+
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // ✅ added
@@ -20,12 +28,24 @@ import 'package:get/get.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/common_divider.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+
+// ✅ ADD THIS (for playback)
+// Add dependency if not present:
+// just_audio: ^0.9.38
+import 'package:just_audio/just_audio.dart';
 
 import '../../controller/chat_controller.dart';
+import '../../core/common/audio_decoder.dart';
 import '../../core/common/calling_class.dart';
+import '../../core/common/const_medipicker.dart';
+import '../../core/common/voice_bubble_const.dart';
 import '../../model/chatScreen/chatList_model.dart';
 import '../../model/chatScreen/empChat_model.dart';
 import '../../model/chatScreen/groupChat_model.dart';
+import '../../model/request/request_data_model.dart';
 import '../home/widget/chat_element_widget.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -62,6 +82,184 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // ✅ Emoji picker state
   bool showEmojiPicker = false;
+  bool showFilePick = false;
+  bool _isRecording = false;
+  int _recordSeconds = 0;
+  bool isLoadingVoiceSend = false;
+  Timer? _timer;
+  final List<Uint8List> selectedFiles = [];
+  final List<String> selectedFileNames = [];
+  bool _fileAbove20Mb = true;
+
+  void _appendSelectedNamesToInput() {
+    final existingText = sendMessageController.text.trim();
+    final fileText = selectedFileNames.join(', ');
+    sendMessageController.text =
+    existingText.isEmpty ? fileText : '$existingText, $fileText';
+
+    sendMessageController.selection = TextSelection.fromPosition(
+      TextPosition(offset: sendMessageController.text.length),
+    );
+  }
+
+  String _formatTime(int seconds) {
+    final m = (seconds ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return "$m:$s";
+  }
+
+  final AudioRecorder _recorder = AudioRecorder();
+  String? _filePath;
+
+  Future<void> startRecording() async {
+    final ok = await _recorder.hasPermission();
+    if (!ok) return;
+
+    final dir = await getTemporaryDirectory();
+    _filePath =
+    '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.mpeg';
+
+    await _recorder.start(
+      const RecordConfig(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 128000,
+        sampleRate: 44100,
+      ),
+      path: _filePath!,
+    );
+  }
+
+  void onStartRecording() async {
+    setState(() {
+      _isRecording = true;
+      _recordSeconds = 0;
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _recordSeconds++);
+    });
+
+    await startRecording();
+  }
+
+  Future<String?> stopRecording() async {
+    _timer?.cancel();
+    setState(() => _isRecording = false);
+
+    final path = await _recorder.stop();
+
+    if (path != null) {
+      await sendVoiceNote(path);
+    }
+    return path;
+  }
+
+// ----------------------------------------
+// 2) helper: ensure file exists (some plugins return path already)
+// ----------------------------------------
+  Future<File> _ensureFile(String path) async {
+    final f = File(path);
+    if (await f.exists()) return f;
+
+    // fallback (should rarely happen)
+    final dir = await getTemporaryDirectory();
+    final alt = File('${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.mpeg');
+    return alt;
+  }
+
+// ----------------------------------------
+// 3) MAIN: send voice note with your API method
+// ----------------------------------------
+  Future<void> sendVoiceNote(String audioPath) async {
+    try {
+      setState(() => isLoadingVoiceSend = true);
+
+      // ✅ recorded file
+      final File audioFile = await _ensureFile(audioPath);
+
+      // ✅ filename for backend
+      final String fileName =
+          "voice_${DateTime.now().millisecondsSinceEpoch}.mpeg";
+
+      // =========================
+      // A) SEND MESSAGE FIRST (to get chatId)
+      // =========================
+      final ApiData msgRes;
+      if (widget.isGroup) {
+        msgRes = await controller.postSendChatData(
+          ptGroupId: controller.groupChatData.value!.groupInfo.ptGroupId,
+          textContent: "", // no text for voice note
+          restrictPatientFromView: false,
+          sentAsSms: false,
+          receiverEmpId: 0,
+          empTextContent: "",
+          isGroup: true,
+        );
+      } else {
+        msgRes = await controller.postSendChatData(
+          ptGroupId: 0,
+          textContent: "",
+          restrictPatientFromView: false,
+          sentAsSms: false,
+          receiverEmpId: controller.empChatData.value!.empInfoData.employeeId,
+          empTextContent: "",
+          isGroup: false,
+        );
+      }
+
+      if (!(msgRes.statusCode == 200 || msgRes.statusCode == 201)) {
+        Get.snackbar('Failed', 'Voice message not sent');
+        return;
+      }
+
+      // ✅ MUST be present in ApiData (same as media attachments)
+      final int? chatId = msgRes.chatId;
+      if (chatId == null || chatId == 0) {
+        Get.snackbar('Error', 'ChatId missing for voice upload');
+        return;
+      }
+
+      // =========================
+      // B) UPLOAD VOICE NOTE (your API method)
+      // =========================
+      final ApiData uploadRes = await controller.postSendVoiceNoteAttachmentUrl(
+        chatId: chatId,
+        base64File: audioFile,
+        documentName: fileName,
+        isGroup: widget.isGroup,
+        duration: _recordSeconds, // ✅ duration in seconds
+      );
+
+      if (!(uploadRes.statusCode == 200 || uploadRes.statusCode == 201)) {
+        Get.snackbar('Failed', uploadRes.message);
+        return;
+      }
+
+      // =========================
+      // C) RESET UI STATES
+      // =========================
+      setState(() {
+        isLoadingVoiceSend = false;
+        _recordSeconds = 0;
+        // if you also used these anywhere:
+        selectedFiles.clear();
+        selectedFileNames.clear();
+        showEmojiPicker = false;
+      });
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => isLoadingVoiceSend = false);
+      }
+    }
+  }
+  Future<void> cancel() async {
+    _timer?.cancel();
+    setState(() => _isRecording = false);
+    await _recorder.cancel();
+  }
 
   // ✅ Focus node (important)
   final FocusNode _focusNode = FocusNode();
@@ -92,14 +290,12 @@ class _ChatScreenState extends State<ChatScreen> {
   // ===========================
   Future<void> _toggleEmojiKeyboard() async {
     if (showEmojiPicker) {
-      // Emoji visible -> switch to keyboard
       setState(() => showEmojiPicker = false);
       await Future.delayed(const Duration(milliseconds: 50));
       FocusScope.of(context).requestFocus(_focusNode);
       return;
     }
 
-    // Keyboard visible -> hide keyboard, then show emoji picker
     FocusScope.of(context).unfocus();
     await SystemChannels.textInput.invokeMethod('TextInput.hide');
     await Future.delayed(const Duration(milliseconds: 80));
@@ -127,6 +323,25 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // ===========================
+  // ✅ Voice Notes extractor (.mpeg only as you requested)
+  // ===========================
+  List<String> _extractVoiceNotesFromList(List<String>? urls) {
+    if (urls == null || urls.isEmpty) return const [];
+    return urls.where((url) {
+      final lower = url.toLowerCase().trim();
+      return lower.endsWith('.mpeg');
+    }).toList();
+  }
+
+  // If your API sometimes puts voice notes inside "attachments", this safely supports it too.
+  List<String> _extractVoiceNotesFromAttachments(List<String> attachments) {
+    return attachments.where((url) {
+      final lower = url.toLowerCase().trim();
+      return lower.endsWith('.mpeg');
+    }).toList();
+  }
+
+  // ===========================
   // GROUP MAPPER
   // ===========================
   List<ChatModel> _mapGroupMessages(PatientGroupChatData? data) {
@@ -141,14 +356,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
       final senderName = '${msg.sender.firstName} ${msg.sender.lastName}'.trim();
 
+      // ✅ Voice notes (from msg.voiceNoteUrl if present, plus fallback from attachments)
+      final voiceNoteUrl = _extractVoiceNotesFromList(msg.voiceNoteUrl);
+      final attachments = msg.attachedMultimediaUrls;
+      final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
+
+      // merge + de-dupe
+      final voiceNotes = <String>{
+        ...voiceNoteUrl,
+        ...voiceFromAttachments,
+      }.toList();
+
       return ChatModel(
         msg: msg.textContent,
         isSender: isMe,
         time: dt,
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: msg.sender.imgUrl.isEmpty ? null : msg.sender.imgUrl,
-        attachments: msg.attachedMultimediaUrls,
-        voiceNotes: const [],
+        attachments: attachments,
+        voiceNotes: voiceNotes,
       );
     }).toList();
   }
@@ -162,14 +388,24 @@ class _ChatScreenState extends State<ChatScreen> {
       final dt = DateTime.tryParse(m.dateCreated) ?? DateTime.now();
       final senderName = '${m.sender.firstName} ${m.sender.lastName}'.trim();
 
+      // ✅ Voice notes (if your emp model has m.voiceNoteUrl, it’ll be used; otherwise fallback to attachments)
+      final voiceNoteUrl = _extractVoiceNotesFromList(m.voiceNoteUrl);
+      final attachments = m.attachedMultimediaUrl;
+      final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
+
+      final voiceNotes = <String>{
+        ...voiceNoteUrl,
+        ...voiceFromAttachments,
+      }.toList();
+
       return ChatModel(
         msg: m.textContent,
         isSender: m.isMine,
         time: dt,
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: (m.sender.imgUrl.isEmpty) ? null : m.sender.imgUrl,
-        attachments: m.attachedMultimediaUrl,
-        voiceNotes: const [],
+        attachments: attachments,
+        voiceNotes: voiceNotes,
       );
     }).toList();
   }
@@ -200,14 +436,31 @@ class _ChatScreenState extends State<ChatScreen> {
   // ===========================
   // SEND (Optimistic)
   // ===========================
+  Future<File> _bytesToTempFile(Uint8List bytes, String fileName) async {
+    // create a temp file (keeps original extension if provided)
+    final dir = await getTemporaryDirectory();
+    final safeName = fileName.isEmpty
+        ? 'file_${DateTime.now().millisecondsSinceEpoch}'
+        : fileName;
+
+    final file = File('${dir.path}/$safeName');
+    await file.writeAsBytes(bytes, flush: true);
+    return file;
+  }
   Future<void> _handleSend() async {
     final text = sendMessageController.text.trim();
-    if (text.isEmpty) return;
+
+    final bool hasAttachments =
+        selectedFiles.isNotEmpty && selectedFileNames.length == selectedFiles.length;
+
+    // ✅ allow send if either text OR attachments exist
+    if (text.isEmpty && !hasAttachments) return;
 
     final tempId = '${DateTime.now().microsecondsSinceEpoch}';
 
+    // optimistic shows text; if text empty, show "Attachment" label (optional)
     final optimistic = ChatModel(
-      msg: text,
+      msg: text.isEmpty && hasAttachments ? "Attachment" : text,
       isSender: true,
       time: DateTime.now(),
       localTempId: tempId,
@@ -219,37 +472,84 @@ class _ChatScreenState extends State<ChatScreen> {
     sendMessageController.clear();
 
     try {
+      // =========================
+      // 1) SEND MESSAGE FIRST
+      // =========================
+      final ApiData res;
       if (widget.isGroup) {
-        final res = await controller.postSendChatData(
+        res = await controller.postSendChatData(
           ptGroupId: controller.groupChatData.value!.groupInfo.ptGroupId,
-          textContent: text,
+          textContent: text, // can be empty if only attachment
           restrictPatientFromView: false,
           sentAsSms: false,
           receiverEmpId: 0,
           empTextContent: '',
           isGroup: true,
         );
-
-        if (!(res.statusCode == 200 || res.statusCode == 201)) {
-          _pendingLocal.removeWhere((m) => m.localTempId == tempId);
-          Get.snackbar('Failed', 'Message not sent');
-        }
       } else {
-        final res = await controller.postSendChatData(
+        res = await controller.postSendChatData(
           ptGroupId: 0,
           textContent: '',
           restrictPatientFromView: false,
           sentAsSms: false,
           receiverEmpId: controller.empChatData.value!.empInfoData.employeeId,
-          empTextContent: text,
+          empTextContent: text, // can be empty if only attachment
           isGroup: false,
         );
-
-        if (!(res.statusCode == 200 || res.statusCode == 201)) {
-          _pendingLocal.removeWhere((m) => m.localTempId == tempId);
-          Get.snackbar('Failed', 'Message not sent');
-        }
       }
+
+      if (!(res.statusCode == 200 || res.statusCode == 201)) {
+        _pendingLocal.removeWhere((m) => m.localTempId == tempId);
+        Get.snackbar('Failed', 'Message not sent');
+        return;
+      }
+
+      // ✅ IMPORTANT:
+      // You MUST have chatId to upload attachments.
+      // Your postSendChatData should return chatId (pt_chat_id / emp_chat_id).
+      // If your ApiData already has it, use it. Otherwise add it in ApiData.
+      final int? chatId = res.chatId; // <-- make sure ApiData contains this
+
+      if (hasAttachments && (chatId == null || chatId == 0)) {
+        // message sent but cannot upload attachments without chatId
+        Get.snackbar('Error', 'ChatId missing for attachments');
+        return;
+      }
+
+      // =========================
+      // 2) UPLOAD ATTACHMENTS
+      // =========================
+      if (hasAttachments) {
+        for (int i = 0; i < selectedFiles.length; i++) {
+          final Uint8List bytes = selectedFiles[i];
+          final String name = selectedFileNames[i];
+
+          final File tempFile = await _bytesToTempFile(bytes, name);
+
+          final attachRes = await controller.postSendAttachmentUrl(
+            chatId: chatId!,
+            base64File: tempFile,
+            documentName: name,
+            isGroup: widget.isGroup,
+          );
+
+          if (!(attachRes.statusCode == 200 || attachRes.statusCode == 201)) {
+            Get.snackbar('Attachment Failed', attachRes.message);
+            // continue uploading remaining OR stop — your choice
+            // break;
+          }
+        }
+
+        // ✅ clear selected after upload attempt
+        setState(() {
+          selectedFiles.clear();
+          selectedFileNames.clear();
+        });
+      }
+
+      // optional: remove optimistic once real message comes from socket/poll
+      // _pendingLocal.removeWhere((m) => m.localTempId == tempId);
+
     } catch (e) {
       _pendingLocal.removeWhere((m) => m.localTempId == tempId);
       Get.snackbar('Error', e.toString());
@@ -263,7 +563,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        resizeToAvoidBottomInset: true, // ✅ important
+        resizeToAvoidBottomInset: true,
         backgroundColor: Colors.white,
         body: Column(
           children: [
@@ -403,8 +703,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           widget.isGroup
                               ? InitiateClass().CallInitiateFunction(
                             context: context,
-                            participentId: controller
-                                .groupChatData.value!.participants
+                            participentId: controller.groupChatData
+                                .value!.participants
                                 .map((e) => e.userId)
                                 .where((id) => id != widget.userId)
                                 .toList(),
@@ -414,8 +714,8 @@ class _ChatScreenState extends State<ChatScreen> {
                               : InitiateClass().CallInitiateFunction(
                             context: context,
                             participentId: [
-                              controller.empChatData.value!.empInfoData
-                                  .userId
+                              controller.empChatData.value!
+                                  .empInfoData.userId
                             ],
                             callType: 'ONE_TO_ONE',
                             isVideo: true,
@@ -427,7 +727,9 @@ class _ChatScreenState extends State<ChatScreen> {
                               ? InitiateClass().CallInitiateFunction(
                             context: context,
                             participentId: controller
-                                .groupChatData.value!.participants
+                                .groupChatData
+                                .value!
+                                .participants
                                 .map((e) => e.userId)
                                 .where((id) =>
                             id != widget.userId)
@@ -494,13 +796,15 @@ class _ChatScreenState extends State<ChatScreen> {
                   return const Center(child: Text("No messages"));
                 }
 
-                return controller.isLoadingChatScreen.value? Container(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                alignment: Alignment.center,
-                                child: const CircularProgressIndicator(
-                                color: AppColors.primaryAppColor,
-                                ),
-                                ) :ListView.builder(
+                return controller.isLoadingChatScreen.value
+                    ? Container(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(
+                    color: AppColors.primaryAppColor,
+                  ),
+                )
+                    : ListView.builder(
                   reverse: true,
                   physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.symmetric(
@@ -510,9 +814,32 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemCount: merged.length,
                   itemBuilder: (context, index) {
                     final element = merged[index];
-                    return ChatElementWidget(
-                      isGroup: widget.isGroup,
-                      chat: element,
+
+                    // ✅ voiceNoteUrl.map(...) rendering (your requested style)
+                    final voiceNoteUrl = element.voiceNotes;
+
+                    return Column(
+                      crossAxisAlignment: element.isSender
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        ChatElementWidget(
+                          isGroup: widget.isGroup,
+                          chat: element,
+                        ),
+
+                        // ✅ Add voice bubbles under the message
+                        if (voiceNoteUrl.isNotEmpty)
+                          ...voiceNoteUrl.map(
+                                (url) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: VoiceNoteBubble(
+                                url: url,
+                                isMe: element.isSender,
+                              ),
+                            ),
+                          ),
+                      ],
                     );
                   },
                 );
@@ -523,7 +850,6 @@ class _ChatScreenState extends State<ChatScreen> {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ✅ Emoji picker ABOVE input (keeps UI stable)
                 Offstage(
                   offstage: !showEmojiPicker,
                   child: SizedBox(
@@ -580,6 +906,145 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ),
+                if (showFilePick)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 5.h),
+                    child: ConstFilepickerAndMediaPicker(
+                      pickDocuments: () async {
+                        showFilePick = false;
+                        FilePickerResult? result =
+                        await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ['pdf'],
+                          allowMultiple: false,
+                          withData: true,
+                        );
+                        final fileSize = result?.files.first.size;
+                        final isAbove20MB = fileSize! > (20 * 1024 * 1024);
+                        if (result != null) {
+                          setState(() {
+                            for (final f in result.files) {
+                              if (f.bytes != null) {
+                                selectedFiles.add(Uint8List.fromList(f.bytes!));
+                                selectedFileNames.add(f.name);
+                                _fileAbove20Mb = !isAbove20MB;
+                              }
+                            }
+                            final existingText =
+                            sendMessageController.text.trim();
+
+                            final fileText = selectedFileNames.join(', ');
+
+                            if (existingText.isEmpty) {
+                              sendMessageController.text = fileText;
+                            } else {
+                              sendMessageController.text =
+                              '$existingText, $fileText';
+                            }
+
+                            sendMessageController.selection =
+                                TextSelection.fromPosition(
+                                  TextPosition(
+                                      offset: sendMessageController.text.length),
+                                );
+                          });
+                        }
+                      },
+                      pickGallery: () async {
+                        showFilePick = false;
+                        FilePickerResult? result =
+                        await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ['png', 'jpg', 'jpeg'],
+                          allowMultiple: false,
+                          withData: true,
+                        );
+                        final fileSize = result?.files.first.size;
+                        final isAbove20MB = fileSize! > (20 * 1024 * 1024);
+                        if (result != null) {
+                          setState(() {
+                            for (final f in result.files) {
+                              if (f.bytes != null) {
+                                selectedFiles.add(
+                                    Uint8List.fromList(f.bytes!)); // canonical
+                                selectedFileNames.add(f.name);
+                                _fileAbove20Mb = !isAbove20MB;
+                              }
+                            }
+                            final existingText =
+                            sendMessageController.text.trim();
+
+                            final fileText = selectedFileNames.join(', ');
+
+                            if (existingText.isEmpty) {
+                              sendMessageController.text = fileText;
+                            } else {
+                              sendMessageController.text =
+                              '$existingText, $fileText';
+                            }
+
+                            sendMessageController.selection =
+                                TextSelection.fromPosition(
+                                  TextPosition(
+                                      offset: sendMessageController.text.length),
+                                );
+                          });
+                        }
+                      },
+                      pickCamera: () async {
+                        final ImagePicker picker = ImagePicker();
+                        final XFile? photo = await picker.pickImage(
+                          source: ImageSource.camera,
+                          imageQuality: 80,
+                        );
+                        if (photo == null) return;
+
+                        final dynamic imageBytes = await photo.readAsBytes();
+                        final String fileName =
+                            "captured_${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+                        setState(() {
+                          selectedFiles.add(imageBytes);
+                          selectedFileNames.add(fileName);
+                          _fileAbove20Mb = true;
+                          _appendSelectedNamesToInput();
+                        });
+                      },
+                    ),
+                  ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: _isRecording ? 56 : 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _isRecording
+                      ? Row(
+                    children: [
+                      const Icon(Icons.mic, color: Colors.red),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.circle,
+                          size: 10, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatTime(_recordSeconds),
+                        style:
+                        const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: cancel,
+                        child: const Text(
+                          "CANCEL",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  )
+                      : const SizedBox.shrink(),
+                ),
 
                 // INPUT (your same UI container)
                 Container(
@@ -601,14 +1066,11 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: PrimaryTextField(
                             focusNode: _focusNode,
                             controller: sendMessageController,
-
-                            // ✅ Tap field -> hide emoji picker
                             onTap: () {
                               if (showEmojiPicker) {
                                 setState(() => showEmojiPicker = false);
                               }
                             },
-
                             hintText: 'Type a message',
                             hintStyle: AppTextStyle.normal10style.copyWith(
                               fontSize: 11.sp,
@@ -618,8 +1080,6 @@ class _ChatScreenState extends State<ChatScreen> {
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.circular(22.r),
                             ),
-
-                            // ✅ SAME UI but fixed logic
                             prefixIcon: IconButton(
                               splashColor: Colors.transparent,
                               hoverColor: Colors.transparent,
@@ -629,30 +1089,36 @@ class _ChatScreenState extends State<ChatScreen> {
                                     ? Icons.keyboard
                                     : Icons.sentiment_satisfied_alt_outlined,
                               ),
-                              onPressed: _toggleEmojiKeyboard, // ✅ FIX
+                              onPressed: _toggleEmojiKeyboard,
                             ),
-
                             suffixIcon: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                ...List.generate(3, (index) {
+                                ...List.generate(2, (index) {
                                   final list = [
                                     AppAsset.attachSvgIcon,
                                     AppAsset.sendMsgSvgIcon,
-                                    AppAsset.downArrowFillSvgIcon,
                                   ];
                                   return InkWell(
-                                    onTap:
-                                    list[index]
+                                    onTap: list[index]
                                         .contains(AppAsset.sendMsgSvgIcon)
-                                        ? (){
+                                        ? () {
                                       if (showEmojiPicker) {
-                                        setState(() => showEmojiPicker = false);
+                                        setState(() {
+                                          showEmojiPicker = false;
+                                          showFilePick = false;
+                                        });
                                       }
                                       _handleSend();
                                     }
-                                        :
-                                        () {},
+                                        : list[index]
+                                        .contains(AppAsset.attachSvgIcon)
+                                        ? () {
+                                      setState(() {
+                                        showFilePick = !showFilePick;
+                                      });
+                                    }
+                                        : () {},
                                     child: Container(
                                       width: 20.w,
                                       height: 20.h,
@@ -672,11 +1138,30 @@ class _ChatScreenState extends State<ChatScreen> {
                         height: 36.h,
                         width: 36.w,
                         padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
+                        decoration: BoxDecoration(
+                          color: _isRecording ? Colors.red : Colors.green,
                           shape: BoxShape.circle,
                         ),
-                        child: SvgPicture.asset(AppAsset.microphoneSvgIcon),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onLongPress: () => onStartRecording(),
+                          onTapUp: (_) => stopRecording(),
+                          onTapCancel: cancel,
+                          child: isLoadingVoiceSend
+                              ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                              : Icon(
+                            _isRecording ? Icons.stop : Icons.mic,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -691,7 +1176,7 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 // ===========================
-// ChatModel (WhatsApp style support)
+// ChatModel
 // ===========================
 class ChatModel {
   final String msg;
