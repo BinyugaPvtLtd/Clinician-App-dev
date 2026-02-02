@@ -166,7 +166,10 @@ class PrimaryTextField extends StatelessWidget {
         cursorColor: style?.color,
         cursorHeight: style?.height ?? 22,
         obscuringCharacter: obscuringCharacter ?? "●",
-        style: style ?? AppTextStyle.normal14style,
+        style: style ?? AppTextStyle.normal12style.copyWith(
+          fontWeight: FontWeight.w400,
+          color: AppColors.defaultTxtGrey,
+        ),
         decoration: InputDecoration(
           // errorStyle: const TextStyle(height: 0, fontSize: 0),
           // errorText: null,
@@ -193,7 +196,7 @@ class PrimaryTextField extends StatelessWidget {
           enabledBorder:
               focusedBorder ??
               OutlineInputBorder(
-                borderRadius: BorderRadius.circular(borderRadius ?? 10),
+                borderRadius: BorderRadius.circular(borderRadius ?? 10.r),
                 borderSide: const BorderSide(
                   color: AppColors.textFieldBorderColor,
                 ),

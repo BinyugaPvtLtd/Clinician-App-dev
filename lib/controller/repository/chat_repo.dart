@@ -10,6 +10,11 @@ class ChatRepository {
   static String postChat = "clinicians_chat";
   static String attachmentMedia = "/clinicians_chat";
   static String attachVoiceNote = "/clinicians_chat";
+  static String patientGroup = "/patient-group";
+  static String groupInfo = "/group-info";
+  static String patientGroupChat = "/patient-group-chat";
+
+
 
   static String getChatList({required int clinicianId,}) {
     return '$chatList/$clinicianId';
@@ -31,5 +36,21 @@ class ChatRepository {
   }
   static String postAttachVoiceNoteMedia({required bool isGroup, required int chatId}) {
     return '$attachVoiceNote/$isGroup/$chatId/voice-note';
+  }
+
+  static String getGroupInfoPatientsChats({required int id}) {
+    return "$patientGroup/$groupInfo/$id";
+  }
+  static String getEmployeeDetailsCom({required int empId}) {
+    return "$empChat/$empdetails/$empId";
+  }
+  static String patchClearPatientGroupChat({required int id}) {
+    return "$patientGroupChat/clear-chat/$id";
+  }
+  static String patchExitPatientGrp({required int id}) {
+    return "$patientGroup/$id/leave";
+  }
+  static String deleteEmpChat({required int otherEmpId}) {
+    return "$empChat/clear-chat/$otherEmpId";
   }
 }

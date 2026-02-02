@@ -15,7 +15,9 @@ import '../core/common/base64_conversation.dart';
 import '../core/constant/app_string.dart';
 import '../model/chatScreen/chatList_model.dart';
 import '../model/chatScreen/empChat_model.dart';
+import '../model/chatScreen/emp_info_model.dart';
 import '../model/chatScreen/groupChat_model.dart';
+import '../model/chatScreen/group_info_model.dart';
 import '../model/request/request_data_model.dart';
 import '../services/auth_api_services/auth_services.dart';
 
@@ -665,6 +667,238 @@ class ChatDataController extends GetxController {
       );
     } finally {
       isChatSendLoading.value = false;
+    }
+  }
+
+  Future<PatientsGroupInfoData?> getAllPatientsGroupInfo(
+      final int id) async {
+    try {
+      final response = await _api.get(
+        ChatRepository.getGroupInfoPatientsChats(id: id),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Patients Group Info API Response: ${response.data}");
+
+        final data = response.data;
+
+        List<ParticipantGroup> participants = [];
+        if (data["allParticipants"] != null) {
+          for (var p in data["allParticipants"]) {
+            participants.add(
+              ParticipantGroup(
+                participantId: p["participantId"] ?? 0,
+                participantType: p["participantType"] ?? "",
+                firstName: p["firstName"] ?? "",
+                lastName: p["lastName"] ?? "",
+                fullName: p["fullName"] ?? "",
+                imgUrl: p["imgurl"] ?? "",
+                email: p["email"] ?? "",
+                address: p["address"],
+                treatment: p["treatment"],
+                lastOnline: p["lastOnline"],
+              ),
+            );
+          }
+        }
+
+        final patientInfo = PatientGroupInfo(
+          ptUserId: data["patientInfo"]["pt_user_id"] ?? 0,
+          ptUserName: data["patientInfo"]["pt_user_name"] ?? "",
+          ptUserEmail: data["patientInfo"]["pt_user_email"] ?? "",
+          ptUserProfileUrl: data["patientInfo"]["pt_user_profile_url"] ?? "",
+          ptUserAddress: data["patientInfo"]["pt_user_address"] ?? "",
+          ptUserTreatment: data["patientInfo"]["pt_user_treatment"] ?? "",
+          ptUserLastOnline: data["patientInfo"]["pt_user_last_online"] ?? "",
+        );
+        List<MediaLinksData> mediaData = [];
+        if (data["mediaLinksAndDocs"] != null) {
+          for (var p in data["mediaLinksAndDocs"]) {
+            mediaData.add(
+              MediaLinksData(
+                  mediaID: p['mediaId'] ?? '',
+                  mediaType: p['mediaType'] ?? '',
+                  mediaUrl: p['mediaUrl'] ?? '',
+                  description: p['description'] ?? '',
+                  datecreated: p['dateCreated'] ?? ''
+
+              ),
+            );
+          }
+        }
+
+        final groupInfo = PatientsGroupInfoData(
+          ptGroupId: data["pt_group_id"] ?? 0,
+          groupName: data["group_name"] ?? "",
+          groupDescription: data["group_description"] ?? "",
+          groupProfileUrl: data["group_profile_url"] ?? "",
+          isActive: data["is_active"] ?? false,
+          createdAt: data["created_at"] ?? "",
+          totalMessages: data["totalMessages"] ?? 0,
+          unseenMessageCount: data["unseenMessageCount"] ?? 0,
+          allParticipants: participants,
+          mediaLinksAndDocs: mediaData,
+          patientInfo: patientInfo,
+        );
+        return groupInfo;
+      } else {
+        print("Patients Group Info API Error: ${response.statusMessage}");
+        return null;
+      }
+    } catch (e) {
+      print("Patients Group Info API Exception: $e");
+      return null;
+    }
+  }
+
+  Future<EmpDetailsDataClass> getEmpDetailCommunication(
+      final int empId) async
+  {
+    var empDetails;
+    try {
+      final response = await _api.get(
+        ChatRepository.getEmployeeDetailsCom(empId: empId),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Employee Details API Response: ${response.data}");
+
+
+        List<String> mediaUrl = [];
+        if (response.data["media"] != null) {
+          for (var m in response.data["media"]) {
+            mediaUrl.add(
+                m
+            );
+          }
+        }
+        // assuming the response.data is a List (as in your provided JSON)
+        empDetails =
+            EmpDetailsDataClass(
+              firstName: response.data['firstName'] ?? '',
+              lastName: response.data['lastName'] ?? '',
+              employeeId: response.data['employeeId'] ?? 0,
+              userId: response.data['userId'] ?? 0,
+              profileUrl: response.data['profileUrl'] ?? '',
+              departmentId: response.data['departmentId'] ?? 0,
+              employeeTypeId: response.data['employeeTypeId'] ?? 0,
+              employeeTypeAbbreviation: response.data['employeeTypeAbbreviation'] ?? '',
+              employeeTypeColor: response.data['employeeTypeColor'] ?? '',
+              media: mediaUrl,
+            );
+        return empDetails;
+      } else {
+        print("Employee Group API Error: ${response.statusMessage}");
+        return empDetails;
+      }
+    } catch (e) {
+      print("Employee Group API Exception: $e");
+      return empDetails;
+    }
+  }
+  Future<ApiData> deleteEmployeeChat(
+     {
+        required int otherEmpId,
+
+      }) async {
+    try {
+      var response = await _api.delete(
+        ChatRepository.deleteEmpChat(otherEmpId: otherEmpId),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Emp Chat clear Successfully");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: true,
+          message: response.statusMessage ?? "Success",
+          data: response.data,
+        );
+      } else {
+        print("Error 1");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: false,
+          message: response.data['message'] ?? "Error occurred",
+        );
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+        statusCode: 404,
+        success: false,
+        message: AppString.somethingWentWrong,
+      );
+    }
+  }
+
+  Future<ApiData> clearPatientGropChatPatch(
+      {
+        required int id,
+      }) async {
+    try {
+      var response = await _api.delete(
+        ChatRepository.patchClearPatientGroupChat(id: id),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Group Chat clear Successfully");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: true,
+          message: response.statusMessage ?? "Success",
+          data: response.data,
+        );
+      } else {
+        print("Error 1");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: false,
+          message: response.data['message'] ?? "Error occurred",
+        );
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+        statusCode: 404,
+        success: false,
+        message: "Something Went Wrong",
+      );
+    }
+  }
+
+  Future<ApiData> patchexitPatientGrop(
+      {
+        required int patientId,
+
+      }) async {
+    try {
+      var response = await _api.delete(
+        ChatRepository.patchExitPatientGrp(id: patientId),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Group Exit Successfully");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: true,
+          message: response.statusMessage ?? "Success",
+          //data: response.data,
+        );
+      } else {
+        print("Error 1");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: false,
+          message: response.data['message'] ?? "Error occurred",
+        );
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+        statusCode: 404,
+        success: false,
+        message: "Something Went Wrong",
+      );
     }
   }
 

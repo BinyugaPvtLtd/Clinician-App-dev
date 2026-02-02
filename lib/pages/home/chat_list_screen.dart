@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../controller/chat_controller.dart';
+import '../../controller/profile_controller.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -20,10 +21,10 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
    ChatDataController controller = Get.put(ChatDataController());
-
+   ProfileController profileController = Get.put(ProfileController());
   @override
   initState() {
-    controller.startChatListListening(clinicianId: 51);
+    controller.startChatListListening(clinicianId: profileController.employeeIdByEmail.value.employeeId);
     super.initState();
   }
   @override

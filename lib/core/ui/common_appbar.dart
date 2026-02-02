@@ -16,6 +16,7 @@ class CommonAppbar extends StatelessWidget {
     this.labelStyle,
     this.widget,
     this.trailing,
+     this.isBackButton = true,
   });
   final String label;
   final EdgeInsets? padding;
@@ -24,6 +25,7 @@ class CommonAppbar extends StatelessWidget {
   final Widget? widget;
    Widget? trailing;
   final Function()? onTap;
+  final bool? isBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class CommonAppbar extends StatelessWidget {
           padding ?? EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
       child: Row(
         children: [
-          InkWell(
+        isBackButton! ?  InkWell(
             onTap:
                 onTap ??
                 () {
@@ -43,7 +45,7 @@ class CommonAppbar extends StatelessWidget {
               color: forgroundColor ?? AppColors.defaultTxtGrey,
               size: 18,
             ),
-          ),
+          ) : SizedBox.shrink(),
           customWidth(9.w),
           Expanded(
             child:

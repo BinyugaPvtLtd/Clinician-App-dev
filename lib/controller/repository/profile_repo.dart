@@ -6,6 +6,8 @@ class ProfileRepository{
   static String visitdetaiils = '/patient-visits';
   static String visitAcceptReject = '/rejected-visits';
   static String clinitianData = "/employees/me/clinician";
+  static String employeeAssistant = "/employee-types/assistants/by-clinician-type";
+  static String postAssignAssistant = "/employees/assistant/details";
 
   // Time Off
   static String leaveType = '/leave-types';
@@ -89,5 +91,8 @@ class ProfileRepository{
 
   static String getMetaDataDropdown() {
     return '$metaDataDocument';
+  }
+  static String getAssistanceDropdown({required int clinicianEmployeeTypeId}) {
+    return '$employeeAssistant/$clinicianEmployeeTypeId';
   }
 }

@@ -161,12 +161,12 @@ class _PrimaryDropDownState extends State<PrimaryDropDown> {
       hint: Align(
         alignment: Alignment.centerLeft,
         child: Padding(
-          padding:  EdgeInsets.all(8.h),
+          padding: widget.prefixIcon != null ? EdgeInsets.all(0.h)  :EdgeInsets.all(8.h),
           child: Text(
             widget.hintText ?? '--select--',
             style:
-                widget.hintStyle ??AppTextStyle.normal12style
-                    .copyWith(
+                widget.hintStyle ??AppTextStyle.normal10style.copyWith(
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
                   color: AppColors.hintGrey,
                 ),

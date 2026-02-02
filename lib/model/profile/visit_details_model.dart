@@ -113,3 +113,41 @@ class WeekItem {
     required this.isCompleted,
   });
 }
+
+/// Assign clinitian
+class EmployeeAssistantTypeModel {
+  final int employeeTypeId;
+  final String employeeType;
+  final String color;
+  final String abbreviation;
+  final int departmentId;
+  final bool isAssistant;
+  final int assistantMasterId;
+  final List<AssistantModel> assistants;
+
+  EmployeeAssistantTypeModel({
+    required this.employeeTypeId,
+    required this.employeeType,
+    required this.color,
+    required this.abbreviation,
+    required this.departmentId,
+    required this.isAssistant,
+    required this.assistantMasterId,
+    required this.assistants,
+  });
+}
+
+class AssistantModel {
+  final int employeeId;
+  final int userId;
+  final String userName;
+  final String personalEmail;
+
+  AssistantModel({
+    required this.personalEmail,
+    required this.employeeId,
+    required this.userId,
+    required this.userName,
+  });
+}
+

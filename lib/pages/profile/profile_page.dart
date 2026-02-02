@@ -30,6 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
         body: Column(
           children: [
             CommonAppbar(
+              isBackButton: false,
               label: "My Profile",
               trailing: InkWell(
                 onTap: () {

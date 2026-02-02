@@ -60,6 +60,7 @@ class LiveMapController extends GetxController{
   ).obs;
   final clinicianStats = ClinicianStats(
     clinician: ClinicianDashboardData(
+      clinicianId: 0,
       name: '',
       imageUrl: '',
       employeeTypeAbbreviation: '',
@@ -122,6 +123,7 @@ visitsMapModel.value = await getMapListVisit();
         // ✅ Clinician object
         final clinicianData = data['clinician'] ?? {};
         final clinician = ClinicianDashboardData(
+          clinicianId: clinicianData[ "clinicianId"] ?? 0,
           name: clinicianData['name'] ?? '',
           imageUrl: clinicianData['imageUrl'] ?? '',
           employeeTypeAbbreviation:
@@ -162,6 +164,7 @@ visitsMapModel.value = await getMapListVisit();
 
     return itemData ?? ClinicianStats(
       clinician: ClinicianDashboardData(
+        clinicianId: 0,
         name: '',
         imageUrl: '',
         employeeTypeAbbreviation: '',

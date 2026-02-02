@@ -86,7 +86,7 @@ class AuthController extends GetxController {
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         // final data = res.data as Map<String, dynamic>;
-        print("Auth OTP ::::: ${res.data}");
+        // print("Auth OTP ::::: ${res.data}");
         return ApiData(
             success: true,
             message: res.statusMessage!,

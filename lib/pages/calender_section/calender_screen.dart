@@ -317,12 +317,12 @@ class _CalenderScreenState extends State<CalenderScreen> {
                             ),
                           ),
                           timeSlotViewSettings: TimeSlotViewSettings(
-                            timeFormat: 'h\na',
+                            timeFormat: 'HH\na',
                             timeTextStyle: AppTextStyle.normal12style.copyWith(
                               color: AppColors.defaultTxtGrey,
                             ),
                             timeIntervalHeight: 44.h,
-                            startHour: 8,
+                            startHour: 0,
                             endHour: 24,
                           ),
                           firstDayOfWeek: 1,

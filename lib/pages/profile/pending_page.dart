@@ -24,14 +24,14 @@ class _PendingVisitsState extends State<PendingVisits> {
   void initState() {
     super.initState();
     controller.fetchPatientNoteRecord(
-      empId: 51,
+      empId: controller.employeeIdByEmail.value.employeeId,
       date: controller.formattedDate, // should be yyyy-MM-dd from controller getter
     );
   }
 
   void _fetchForCurrentDate() {
     controller.fetchPatientNoteRecord(
-      empId: 51,
+      empId: controller.employeeIdByEmail.value.employeeId,
       date: controller.formattedDate,
     );
   }

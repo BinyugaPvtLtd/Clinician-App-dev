@@ -8,6 +8,7 @@ import 'package:clinician_app/pages/request/visit_doc_upload_page.dart';
 import 'package:clinician_app/pages/request/widget/accept_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/assign_assistant_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/reject_dialog_widget.dart';
+import 'package:clinician_app/pages/request/widget/request_clinitian_dialog.dart';
 import 'package:clinician_app/pages/request/widget/reschedule_dialog_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -30,6 +31,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
   void initState() {
     // TODO: implement initState
    controller.fetchVisitDetails(visitId: widget.visitId);
+   controller.fetchAssistanceDropdown(clinicianEmployeeTypeId: 4);
     super.initState();
   }
   @override
@@ -206,7 +208,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                 PrimaryOutlinedButton(
                                   height: 35.h,
                                   onPressed: () {
-                                    Get.dialog(AssignAssistantDialogWidget());
+                                    Get.dialog(AssignAssistantDialogWidget(visitId: widget.visitId,));
                                   },
                                   radius: 6.r,
                                   width: 150.w,
@@ -384,7 +386,9 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                               child: PrimaryOutlinedButton(
                                 height: 35.h,
                                 borderWidth: 0.8.w,
-                                onPressed: () {},
+                                onPressed: () {
+                                  Get.dialog(AssignRequestClinitianDialogWidget());
+                                },
                                 radius: 6.r,
                                 width: 150.w,
                                 text: 'Request For Clinician',

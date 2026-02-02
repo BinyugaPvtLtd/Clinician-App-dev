@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../controller/calling_controller.dart';
+import '../../../controller/profile_controller.dart';
 import '../../../services/token_manager/token_manager_service.dart';
 
 void showLogoutConfirmationDialog(BuildContext context) {
   final callController = Get.put(CallingController());
+  ProfileController profileController = Get.put(ProfileController());
   showDialog(
     context: context,
     barrierDismissible: true,
@@ -78,11 +80,13 @@ void showLogoutConfirmationDialog(BuildContext context) {
                       onPressed: () async{
                         String fcmToken = await TokenManager.getFcmTokenRegister();
                         if(fcmToken.isEmpty){
+                          profileController.clearEmpId();
                           TokenManager.removeAccessToken();
                           Get.offAll(()=>LoginScreen());
                         }else{
                           var response = await callController.unRegisterDevice(context: context, fcmToken: fcmToken);
                           if(response.statusCode == 201 || response.statusCode == 200){
+                            profileController.clearEmpId();
                             TokenManager.removeFCMToken();
                             TokenManager.removeAccessToken();
                             Get.offAll(()=>LoginScreen());

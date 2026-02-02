@@ -141,6 +141,13 @@ class _SeeRouteDialogState extends State<SeeRouteDialog> {
                           final safeValue = names.contains(selectedName) ? selectedName : null;
 
                           return PrimaryDropDown(
+                            contentPadding: EdgeInsets.symmetric(vertical: 0),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: AppColors.borderGrey,
+                                width: 1.w,
+                              ),
+                            ),
                             hintText: "Select Patient",
                             value: safeValue,
                             items: uniqueVisits.map((item) {
@@ -251,7 +258,7 @@ class _SeeRouteDialogState extends State<SeeRouteDialog> {
                     return;
                   }
                 var response =  await liveMapController.fetchViewRoutetMap(
-                     clinitianId: 51,
+                     clinitianId: liveMapController.clinicianStats.value.clinician.clinicianId,
                       patientId:  liveMapController.selectedPatientId.value,
                   );
 

@@ -1,10 +1,12 @@
 class ClinicianDashboardData {
+  final int  clinicianId;
   final String name;
   final String imageUrl;
   final String employeeTypeAbbreviation;
   final String employeeTypeColor;
 
   ClinicianDashboardData({
+    required this.clinicianId,
     required this.name,
     required this.imageUrl,
     required this.employeeTypeAbbreviation,

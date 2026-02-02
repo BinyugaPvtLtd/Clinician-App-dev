@@ -8,6 +8,9 @@ class AppColors {
   static const Color primaryLightBackGColor = Color(0xffE9FAF9);
   static const Color redLightBackGColor = Color(0xffFFE4E4);
   static const Color containerBakGColor = Color(0xffF4F4F5);
+  static Color greyShade400 = Colors.grey.shade400;
+  static Color blackfaint = Color(0xFF333333);
+  static Color mediumgrey = Color(0xFF686464);
   static const Color navyBlueColor = Color(0xff2A76B2);
   static const Color textGreyColor = Color.fromRGBO(107, 114, 123, 1);
   static const Color textFieldBackGColor = Color(0xFFF9FAFB);

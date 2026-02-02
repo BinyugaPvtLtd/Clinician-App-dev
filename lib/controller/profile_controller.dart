@@ -20,15 +20,23 @@ import '../services/token_manager/token_manager_service.dart';
 
 class ProfileController extends GetxController{
   final ApiService _api = Get.put(ApiService());
+  final selectedIndex = (-1).obs;
   final isClinitianloading = false.obs;
   final isLoading = false.obs;
   final isEmployeeLoading = false.obs;
   final isEmployeedetailsLoading = false.obs;
   final isEmployeeSaveLoading = false.obs;
   final isVisitUpdateLoding = false.obs;
+  final isAssistanceLoading = false.obs;
+  final isAssistantAssignLoading = false.obs;
   final error = ''.obs;
   final employeeId = 0.obs;
   final ImagePicker _picker = ImagePicker();
+  final employeeAssistantTypeModel = <EmployeeAssistantTypeModel>[].obs;
+  final selectedDataId = 0.obs;
+  final selectedDataName = ''.obs;
+  final emailController = TextEditingController().obs;
+
   final patientVisitNoteData = PatientVisitsNoteModel(
       employeeId: 0,
       date: '', items: []).obs;
@@ -50,13 +58,15 @@ class ProfileController extends GetxController{
   final firstNameController = TextEditingController().obs;
   final lastNameController  = TextEditingController().obs;
   final phoneController     = TextEditingController().obs;
-  final emailController     = TextEditingController().obs;
+  final emailAssistenseController  = TextEditingController().obs;
   final RxString employeeImage = ''.obs;
   @override
   void onInit() {
     super.onInit();
     fetchRecordType();
   }
+
+
 
   static const int maxBytes = 20 * 1024 * 1024; // 20MB
   RxInt contentTypeInx = 0.obs;
@@ -122,6 +132,10 @@ class ProfileController extends GetxController{
     //   selectedRecordName.value = '';
     // }
   }
+  void clearEmpId(){
+    employeeIdByEmail.value = EmployeeIdByEmail(employeeId: 0);
+    employeeId.value = 0;
+  }
   Future<void> fetchPatientNoteRecord({required int empId, required String date}) async {
     print('Selected date ${date}');
      patientVisitNoteData.value = await getPatientVisitesNote(empId: empId, date: date);
@@ -131,6 +145,9 @@ class ProfileController extends GetxController{
   }
   Future<void> fetchClinitionLoginDetails() async {
     clinitinaLoginDataModel.value = await getLoginClinitianData();
+  }
+  Future<void> fetchAssistanceDropdown({required int clinicianEmployeeTypeId}) async {
+    employeeAssistantTypeModel.value = await getAssistanceVisit(clinicianEmployeeTypeId: clinicianEmployeeTypeId);
   }
 
 
@@ -559,6 +576,108 @@ class ProfileController extends GetxController{
       );
     } finally {
       isVisitUpdateLoding.value = false;
+    }
+  }
+
+  /// Assistance
+
+  Future<List<EmployeeAssistantTypeModel>> getAssistanceVisit({required int clinicianEmployeeTypeId}) async {
+    List<EmployeeAssistantTypeModel> itemData = [];
+    String formatTimeToAMPM(String? dateTimeString) {
+      if (dateTimeString == null || dateTimeString.isEmpty) return '';
+
+      try {
+        final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
+        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+      } catch (e) {
+        return '';
+      }
+    }
+    try {
+      isAssistanceLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(
+        ProfileRepository.getAssistanceDropdown(clinicianEmployeeTypeId: clinicianEmployeeTypeId),
+      );
+
+      if(res.statusCode == 200 || res.statusCode == 201) {
+        final data = res.data;
+        for(var item in res.data){
+          final List<AssistantModel> assistants = [];
+
+          if (item['assistants'] != null) {
+            for (var a in item['assistants']) {
+              assistants.add(
+                AssistantModel(
+                    employeeId: a['employeeId'] ?? 0,
+                    userId: a['userId'] ?? 0,
+                    userName:  a['userName'] ?? '',
+                    personalEmail: a["personalEmail"] ?? ''
+
+                ),
+              );
+            }
+          }
+          itemData.add(EmployeeAssistantTypeModel(
+              employeeTypeId: item['employeeTypeId'] ?? 0,
+              employeeType: item['employeeType'] ?? '',
+              color: item['color'] ?? '',
+              abbreviation: item['abbreviation'] ?? '',
+              departmentId: item['departmentId'] ?? 0,
+              isAssistant: item['isAssistant'] ?? false,
+              assistantMasterId: item['assistantMasterId'] ?? 0,
+              assistants: assistants));
+        }
+
+      } else {
+        error.value = "failed to load data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+      debugPrint('error assistance details: $e');
+    } finally {
+      isAssistanceLoading.value = false;
+    }
+
+    return itemData;
+  }
+  Future<ApiData> PostAssignAssistance({
+    required int visitId,
+   required int assistantUserId
+  }) async {
+    try {
+      isAssistantAssignLoading.value = true;
+      error.value = '';
+      final res = await _api.post(ProfileRepository.postAssignAssistant, {
+        "visitId": visitId,
+        "assistantUserId": assistantUserId
+      });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }else{
+        error.value = res.statusMessage!;
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isAssistantAssignLoading.value = false;
     }
   }
 }
