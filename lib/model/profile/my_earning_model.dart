@@ -30,3 +30,18 @@ class MyEarningTodayVisitModel{
   });
 
 }
+
+class MyAllEarningData{
+  final int clinicianId;
+  final double total;
+  final double thismonth;
+  final double thisweek;
+  final double today;
+  MyAllEarningData({
+    required this.clinicianId,
+    required this.total,
+    required this.thismonth,
+    required this.thisweek,
+    required this.today,
+  });
+}

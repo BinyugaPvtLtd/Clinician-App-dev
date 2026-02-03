@@ -17,7 +17,8 @@ class ProfileRepository{
 
   // My Earning
   static String myEarning = '/patient-visits/clinician/completed-visits-stats';
-  static String myEarningToday = '/patient-visits/clinician/completed-visits-stats';
+  static String myEarningToday = '/patient-visits/clinician/today/completed';
+  static String myAllEarning = "/patient-visits/earning";
 
   /// Update documents
   static String updateListDocument = '/employee-documents/ByemployeeIdGrouped';
@@ -71,6 +72,9 @@ class ProfileRepository{
   }
   static String getMyEarningTodayVisit(){
     return '$myEarningToday';
+  }
+  static String getMyAllEarning({required int clinicianId}){
+    return "$myAllEarning/$clinicianId";
   }
 
   /// Update documents

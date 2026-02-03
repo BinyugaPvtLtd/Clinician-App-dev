@@ -58,9 +58,9 @@ class ChatScreen extends StatefulWidget {
     required this.title,
     required this.avatarUrl,
     this.abbrList,
-    required this.userId,
+    required this.userId, required this.isYou,
   });
-
+  final bool isYou;
   final String title;
   final String avatarUrl;
   final bool isGroup;
@@ -687,7 +687,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 // 1) Video call
                 if (index == 0) {
-                  return InkWell(
+                  return widget.isYou ? Offstage(): InkWell(
                     splashColor: Colors.transparent,
                     hoverColor: Colors.transparent,
                     highlightColor: Colors.transparent,
@@ -727,7 +727,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                 // 2) Audio call
                 if (index == 1) {
-                  return InkWell(
+                  return widget.isYou ? Offstage():InkWell(
                     splashColor: Colors.transparent,
                     hoverColor: Colors.transparent,
                     highlightColor: Colors.transparent,

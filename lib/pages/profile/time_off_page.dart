@@ -6,6 +6,7 @@ import 'package:clinician_app/core/ui/primary_dropdown.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
 import 'package:clinician_app/pages/profile/history_page.dart';
 import 'package:clinician_app/pages/time_sheet/widget/radio_button.dart';
+import 'package:clinician_app/services/token_manager/token_manager_service.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -122,8 +123,9 @@ class _TimeOffPageState extends State<TimeOffPage> {
                           customHeight(20.h),
                           Text("Full Name", style: AppTextStyle.bold14style),
                           customHeight(4.h),
-                          PrimaryTextField(hintText: "Lucas Jackson",
-                          controller: fullNameController,
+                          PrimaryTextField(hintText: "Enter full name",
+                          readonly: true,
+                          controller: TextEditingController(text: TokenManager.getUserName()),
                             validator: (value) => Validators.validateRequired(value!,'Full Name'),),
                           customHeight(18.h),
                           Text("Time off type", style: AppTextStyle.bold14style),

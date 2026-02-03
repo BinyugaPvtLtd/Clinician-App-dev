@@ -6,6 +6,8 @@ import 'package:clinician_app/pages/calender_section/widget/calender_date_pick_d
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../controller/profile_controller.dart';
+
 class MyEarningPage extends StatefulWidget {
   const MyEarningPage({super.key});
 
@@ -15,11 +17,13 @@ class MyEarningPage extends StatefulWidget {
 
 class _MyEarningPageState extends State<MyEarningPage> {
   EarningsController earningsController = Get.put(EarningsController());
+  ProfileController controller = Get.put(ProfileController());
   @override
   void initState() {
     // TODO: implement initState
     earningsController.fetchMyTotalEarningData();
     earningsController.fetchMyTotalEarningTodayData();
+    earningsController.fetchMyAllEarningData(clinitianId: controller.employeeIdByEmail.value.employeeId);
     super.initState();
   }
 
@@ -42,7 +46,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
             ),
             Divider(),
           Obx((){
-            if (earningsController.isEarningLoading.value  ) {
+            if (earningsController.isEarningLoading.value || earningsController.isAllEarningLoading.value ) {
               return Expanded(
                 child: Center(
                   child: CircularProgressIndicator(

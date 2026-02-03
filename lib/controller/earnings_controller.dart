@@ -7,18 +7,18 @@ import '../services/auth_api_services/auth_services.dart';
 
 class EarningsController extends GetxController {
   final ApiService _api = Get.put(ApiService());
+  final isAllEarningLoading = false.obs;
   final isEarningLoading = false.obs;
   final isEarningLoadingList = false.obs;
   final isTimeOffSaveLoading = false.obs;
   final error = ''.obs;
   final myTotalEarningModel = MyTotalEarningModel(
       total: 0, thisWeek: 0, thisMonth: 0).obs;
+  final myAllEarningData = MyAllEarningData(
+      total: 0, thisweek: 0, thismonth: 0, clinicianId: 0, today: 0).obs;
   final myEarningTodayVisitModel = <MyEarningTodayVisitModel>[].obs;
   List<PriceDurationModel> earningsList = [
-    PriceDurationModel(duration: "Total", price: "\$22,187"),
-    PriceDurationModel(duration: "Today", price: "\$1,342"),
-    PriceDurationModel(duration: "This Week", price: "\$7,258"),
-    PriceDurationModel(duration: "This Month", price: "\$22,871"),
+
   ];
   List<PriceDurationModel> visitsList = [
 
@@ -32,6 +32,15 @@ class EarningsController extends GetxController {
       PriceDurationModel(duration: "Total", price: "\$${myTotalEarningModel.value.total}"),
       PriceDurationModel(duration: "This Week", price: "\$${myTotalEarningModel.value.thisWeek}"),
       PriceDurationModel(duration: "This Month", price: "\$${myTotalEarningModel.value.thisMonth}"),
+    ];
+  }
+  Future<void> fetchMyAllEarningData({required int clinitianId}) async {
+    myAllEarningData.value = await getMyAllEarningData(clinitianId: clinitianId);
+    earningsList = [
+      PriceDurationModel(duration: "Total", price: "\$${myAllEarningData.value.total}"),
+      PriceDurationModel(duration: "Today", price: "\$${myAllEarningData.value.today}"),
+      PriceDurationModel(duration: "This Week", price: "\$${myAllEarningData.value.thisweek}"),
+      PriceDurationModel(duration: "This Month", price: "\$${myAllEarningData.value.thismonth}"),
     ];
   }
   Future<void> fetchMyTotalEarningTodayData() async {
@@ -109,6 +118,42 @@ class EarningsController extends GetxController {
 
     // ✅ return ONLY here
     return itemData ;
+  }
+  Future<MyAllEarningData> getMyAllEarningData(
+  {required int clinitianId}
+      ) async {
+    MyAllEarningData? itemData ;
+    try {
+      isAllEarningLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(ProfileRepository.getMyAllEarning(clinicianId: clinitianId));
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        itemData = MyAllEarningData(
+            total: double.parse(((res.data['total'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)),
+            thisweek:double.parse(((res.data['thisweek'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)),
+            thismonth: double.parse(((res.data['thismonth'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)),
+            clinicianId: res.data['clinicianId'] ?? 0,
+          today: double.parse(((res.data['today'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)),
+
+        );
+      } else {
+        error.value = "failed to load data";
+      }
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isAllEarningLoading.value = false;
+    }
+
+    // ✅ return ONLY here
+    return itemData ?? MyAllEarningData(
+        total: 0,
+        thisweek: 0,
+        thismonth: 0,
+        clinicianId: 0,
+        today: 0);
   }
 
 }

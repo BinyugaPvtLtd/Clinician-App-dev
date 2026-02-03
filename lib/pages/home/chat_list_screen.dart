@@ -4,6 +4,7 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/common_appbar.dart';
 import 'package:clinician_app/core/ui/common_divider.dart';
 import 'package:clinician_app/pages/home/chat_screen.dart';
+import 'package:clinician_app/services/token_manager/token_manager_service.dart';
 import 'package:clinician_app/utils/common_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -83,7 +84,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
                     var title = item.isGroup
                         ? (item.groupName ?? '')
-                        : '${item.firstName ?? ''} ${item.lastName ?? ''}'.trim();
+                        : TokenManager.getUserId() == item.userId ? "${item.firstName ?? ''} ${item.lastName ?? ''} (You)":  '${item.firstName ?? ''} ${item.lastName ?? ''}'.trim();
 
                     final avatarUrl =
                     item.isGroup ? item.groupProfileUrl : item.imgUrl;
@@ -91,6 +92,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     return InkWell(
                       onTap: () {
                         Get.to(() => ChatScreen(
+                          isYou: TokenManager.getUserId() == item.userId ? true : false,
                           userId: controller.userId.value,
                           isGroup: item.isGroup,
                           ptGroupId: item.ptGroupId,
