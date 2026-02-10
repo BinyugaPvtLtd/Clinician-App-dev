@@ -22,16 +22,35 @@ class CalenderScreen extends StatefulWidget {
 }
 
 class _CalenderScreenState extends State<CalenderScreen> {
-  CalenderListController controller = Get.put(CalenderListController());
-  ProfileController profileController = Get.put(ProfileController());
+  final CalenderListController controller = Get.put(CalenderListController());
+  final ProfileController profileController = Get.put(ProfileController());
+
+  String get _empId =>
+      profileController.employeeIdByEmail.value.employeeId.toString();
+
+  static const String _status = 'pending';
 
   @override
   void initState() {
-    // TODO: implement initState
-    controller.fetchCalenderListDetails(status: 'pending', date: controller.formattedDate);
-    controller.fetchCalenderDetails(dateFrom: "2025-12-31", dateTo: "2025-12-31", empIds: "51");
     super.initState();
+
+    // ✅ keep calendar controller in sync with current date
+    controller.calController.value.displayDate = controller.currentDate.value;
+
+    // ✅ Start continue listening (poll every 2 seconds)
+    controller.startContinueListening(
+      status: _status,
+      empIds: _empId,
+    );
   }
+
+  @override
+  void dispose() {
+    // ✅ stop polling to avoid memory leaks
+    controller.stopContinueListening();
+    super.dispose();
+  }
+
   DateTime? _parsePickedDate(dynamic result) {
     if (result == null) return null;
     if (result is DateTime) return result;
@@ -41,18 +60,11 @@ class _CalenderScreenState extends State<CalenderScreen> {
     }
     return null;
   }
-  void _fetchForCurrentDate() {
-    controller.fetchCalenderListDetails(
-      status: 'pending',
-      date: controller.formattedDate,
-    );
-  }
-  void _fetchForCurrentCalenderDate() {
-    controller.fetchCalenderDetails(
-        dateFrom: controller.formattedDate, dateTo: controller.formattedDate, empIds: profileController.employeeId.toString()
-    );
-  }
 
+  void _refreshNow() {
+    // ✅ instant refresh (no need to wait for next 2-second tick)
+    controller.refreshNow(status: _status, empIds: _empId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,32 +88,35 @@ class _CalenderScreenState extends State<CalenderScreen> {
                     children: [
                       ...List.generate(2, (index) {
                         return Obx(
-                          () => InkWell(
+                              () => InkWell(
                             onTap: () {
                               controller.contentTypeInx.value = index;
+
+                              // Optional: keep calendar view synced if switching to Calendar tab
+                              if (index == 1) {
+                                controller.calController.value.displayDate =
+                                    controller.currentDate.value;
+                              }
                             },
                             child: Container(
                               width: 83.w,
                               height: 36.h,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color:
-                                    index == controller.contentTypeInx.value
-                                        ? AppColors.primaryAppColor
-                                        : Colors.white,
+                                color: index == controller.contentTypeInx.value
+                                    ? AppColors.primaryAppColor
+                                    : Colors.white,
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Text(
                                 index == 0 ? 'List' : 'Calender',
                                 style: AppTextStyle.normal12style.copyWith(
-                                  fontWeight:
-                                      index == controller.contentTypeInx.value
-                                          ? FontWeight.w600
-                                          : FontWeight.w300,
-                                  color:
-                                      index == controller.contentTypeInx.value
-                                          ? Colors.white
-                                          : AppColors.defaultTxtGrey,
+                                  fontWeight: index == controller.contentTypeInx.value
+                                      ? FontWeight.w600
+                                      : FontWeight.w300,
+                                  color: index == controller.contentTypeInx.value
+                                      ? Colors.white
+                                      : AppColors.defaultTxtGrey,
                                 ),
                               ),
                             ),
@@ -111,19 +126,23 @@ class _CalenderScreenState extends State<CalenderScreen> {
                     ],
                   ),
                   customHeight(10.h),
+
                   // ----- date change ---------
                   SizedBox(
                     height: 34.h,
                     child: Row(
                       children: [
                         customWidth(33.w),
-                        Spacer(),
+                        const Spacer(),
+
+                        // PREVIOUS DAY
                         InkWell(
-                          onTap:  () {
+                          onTap: () {
                             controller.changeDate(-1);
-                            controller.calController.value.displayDate = controller.currentDate.value; // ✅ update calendar
-                            _fetchForCurrentDate();
-                            _fetchForCurrentCalenderDate();
+                            controller.calController.value.displayDate =
+                                controller.currentDate.value;
+
+                            _refreshNow();
                           },
                           child: Container(
                             width: 32.h,
@@ -138,7 +157,10 @@ class _CalenderScreenState extends State<CalenderScreen> {
                             child: SvgPicture.asset(AppAsset.leftArrowSvgIcon),
                           ),
                         ),
+
                         customWidth(10.w),
+
+                        // CURRENT DATE LABEL
                         Container(
                           height: 32.h,
                           padding: EdgeInsets.symmetric(
@@ -153,13 +175,14 @@ class _CalenderScreenState extends State<CalenderScreen> {
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.25),
                                 blurRadius: 1.r,
-                                offset: Offset(0, 0),
+                                offset: const Offset(0, 0),
                               ),
                             ],
                           ),
                           child: Obx(
-                            () => Text(
-                              CommonMethods.getFormattedDay(controller.currentDate.value),
+                                () => Text(
+                              CommonMethods.getFormattedDay(
+                                  controller.currentDate.value),
                               style: AppTextStyle.normal12style.copyWith(
                                 color: AppColors.defaultTxtGrey,
                                 fontWeight: FontWeight.w700,
@@ -167,13 +190,17 @@ class _CalenderScreenState extends State<CalenderScreen> {
                             ),
                           ),
                         ),
+
                         customWidth(10.w),
+
+                        // NEXT DAY
                         InkWell(
-                          onTap:  () {
+                          onTap: () {
                             controller.changeDate(1);
-                            controller.calController.value.displayDate = controller.currentDate.value; // ✅ update calendar
-                            _fetchForCurrentDate();
-                            _fetchForCurrentCalenderDate();
+                            controller.calController.value.displayDate =
+                                controller.currentDate.value;
+
+                            _refreshNow();
                           },
                           child: Container(
                             width: 32.h,
@@ -188,10 +215,13 @@ class _CalenderScreenState extends State<CalenderScreen> {
                             child: SvgPicture.asset(AppAsset.rightArrowSvgIcon),
                           ),
                         ),
-                        Spacer(),
+
+                        const Spacer(),
                         customWidth(5.w),
+
+                        // DATE PICKER
                         InkWell(
-                          onTap:() async{
+                          onTap: () async {
                             final result = await Get.dialog(
                               CalenderDatePickDialogWidget(),
                             );
@@ -201,13 +231,11 @@ class _CalenderScreenState extends State<CalenderScreen> {
 
                             controller.currentDate.value = picked;
 
-                            // If you want calendar to follow date in calendar mode
                             if (controller.contentTypeInx.value == 1) {
                               controller.calController.value.displayDate = picked;
                             }
 
-                            _fetchForCurrentDate();
-                            _fetchForCurrentCalenderDate();
+                            _refreshNow();
                           },
                           child: Container(
                             width: 28.w,
@@ -227,9 +255,12 @@ class _CalenderScreenState extends State<CalenderScreen> {
                       ],
                     ),
                   ),
+
                   customHeight(10.h),
+
+                  // list mode date label
                   Obx(
-                    () => Visibility(
+                        () => Visibility(
                       visible: controller.contentTypeInx.value == 0,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -246,10 +277,12 @@ class _CalenderScreenState extends State<CalenderScreen> {
                       ),
                     ),
                   ),
+
+                  // CONTENT
                   Obx(
-                    () {
+                        () {
                       if (controller.isListLoading.value) {
-                        return Expanded(
+                        return const Expanded(
                           child: Center(
                             child: CircularProgressIndicator(
                               color: AppColors.primaryAppColor,
@@ -259,83 +292,79 @@ class _CalenderScreenState extends State<CalenderScreen> {
                       }
 
                       final items = controller.calenderListModel.value.visits;
-                      // if (items.isEmpty) {
-                      //   return const Expanded(
-                      //     child: Center(child: Text("No Records Found!")),
-                      //   );
-                      // }
-                      return  Expanded(
-                          child:controller.contentTypeInx.value == 0
-                              ? items.isEmpty ? Center(child: Text("No Records Found!")) :
-                          ListView.builder(
-                            itemCount: controller.calenderListModel.value.visits.length,
-                            physics: BouncingScrollPhysics(),
-                            padding: EdgeInsets.only(bottom: 20.h),
-                            shrinkWrap: true,
-                            itemBuilder: (context, index) {
-                              var visitListData = controller.calenderListModel.value.visits[index];
-                              return InkWell(
-                                onTap: () {
-                                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                                    Get.to(
-                                          () => VisitDetailPage(
-                                        visitId: visitListData.visitId,
-                                      ),
-                                    );
-                                  });
-                                },
-                                child: AppointmentListWidget(dataList: visitListData,),
-                              );
-                            },
-                          )
-                              :  Obx(() {
-                        // ✅ This log confirms Calendar widget rebuilds
-                        debugPrint("📅 Calendar rebuild | visits=${controller.visitList.length} "
-                            "appointments=${controller.calendarAppointments.length}");
 
-                        return SfCalendar(
-                          controller: controller.calController.value,
-                          cellBorderColor: Colors.transparent,
-                          view: CalendarView.day,
-                          allowViewNavigation: false,
-                          headerHeight: 0,
-                          // onViewChanged: (viewChangedDetails) {
-                          //   Future.delayed(const Duration(milliseconds: 10), () {
-                          //     final visibleDate = viewChangedDetails.visibleDates.first;
-                          //     controller.currentDate.value = visibleDate;
-                          //   });
-                          // },
-                          monthViewSettings: const MonthViewSettings(),
-                          viewHeaderStyle: ViewHeaderStyle(
-                            dayTextStyle: AppTextStyle.normal12style.copyWith(
-                              color: AppColors.defaultTxtGrey,
+                      return Expanded(
+                        child: controller.contentTypeInx.value == 0
+                            ? (items.isEmpty
+                            ? const Center(child: Text("No Records Found!"))
+                            : ListView.builder(
+                          itemCount: items.length,
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.only(bottom: 20.h),
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            final visitListData = items[index];
+                            return InkWell(
+                              onTap: () {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
+                                  Get.to(
+                                        () => VisitDetailPage(
+                                      visitId: visitListData.visitId,
+                                    ),
+                                  );
+                                });
+                              },
+                              child: AppointmentListWidget(
+                                dataList: visitListData,
+                              ),
+                            );
+                          },
+                        ))
+                            : Obx(() {
+                          debugPrint(
+                            "📅 Calendar rebuild | visits=${controller.visitList.length} "
+                                "appointments=${controller.calendarAppointments.length}",
+                          );
+
+                          return SfCalendar(
+                            controller: controller.calController.value,
+                            cellBorderColor: Colors.transparent,
+                            view: CalendarView.day,
+                            allowViewNavigation: false,
+                            headerHeight: 0,
+                            monthViewSettings: const MonthViewSettings(),
+                            viewHeaderStyle: ViewHeaderStyle(
+                              dayTextStyle:
+                              AppTextStyle.normal12style.copyWith(
+                                color: AppColors.defaultTxtGrey,
+                              ),
+                              dateTextStyle:
+                              AppTextStyle.regular16style.copyWith(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.defaultTxtGrey,
+                              ),
                             ),
-                            dateTextStyle: AppTextStyle.regular16style.copyWith(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.defaultTxtGrey,
+                            timeSlotViewSettings: TimeSlotViewSettings(
+                              timeFormat: 'HH\na',
+                              timeTextStyle:
+                              AppTextStyle.normal12style.copyWith(
+                                color: AppColors.defaultTxtGrey,
+                              ),
+                              timeIntervalHeight: 44.h,
+                              startHour: 0,
+                              endHour: 24,
                             ),
-                          ),
-                          timeSlotViewSettings: TimeSlotViewSettings(
-                            timeFormat: 'HH\na',
-                            timeTextStyle: AppTextStyle.normal12style.copyWith(
-                              color: AppColors.defaultTxtGrey,
+                            firstDayOfWeek: 1,
+                            dataSource: MeetingDataSource(
+                              controller.calendarAppointments,
                             ),
-                            timeIntervalHeight: 44.h,
-                            startHour: 0,
-                            endHour: 24,
-                          ),
-                          firstDayOfWeek: 1,
-
-                          // ✅ use RxList appointments
-                          dataSource: MeetingDataSource(controller.calendarAppointments),
-
-                          appointmentBuilder: customAppointmentBuilder,
-                        );
-                      })
-
+                            appointmentBuilder: customAppointmentBuilder,
+                          );
+                        }),
                       );
-                   }
+                    },
                   ),
                 ],
               ),
@@ -347,10 +376,10 @@ class _CalenderScreenState extends State<CalenderScreen> {
   }
 }
 
-
+// ==========================
+// helpers (unchanged)
+// ==========================
 DateTime _safeParse(String value) {
-  // API example: "2026-01-02T04:00:00.000Z"
-  // DateTime.parse handles it. If empty -> fallback now.
   try {
     if (value.trim().isEmpty) return DateTime.now();
     return DateTime.parse(value).toLocal();
@@ -358,18 +387,6 @@ DateTime _safeParse(String value) {
     return DateTime.now();
   }
 }
-
-// String _visitTypeLabel(int visitType) {
-//   // change labels as per your need
-//   switch (visitType) {
-//     case 1:
-//       return "Visit";
-//     case 2:
-//       return "Follow-up";
-//     default:
-//       return "Type $visitType";
-//   }
-// }
 
 List<Appointment> getAppointments({required List<VisitModelData> dataList}) {
   debugPrint("✅ getAppointments called, length=${dataList.length}");
@@ -381,36 +398,23 @@ List<Appointment> getAppointments({required List<VisitModelData> dataList}) {
     final end = _safeParse(item.visitDateTimeTo);
 
     final fixedStart = start.isBefore(end) ? start : end;
-    final fixedEnd = start.isBefore(end)
-        ? end
-        : start.add(const Duration(minutes: 30));
+    final fixedEnd =
+    start.isBefore(end) ? end : start.add(const Duration(minutes: 30));
 
-    debugPrint(
-      "✅ [$index] ${item.employee.firstName} "
-          "Start=$fixedStart End=$fixedEnd",
-    );
     Color hexToColor(String hex) {
       hex = hex.replaceAll("#", "").trim();
-
-      if (hex.length == 6) {
-        hex = "FF$hex"; // add full opacity
-      }
-
+      if (hex.length == 6) hex = "FF$hex";
       return Color(int.parse(hex, radix: 16));
     }
 
     return Appointment(
       startTime: fixedStart,
       endTime: fixedEnd,
-      subject:
-      '${item.employee.firstName} ${item.employee.lastName}',
-          // '\n${_visitTypeLabel(item.visitType)}',
+      subject: '${item.employee.firstName} ${item.employee.lastName}',
       color: hexToColor(item.employeeType.color),
     );
   });
 }
-
-
 
 Widget customAppointmentBuilder(
     BuildContext context,
@@ -440,15 +444,13 @@ Widget customAppointmentBuilder(
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        Spacer(),
-        // your icon here
+        const Spacer(),
         SvgPicture.asset(AppAsset.calenderEventInfoSvgIcon),
         const SizedBox(width: 12),
       ],
     ),
   );
 }
-
 
 class MeetingDataSource extends CalendarDataSource {
   MeetingDataSource(List<Appointment> source) {

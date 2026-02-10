@@ -39,6 +39,7 @@ class TimeSheetController extends GetxController {
   final selectedTypeRecord = 'All'.obs;
   final selectedDate = ''.obs;
   final searchText = 'all'.obs;
+  final  clinitianId = 0.obs; // you can set this from profile or auth controller
   TimeOfDay _selectedTime = TimeOfDay.now();
   Timer? _pollTimer;
   Worker? _everWorker; // <— IMPORTANT
@@ -55,7 +56,7 @@ class TimeSheetController extends GetxController {
 
     // Save the worker so you can dispose it
     _everWorker = everAll(
-      [selectedTypeRecord, selectedDate, searchText],
+      [selectedTypeRecord, selectedDate, searchText,clinitianId],
           (_) => fetchTimeSheetRecord(),
     );
 
@@ -95,7 +96,7 @@ class TimeSheetController extends GetxController {
       final list = await getAllTimeSheetData(
         recordType: selectedTypeRecord.value,
         selectDate: selectedDate.value,
-        searchText: searchText.value,
+        searchText: searchText.value, clinicianId: clinitianId.value,
       );
 
       // update only if changed (optional)
@@ -407,7 +408,8 @@ class TimeSheetController extends GetxController {
   Future<List<TimeSheetAllData>> getAllTimeSheetData({
     required String recordType,
     required String selectDate,
-    required String searchText
+    required String searchText,
+    required int clinicianId,
 }) async {
     List<TimeSheetAllData> itemData = [];
     try {
@@ -417,7 +419,7 @@ class TimeSheetController extends GetxController {
       final res = await _api.get(TimeSheetRepository.getTimeSheetData(
           recordType: recordType,
           chooseData: selectDate,
-          search: searchText));
+          search: searchText, clinicianId: clinicianId));
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         for (var i in res.data) {

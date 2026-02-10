@@ -326,7 +326,7 @@ class _MyEarningPageState extends State<MyEarningPage> {
                                   ),
                                   Spacer(),
                                   Text(
-                                    "\$55.00",
+                                    "\$${listData.visit_charge}",
                                     style: AppTextStyle.regular10style.copyWith(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 20.sp,

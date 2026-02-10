@@ -205,7 +205,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                   );
                                 }),
                                 Spacer(),
-                                PrimaryOutlinedButton(
+                                controller.visitDetailModel.value!.isAssistantUser ? PrimaryOutlinedButton(
                                   height: 35.h,
                                   onPressed: () {
                                     Get.dialog(AssignAssistantDialogWidget(visitId: widget.visitId,));
@@ -224,14 +224,14 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                     color: AppColors.primaryAppColor,
                                     size: 15,
                                   ),
-                                ),
+                                ) : Offstage(),
                               ],
                             ),
                             customHeight(10.h),
                           ],
                         ),
                       ),
-                    ),
+                    ), 
                     Container(
                       width: double.maxFinite,
                       padding: EdgeInsets.symmetric(

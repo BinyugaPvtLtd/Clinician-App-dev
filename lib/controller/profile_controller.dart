@@ -413,7 +413,8 @@ class ProfileController extends GetxController{
                   visiteDateTimeFrom: p['visiteDateTimeFrom'] != null ? formatTimeToAMPM(p['visiteDateTimeFrom']) : '',
                   visitDateTimeTo: p['visitDateTimeTo'] != null ? formatTimeToAMPM(p['visitDateTimeTo']) : '',
                   isVisitCompleted: p['isVisitCompleted'] ?? false,
-                  isVisitMissed: p['isVisitMissed'] ?? false
+                  isVisitMissed: p['isVisitMissed'] ?? false,
+                  visitCharge: p["visit_charge"] ?? 0
 
               ),
             );
@@ -470,6 +471,7 @@ class ProfileController extends GetxController{
             visitTypeName: header['visitTypeName'] ?? '',
             timeRange: header['timeRange'] ?? '',
           ),
+          isAssistantUser: header['isAssistantUser'] ?? false,
           patient: Patient(
             name: patient['name'] ?? '',
             imageUrl: patient['imageUrl'] ?? '',
@@ -644,14 +646,14 @@ class ProfileController extends GetxController{
   }
   Future<ApiData> PostAssignAssistance({
     required int visitId,
-   required int assistantUserId
+   required int EmployeeId
   }) async {
     try {
       isAssistantAssignLoading.value = true;
       error.value = '';
       final res = await _api.post(ProfileRepository.postAssignAssistant, {
         "visitId": visitId,
-        "assistantUserId": assistantUserId
+        "employeeId": EmployeeId
       });
 
       if (res.statusCode == 200 || res.statusCode == 201) {

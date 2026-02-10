@@ -202,7 +202,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     await _recorder.start(
       const RecordConfig(
-        encoder: AudioEncoder.aacLc,
+        encoder: AudioEncoder.opus,
         bitRate: 128000,
         sampleRate: 44100,
       ),
@@ -310,7 +310,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await controller.postSendVoiceNoteAttachmentUrl(
         chatId: chatId,
         base64File: audioFile,
-        documentName: fileName,
+        documentName: "voice_${DateTime.now().millisecondsSinceEpoch}.mpeg",
         isGroup: widget.isGroup,
         duration: _recordSeconds,
       );
@@ -389,11 +389,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
       final senderName = '${msg.sender.firstName} ${msg.sender.lastName}'.trim();
 
-      final voiceFromField = _extractVoiceNotesFromList(msg.voiceNoteUrl);
+      // final voiceFromField = _extractVoiceNotesFromList(msg.voiceNoteUrl);
       final attachments = msg.attachedMultimediaUrls;
-      final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
+      // final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
 
-      final voiceNotes = <String>{...voiceFromField, ...voiceFromAttachments}.toList();
+      final voiceNotes = msg.voiceNoteUrl!.where((url) {
+        final lower = url.toLowerCase();
+        return lower.endsWith('.mpeg');
+      }).toList();
 
       return ChatModel(
         msg: msg.textContent,
@@ -416,11 +419,14 @@ class _ChatScreenState extends State<ChatScreen> {
       final dt = DateTime.tryParse(m.dateCreated) ?? DateTime.now();
       final senderName = '${m.sender.firstName} ${m.sender.lastName}'.trim();
 
-      final voiceFromField = _extractVoiceNotesFromList(m.voiceNoteUrl);
+      // final voiceFromField = _extractVoiceNotesFromList(m.voiceNoteUrl);
       final attachments = m.attachedMultimediaUrl;
-      final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
+      // final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
 
-      final voiceNotes = <String>{...voiceFromField, ...voiceFromAttachments}.toList();
+      final voiceNotes = m.voiceNoteUrl!.where((url) {
+        final lower = url.toLowerCase();
+        return lower.endsWith('.mpeg');
+      }).toList();
 
       return ChatModel(
         msg: m.textContent,
@@ -816,7 +822,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             Get.off(
                               ClinitianInfoScreen(
                                 empId: controller.empChatData.value!.empInfoData.employeeId,
-                                onClose: () => Get.back(),
+                                onClose: () => Get.back(), title:  widget.title,
                               ),
                             );
                           });

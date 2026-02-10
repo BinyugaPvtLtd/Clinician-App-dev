@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../controller/profile_controller.dart';
 import '../../controller/timesheet_controller.dart';
 
 class TimeSheetPage extends StatefulWidget {
@@ -30,12 +31,13 @@ class _TimeSheetPageState extends State<TimeSheetPage>
   // final homeController = Get.find<HomeController>();
   RxInt selectedIndex = 0.obs;
   TextEditingController searchController = TextEditingController();
-
+  ProfileController controller = Get.put(ProfileController());
   @override
   void initState() {
     super.initState();
     _tabController = TabController(vsync: this, length: 4);
     timeSheetController.selectedTypeRecord.value = 'All';
+    timeSheetController.clinitianId.value = controller.employeeIdByEmail.value.employeeId;
     timeSheetController.selectedDate.value = timeSheetController.selectedDate.value;
     timeSheetController.searchText.value = 'all';
   }

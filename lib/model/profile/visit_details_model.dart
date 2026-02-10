@@ -6,6 +6,7 @@ class VisitDetailModel {
   final List<VisitInstruction> visitInstructions;
   final List<OtherClinician> otherClinicians;
   final List<Week> weeks;
+  final bool isAssistantUser;
 
   VisitDetailModel({
     required this.visitHeader,
@@ -14,6 +15,7 @@ class VisitDetailModel {
     required this.visitInstructions,
     required this.otherClinicians,
     required this.weeks,
+    required this.isAssistantUser
   });
 }
 

@@ -27,6 +27,8 @@ class _AssignAssistantDialogWidgetState
   @override
   void initState() {
     // TODO: implement initState
+    controller.emailAssistenseController.value.clear();
+    controller.selectedDataId.value = 0;
     super.initState();
   }
   @override
@@ -125,7 +127,7 @@ class _AssignAssistantDialogWidgetState
                                 (x) => x.userName == value,
                             orElse: () => assistants.first,
                           );
-                          controller.selectedDataId.value = selected.userId;
+                          controller.selectedDataId.value = selected.employeeId;
                           controller.selectedDataName.value = selected.userName;
                           controller.emailAssistenseController.value.text = selected.personalEmail;
 
@@ -185,7 +187,7 @@ class _AssignAssistantDialogWidgetState
                         onTap: () async{
                           var response = await controller.PostAssignAssistance(
                               visitId: widget.visitId,
-                              assistantUserId: controller.selectedDataId.value);
+                              EmployeeId: controller.selectedDataId.value);
                           if(response.statusCode == 200 || response.statusCode == 201){
                             Get.back();
                             showSucessDialog( context: context,

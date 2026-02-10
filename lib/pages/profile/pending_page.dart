@@ -346,7 +346,7 @@ class _PendingVisitsState extends State<PendingVisits> {
                                           ),
                                         ),
                                         Text(
-                                          '\$55.00',
+                                          '\$${visitsItem.visitCharge}',
                                           style: AppTextStyle.normal12style.copyWith(
                                             fontSize: 20.sp,
                                             fontWeight: FontWeight.w600,

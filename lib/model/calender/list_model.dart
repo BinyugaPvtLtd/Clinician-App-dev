@@ -15,8 +15,12 @@ class VisitsListData {
   final String timeFrom;
   final String timeTo;
   final bool inZone;
+  final double distance;
+  final double visitCharge;
 
   VisitsListData({
+    required this.distance,
+    required this.visitCharge,
     required this.visitId,
     required this.visitType,
     required this.patientName,

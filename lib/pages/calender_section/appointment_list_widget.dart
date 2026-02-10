@@ -114,7 +114,7 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                   ),
                   customHeight(13.h),
                   Text(
-                    '2x4    | 2.5 miles',
+                    '2x4   | ${widget.dataList.distance} miles',
                     style: AppTextStyle.normal12style.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.defaultTxtGrey,
@@ -122,7 +122,7 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                   ),
                   customHeight(5.h),
                   Text(
-                    '\$55.00',
+                    '\$${widget.dataList.visitCharge}',
                     style: AppTextStyle.normal12style.copyWith(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w600,

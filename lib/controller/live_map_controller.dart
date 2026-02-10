@@ -24,6 +24,8 @@ class LiveMapController extends GetxController{
   final isSeeRouteLoading = false.obs;
   final error = ''.obs;
 
+  final RxBool isLoading = false.obs;
+  bool _isFirstLoad = true;
   final selectedPatientId = 0.obs;
   final selectedPatientName = ''.obs;
   final visitsMapModel = VisitsMapModel(visits: []).obs;
@@ -77,10 +79,12 @@ class LiveMapController extends GetxController{
 
     // ✅ first time call (will show loader only once)
     fetchListOfVisitMap();
+    fetchClinicianDashoardDetails();
 
     // ✅ then every 10 seconds (no loader after first time)
-    _visitTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _visitTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       fetchListOfVisitMap();
+      fetchClinicianDashoardDetails();
     });
   }
 
@@ -99,10 +103,18 @@ visitsMapModel.value = await getMapListVisit();
     visitDashboardDetails.value = await getVisitDetailsDashboardData(visitId: visitId);
   }
 
-  Future<void> fetchClinicianDashoardDetails() async {
-    clinicianStats.value = await getLiveMapDashboardData();
-    // await fetchVisitMapDetails(visitId: 199);
+  Future<void> fetchClinicianDashoardDetails({bool showLoader = false}) async {
+    try {
+      if (showLoader) isLoading.value = true;
+
+      clinicianStats.value = await getLiveMapDashboardData();
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (showLoader) isLoading.value = false;
+    }
   }
+
 
   Future<void> fetchVisitData({required int clinitianId}) async {
     mapVisitDataModel.value = await getVisitData(clinicianId: clinitianId);

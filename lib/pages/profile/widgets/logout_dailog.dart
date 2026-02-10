@@ -78,7 +78,7 @@ void showLogoutConfirmationDialog(BuildContext context) {
                       ),
                       buttonColor: Colors.red,
                       onPressed: () async{
-                        String fcmToken = await TokenManager.getFcmTokenRegister();
+                        final fcmToken = await TokenManager.getFcmTokenRegister();
                         if(fcmToken.isEmpty){
                           profileController.clearEmpId();
                           TokenManager.removeAccessToken();

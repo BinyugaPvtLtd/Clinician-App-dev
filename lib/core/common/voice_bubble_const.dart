@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
+
 class VoiceNoteBubble extends StatefulWidget {
-  final String url; // mp3 URL
+  final String url; // your S3 url ending .mpeg
   final bool isMe;
 
   const VoiceNoteBubble({
@@ -18,52 +22,51 @@ class VoiceNoteBubble extends StatefulWidget {
 
 class _VoiceNoteBubbleState extends State<VoiceNoteBubble> {
   final AudioPlayer _player = AudioPlayer();
-  bool _loading = false;
 
-  // Whether we've preloaded the URL metadata (duration) to show total duration
-  bool _preloadedDuration = false;
+  bool _loading = false;
+  String? _error;
+  double? _downloadProgress;
 
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+
+  String? _localPath; // cached audio file
 
   @override
   void initState() {
     super.initState();
 
     _player.durationStream.listen((d) {
-      if (d != null) setState(() => _duration = d);
+      if (!mounted) return;
+      setState(() => _duration = d ?? Duration.zero);
     });
 
     _player.positionStream.listen((p) {
+      if (!mounted) return;
       setState(() => _position = p);
     });
 
     _player.playerStateStream.listen((state) {
-      // reset position when completed (like WhatsApp)
+      if (!mounted) return;
       if (state.processingState == ProcessingState.completed) {
         _player.seek(Duration.zero);
         _player.pause();
       }
     });
 
-    // Try to preload metadata (duration) so we can display total duration
-    // even before the user presses play. This won't start playback.
-    _preloadDuration();
+    // ✅ prepare once (download + setFilePath)
+    _prepareLocal();
   }
 
-  Future<void> _preloadDuration() async {
-    if (_preloadedDuration) return;
-    if (widget.url.isEmpty) return;
-
-    try {
-      setState(() => _loading = true);
-      // setUrl will load metadata (duration) but not start playback.
-      await _player.setUrl(widget.url);
-      _preloadedDuration = true;
-    } catch (e) {
-      debugPrint('Preload audio metadata failed: $e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  @override
+  void didUpdateWidget(covariant VoiceNoteBubble oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _player.stop();
+      _localPath = null;
+      _duration = Duration.zero;
+      _position = Duration.zero;
+      _prepareLocal();
     }
   }
 
@@ -73,30 +76,98 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble> {
     super.dispose();
   }
 
+  Future<File> _cacheFileForUrl(String url) async {
+    final dir = await getTemporaryDirectory();
+    // stable filename from url
+    final bytes = utf8.encode(url);
+    final key = base64Url.encode(bytes).replaceAll('=', '');
+    return File('${dir.path}/voice_$key.mpeg'); // keep .mpeg extension
+  }
+
+  Future<void> _downloadToFile(String url, File outFile) async {
+    final client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 20);
+
+    try {
+      final uri = Uri.parse(url);
+      final req = await client.getUrl(uri);
+      final res = await req.close();
+
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        throw Exception('Download failed: HTTP ${res.statusCode}');
+      }
+
+      final total = res.contentLength; // -1 if unknown
+      int received = 0;
+
+      final sink = outFile.openWrite(mode: FileMode.writeOnly);
+      await for (final chunk in res) {
+        received += chunk.length;
+        sink.add(chunk);
+
+        if (total > 0 && mounted) {
+          setState(() => _downloadProgress = received / total);
+        }
+      }
+      await sink.flush();
+      await sink.close();
+
+      final len = await outFile.length();
+      if (len <= 0) throw Exception('Downloaded file is empty');
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  Future<void> _prepareLocal() async {
+    final url = widget.url.trim();
+    if (url.isEmpty) return;
+
+    setState(() {
+      _loading = true;
+      _error = null;
+      _downloadProgress = null;
+    });
+
+    try {
+      final file = await _cacheFileForUrl(url);
+
+      if (!await file.exists() || await file.length() == 0) {
+        await _downloadToFile(url, file);
+      }
+
+      _localPath = file.path;
+
+      // ✅ IMPORTANT: play local file only
+      await _player.setFilePath(_localPath!);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e.toString());
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
   Future<void> _togglePlay() async {
+    if (_loading) return;
+
     try {
       if (_player.playing) {
         await _player.pause();
         return;
       }
 
-      // If not already prepared/preloaded, ensure we set the URL now.
+      // if not ready, prepare now
       if (_player.processingState == ProcessingState.idle) {
-        setState(() => _loading = true);
-        try {
-          await _player.setUrl(widget.url); // mp3 works here
-          _preloadedDuration = true;
-        } catch (e) {
-          debugPrint('Audio setUrl failed on play: $e');
-        } finally {
-          if (mounted) setState(() => _loading = false);
-        }
+        await _prepareLocal();
+        if (_error != null) return;
       }
 
       await _player.play();
     } catch (e) {
-      setState(() => _loading = false);
-      debugPrint("Audio/mpeg play error: $e");
+      if (!mounted) return;
+      setState(() => _error = e.toString());
     }
   }
 
@@ -111,14 +182,13 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble> {
     final bg = widget.isMe ? Colors.green : Colors.grey.shade200;
     final fg = widget.isMe ? Colors.white : Colors.black87;
 
-    final totalMs = _duration.inMilliseconds == 0 ? 1 : _duration.inMilliseconds;
-    final progress = (_position.inMilliseconds / totalMs).clamp(0.0, 1.0);
+    final totalMs = _duration.inMilliseconds <= 0 ? 1 : _duration.inMilliseconds;
+    final posMs = _position.inMilliseconds.clamp(0, totalMs);
+    final progress = (posMs / totalMs).clamp(0.0, 1.0);
 
-    // Make bubble width responsive: use 75% of screen width, capped to 360
     final screenWidth = MediaQuery.of(context).size.width;
     final maxBubbleWidth = math.min(screenWidth * 0.75, 360.0);
 
-    // Wrap the existing container in a ConstrainedBox so it adapts to screen size
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxBubbleWidth),
       child: Container(
@@ -128,7 +198,6 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble> {
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.max,
           children: [
             InkWell(
               onTap: _togglePlay,
@@ -146,6 +215,7 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble> {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
+                      value: _downloadProgress, // null = indeterminate
                       valueColor: AlwaysStoppedAnimation<Color>(fg),
                     ),
                   )
@@ -157,8 +227,6 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble> {
               ),
             ),
             const SizedBox(width: 10),
-
-            // Flexible progress bar that fills available space instead of fixed 160
             Expanded(
               child: SizedBox(
                 height: 24,
@@ -172,17 +240,17 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble> {
                 ),
               ),
             ),
-
             const SizedBox(width: 10),
-
             Text(
-              // While playing show current position, otherwise show total duration
-              // If duration is not known yet, show a placeholder "--:--".
               _player.playing
                   ? _fmt(_position)
                   : (_duration.inMilliseconds > 0 ? _fmt(_duration) : ""),
               style: TextStyle(color: fg, fontSize: 12),
             ),
+            if (_error != null) ...[
+              const SizedBox(width: 6),
+              Icon(Icons.error_outline, color: fg, size: 16),
+            ],
           ],
         ),
       ),

@@ -19,12 +19,13 @@ import '../../../model/chatScreen/group_info_model.dart';
 
 class ClinitianInfoScreen extends StatefulWidget {
   final int empId;
+  final String title;
   final VoidCallback onClose;
 
   const ClinitianInfoScreen({
     super.key,
     required this.empId,
-    required this.onClose,
+    required this.onClose, required this.title,
   });
 
   @override
@@ -309,7 +310,7 @@ class _ClinitianInfoScreenState extends State<ClinitianInfoScreen> with SingleTi
 
                         Center(
                           child: Text(
-                            "${groupInfo.firstName} ${groupInfo.lastName}",
+                            widget.title,
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,

@@ -25,6 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    FocusScope.of(context).unfocus();
     return SafeArea(
       child: Scaffold(
         body: Column(

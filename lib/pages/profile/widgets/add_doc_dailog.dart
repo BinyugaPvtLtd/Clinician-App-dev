@@ -18,6 +18,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
   UpdateDocumentsController docCtrl = Get.put(UpdateDocumentsController());
   TextEditingController expDateController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  docCtrl.clearAll();
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -47,6 +48,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                       Obx(()=>docCtrl.fileName.isEmpty ? _uploadCaptureOption(
+                        isRedValidation:  docCtrl.fileNameValidation.value.isEmpty ? false : true,
                           label2: docCtrl.fileNameValidation.value.isEmpty ? "Upload document" : docCtrl.fileNameValidation.value,
                           icon: AppAsset.upload,
                           label: "Upload here",
@@ -55,6 +57,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                             // Handle file picker
                           },
                         ) : _uploadCaptureOption(
+                        isRedValidation: false,
                         label2: docCtrl.fileName.value,
                         icon: AppAsset.upload,
                         label: "Upload here",
@@ -254,23 +257,29 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                           ): PrimaryButton(
                             onTap: () async{
       if (_formKey.currentState!.validate()){
-        var uploadResponse = await docCtrl.postUploadDocumentBase64Data(
-            docMetaId: docCtrl.selectedMasterMetaDocId.value,
-            docTypeSetupId: docCtrl.selectedSubDocId.value,
-            empId: empId,
-            base64File: docCtrl.selectedPdfFile.value!,
-            documentName: docCtrl.fileName.value,
-            expiryDate: expDateController.text.isEmpty ? null : docCtrl.expiryIsoDate.value);
-        if(uploadResponse.statusCode == 200 || uploadResponse.statusCode ==201){
-          Get.back();
-          docCtrl.clearAll();
-          docCtrl.fetchDocListDetails(empId: empId, approveOnly: 'no', searchText: 'all');
-          showSucessDialog( context: context,
-              message: 'Document uploaded successfully',
-              title: 'Successfully');
-        }else{
+        if(docCtrl.fileNameValidation.value.isNotEmpty){
+          var uploadResponse = await docCtrl.postUploadDocumentBase64Data(
+              docMetaId: docCtrl.selectedMasterMetaDocId.value,
+              docTypeSetupId: docCtrl.selectedSubDocId.value,
+              empId: empId,
+              base64File: docCtrl.selectedPdfFile.value!,
+              documentName: docCtrl.fileName.value,
+              expiryDate: expDateController.text.isEmpty ? null : docCtrl.expiryIsoDate.value);
+          if(uploadResponse.statusCode == 200 || uploadResponse.statusCode ==201){
+            Get.back();
+            docCtrl.clearAll();
+            docCtrl.fetchDocListDetails(empId: empId, approveOnly: 'no', searchText: 'all');
+            showSucessDialog( context: context,
+                message: 'Document uploaded successfully',
+                title: 'Successfully');
+          }else{
 
+          }
+        }else{
+          docCtrl.fileNameValidation.value = 'Please upload document';
+          print('Validation failed');
         }
+
         // if(docCtrl.fileName.value.isEmpty){
         //   docCtrl.fileNameValidation.value = 'Please upload document';
         //   //return;
@@ -319,6 +328,7 @@ Widget _uploadCaptureOption({
   required String icon,
   required String label,
   required String label2,
+  required bool isRedValidation,
   required VoidCallback onTap,
 }) {
   return Column(
@@ -326,7 +336,7 @@ Widget _uploadCaptureOption({
       Text(
         label2,
         style: AppTextStyle.bold12style.copyWith(
-          color: AppColors.defaultTxtGrey,
+          color: isRedValidation ? AppColors.redColor : AppColors.defaultTxtGrey,
         ),
       ),
       customHeight(12.h),

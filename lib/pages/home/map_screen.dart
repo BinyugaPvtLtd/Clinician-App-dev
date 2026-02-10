@@ -35,7 +35,7 @@ class _MapScreenState extends State<MapScreen> {
   final LiveMapController liveMapController = Get.put(LiveMapController());
   @override
   void initState() {
-    liveMapController.fetchClinicianDashoardDetails();
+   // liveMapController.fetchClinicianDashoardDetails();
     // liveMapController.fetchListOfVisitMap();
     liveMapController.startVisitListening();
     super.initState();
@@ -74,7 +74,7 @@ class _MapScreenState extends State<MapScreen> {
       children: [
         HomeAppbarWidget(),
       Obx((){
-        if (liveMapController.isDashboardLoading.value) {
+        if (liveMapController.isLoading.value) {
           return Expanded(child: const Center(child: CircularProgressIndicator(color: AppColors.primaryAppColor,)));
         }
         // if (controller.error.value.isNotEmpty) {
