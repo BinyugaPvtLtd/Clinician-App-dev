@@ -60,7 +60,7 @@ dependencies:
   printing: any
   file_picker: ^8.0.0
   record: any
-  just_audio: any
+  flutter_vlc_player: any
   open_file: ^3.2.1
   device_info_plus: any
   firebase_core: any
@@ -71,6 +71,9 @@ dependencies:
   image_gallery_saver_plus: any
   emoji_picker_flutter: ^4.3.0
   flutter_polyline_points: any
+  media_kit: any
+  media_kit_libs_android_audio: any
+
 dev_dependencies:
   change_app_package_name: ^1.5.0
   flutter_lints: ^5.0.0

@@ -76,7 +76,7 @@ class Message {
   final List<int> seenByClinicians;
   final List<String> attachedMultimediaUrls; // ✅ List of URLs now
   final String stickerMultimediaUrl;
-  final List<String>? voiceNoteUrl;
+  final String? voiceNoteUrl;
   final bool sentAsSms;
   final Sender sender;
   final int ptUserId;

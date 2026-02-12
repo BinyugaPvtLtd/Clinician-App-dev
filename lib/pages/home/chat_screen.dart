@@ -37,7 +37,7 @@ import 'package:record/record.dart';
 
 // ✅ Voice bubble playback
 // Add if missing: just_audio: ^0.9.38
-import 'package:just_audio/just_audio.dart';
+// import 'package:just_audio/just_audio.dart';
 
 import '../../controller/chat_controller.dart';
 import '../../core/common/calling_class.dart';
@@ -393,10 +393,10 @@ class _ChatScreenState extends State<ChatScreen> {
       final attachments = msg.attachedMultimediaUrls;
       // final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
 
-      final voiceNotes = msg.voiceNoteUrl!.where((url) {
-        final lower = url.toLowerCase();
-        return lower.endsWith('.mpeg');
-      }).toList();
+      // final voiceNotes = msg.voiceNoteUrl!.where((url) {
+      //   final lower = url.toLowerCase();
+      //   return lower.endsWith('.mpeg');
+      // }).toList();
 
       return ChatModel(
         msg: msg.textContent,
@@ -405,7 +405,7 @@ class _ChatScreenState extends State<ChatScreen> {
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: msg.sender.imgUrl.isEmpty ? null : msg.sender.imgUrl,
         attachments: attachments,
-        voiceNotes: voiceNotes,
+        voiceNotes: msg.voiceNoteUrl!,
       );
     }).toList();
   }
@@ -423,10 +423,10 @@ class _ChatScreenState extends State<ChatScreen> {
       final attachments = m.attachedMultimediaUrl;
       // final voiceFromAttachments = _extractVoiceNotesFromAttachments(attachments);
 
-      final voiceNotes = m.voiceNoteUrl!.where((url) {
-        final lower = url.toLowerCase();
-        return lower.endsWith('.mpeg');
-      }).toList();
+      // final voiceNotes = m.voiceNoteUrl!.where((url) {
+      //   final lower = url.toLowerCase();
+      //   return lower.endsWith('.mpeg');
+      // }).toList();
 
       return ChatModel(
         msg: m.textContent,
@@ -435,7 +435,7 @@ class _ChatScreenState extends State<ChatScreen> {
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: (m.sender.imgUrl.isEmpty) ? null : m.sender.imgUrl,
         attachments: attachments,
-        voiceNotes: voiceNotes,
+        voiceNotes:  m.voiceNoteUrl,
       );
     }).toList();
   }
@@ -490,7 +490,7 @@ class _ChatScreenState extends State<ChatScreen> {
           time: DateTime.now(),
           localTempId: tempId,
           attachments: const [],
-          voiceNotes: const [],
+          voiceNotes: '',
         ),
       );
     }
@@ -1025,15 +1025,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
                         // ✅ Voice bubbles below message
                         if (voiceNoteUrl.isNotEmpty)
-                          ...voiceNoteUrl.map(
-                                (url) => Padding(
+                          // ...voiceNoteUrl.map(
+                          //       (url) =>
+                    Padding(
                               padding: const EdgeInsets.only(bottom: 4),
                               child: VoiceNoteBubble(
-                                url: url,
+                                url: voiceNoteUrl,
                                 isMe: element.isSender,
                               ),
                             ),
-                          ),
+                          // ),
                       ],
                     );
                   },
@@ -1334,7 +1335,7 @@ class ChatModel {
   final String? localTempId;
 
   final List<String> attachments;
-  final List<String> voiceNotes;
+  final String voiceNotes;
 
   ChatModel({
     required this.msg,
@@ -1344,6 +1345,6 @@ class ChatModel {
     this.senderAvatarUrl,
     this.localTempId,
     this.attachments = const [],
-    this.voiceNotes = const [],
+    required this.voiceNotes,
   });
 }

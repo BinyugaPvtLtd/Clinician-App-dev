@@ -10,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:media_kit/media_kit.dart';
 
 import 'firebase_options.dart';
 
@@ -17,6 +18,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ScreenUtil.ensureScreenSize();
   await GetStorage.init();
+
   // if (Firebase.apps.isEmpty) {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -24,6 +26,7 @@ Future<void> main() async {
   setupForegroundCallListener();
   setupBackgroundCallListener();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  MediaKit.ensureInitialized();
   runApp(const ClinicalApp());
 }
 bool _manuallyRejected = false;

@@ -281,7 +281,7 @@ class ChatDataController extends GetxController {
                 seenByClinicians: List<int>.from(m["seen_by_clinicians"] ?? []),
                 attachedMultimediaUrls: attachments,
                 stickerMultimediaUrl: m["sticker_multimedia_url"] ?? "",
-                voiceNoteUrl: voiceNote,
+                voiceNoteUrl: m['voice_note_url'] ?? '',
                 sentAsSms: m["sent_as_sms"] ?? false,
                 sender: Sender(
                   userId: sender["userId"] ?? 0,
@@ -373,7 +373,7 @@ class ChatDataController extends GetxController {
 
             messages.add(
               EmpMessage(
-                voiceNoteUrl: voiceNoteUrls,
+                voiceNoteUrl: m['voice_note_url'] ?? '',
                 textContent: m["text_content"] ?? "",
                 dateCreated: m["date_created"] ?? "",
                 dateModified: m["date_modified"],

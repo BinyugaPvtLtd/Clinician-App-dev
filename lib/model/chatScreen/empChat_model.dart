@@ -64,7 +64,7 @@ class EmpMessage {
   final bool sendAsSms;
   final List<int> seenByEmployees;
   final List<String> attachedMultimediaUrl;
-  final List<String> voiceNoteUrl;
+  final String voiceNoteUrl;
   final String stickerMultimediaUrl;
   final bool isMine;
   final EmpSender sender;
