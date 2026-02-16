@@ -199,7 +199,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '2x4    | 2.5 miles',
+                        '2x4    | ${widget.data.distance} miles',
                         style: AppTextStyle.normal12style.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppColors.defaultTxtGrey,

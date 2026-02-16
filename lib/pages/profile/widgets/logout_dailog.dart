@@ -93,7 +93,7 @@ void showLogoutConfirmationDialog(BuildContext context) {
                           }
                         }
 
-                        TokenManager.removeAccessToken();
+                        // TokenManager.removeAccessToken();
 
                       },
                     ),

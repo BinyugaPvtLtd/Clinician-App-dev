@@ -21,6 +21,7 @@ class PatientVisitModel {
   final int patientAge;
   final int primaryDiagnosisId;
   final String primaryDiagnosisName;
+  final double distance;
   final String inZone;
   final int zoneId;
   final String zoneName;
@@ -31,6 +32,7 @@ class PatientVisitModel {
   final List<VisitDetailsModel> visitList;
 
   PatientVisitModel({
+    required this.distance,
     required this.warning,
     required this.visitTime,
     required this.visitId,

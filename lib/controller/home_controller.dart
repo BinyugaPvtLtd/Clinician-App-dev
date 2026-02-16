@@ -260,6 +260,7 @@ class HomeController extends GetxController {
               zoneName: v['zoneName'] ?? '--',
               patientAddress: v['patientAddress'] ?? '--',
               visitNote: v['visit_note'] ?? '',
+              distance: v['distance'] ?? 0.0,
               visitCharge: double.parse(
                 (((v['visit_charge'] as num?)?.toDouble() ?? 0.0)
                     .toStringAsFixed(2)),
