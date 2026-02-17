@@ -471,7 +471,7 @@ class ProfileController extends GetxController{
             visitTypeName: header['visitTypeName'] ?? '',
             timeRange: header['timeRange'] ?? '',
           ),
-          isAssistantUser: header['isAssistantUser'] ?? false,
+          isAssistantUser: data['isAssistantUser'] ?? false,
           patient: Patient(
             name: patient['name'] ?? '',
             imageUrl: patient['imageUrl'] ?? '',
@@ -482,6 +482,7 @@ class ProfileController extends GetxController{
           planOfCare: (data['planOfCare'] as List? ?? [])
               .map(
                 (e) => PlanOfCare(
+                  color: e?['color']??'',
               employeeTypeId: e?['employeeTypeId'] ?? 0,
               abbreviation: e?['abbreviation'] ?? '',
             ),
@@ -493,6 +494,8 @@ class ProfileController extends GetxController{
           otherClinicians:(data['otherClinicians'] as List? ?? [])
               .map(
                 (o) => OtherClinician(
+                  userId: o['userId'] ?? 0,
+                    employeeTypeColor: o['color'] ?? '',
                     employeeId: o['employeeId'] ?? 0,
                     name: o['name'] ?? '',
                     employeeTypeAbbreviation: o['employeeTypeAbbreviation'] ?? '',

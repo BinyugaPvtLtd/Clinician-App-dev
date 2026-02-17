@@ -1,3 +1,4 @@
+import 'package:clinician_app/core/common/hex_color_decoder.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../controller/profile_controller.dart';
+import '../../core/common/calling_class.dart';
 import '../../model/profile/visit_details_model.dart';
 
 class VisitDetailPage extends StatefulWidget {
@@ -175,37 +177,28 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                             Row(
                               children: [
                                 ...List.generate(controller.visitDetailModel.value!.planOfCare.length, (index) {
-                                  var list = [
-                                    KeyValueModel(key: 'OT', value: 'FEBD4D'),
-                                    KeyValueModel(key: 'PT', value: 'F6928A'),
-                                    KeyValueModel(key: 'ST', value: '527FB9'),
-                                  ];
+                                  var list = controller.visitDetailModel.value!.planOfCare[index];
                                   return Container(
                                     padding: EdgeInsets.symmetric(
-                                      vertical: 4.h,
-                                      horizontal: 4.w,
+                                      vertical: 3.h,
+                                      horizontal: 3.w,
                                     ),
                                     width: 23.w,
                                     alignment: Alignment.center,
                                     margin: EdgeInsets.only(right: 2.w),
                                     decoration: BoxDecoration(
-                                      color: Color(
-                                        int.tryParse(
-                                              '0xff${list[index].value}',
-                                            ) ??
-                                            0,
-                                      ),
+                                      color: hexToColor(list.color),
                                       borderRadius: BorderRadius.circular(2.r),
                                     ),
                                     child: Text(
-                                      list[index].key,
+                                      list.abbreviation,
                                       style: AppTextStyle.normal10style
                                           .copyWith(color: Colors.white),
                                     ),
                                   );
                                 }),
                                 Spacer(),
-                                controller.visitDetailModel.value!.isAssistantUser ? PrimaryOutlinedButton(
+                                controller.visitDetailModel.value!.isAssistantUser == false ? PrimaryOutlinedButton(
                                   height: 35.h,
                                   onPressed: () {
                                     Get.dialog(AssignAssistantDialogWidget(visitId: widget.visitId,));
@@ -342,7 +335,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                                         3.r,
                                                       ),
                                                   color:
-                                                      AppColors.appYellowColor,
+                                                      hexToColor(otherClinicianData.employeeTypeColor),
                                                 ),
                                                 child: Text(
                                                   otherClinicianData.employeeTypeAbbreviation,
@@ -371,9 +364,21 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                         ),
                                       ),
                                       customWidth(8.h),
-                                      SvgPicture.asset(
-                                        AppAsset.callFillSvgIcon,
-                                        width: 19.w,
+                                      InkWell(
+                                        onTap:(){
+                                          InitiateClass().CallInitiateFunction(
+                                            context: context,
+                                            participentId: [
+                                              otherClinicianData.userId
+                                            ],
+                                            callType: 'ONE_TO_ONE',
+                                            isVideo: false,
+                                          );
+                                         },
+                                        child: SvgPicture.asset(
+                                          AppAsset.callFillSvgIcon,
+                                          width: 19.w,
+                                        ),
                                       ),
                                     ],
                                   );

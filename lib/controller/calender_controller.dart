@@ -205,7 +205,7 @@ class CalenderListController extends GetxController {
                 patientName: v['patientName'] ?? '',
                 patientImgUrl: v['patientImgUrl'] ?? '',
                 address: v['address'] ?? '--',
-                visitType: v['visitType'] ?? '',
+                visitType: v['visitTypeName'] ?? '',
                 primaryDiagnosis: v['primaryDiagnosis'] ?? '',
                 timeFrom:
                 v['timeFrom'] != null ? formatTimeToAMPM(v['timeFrom']) : '',

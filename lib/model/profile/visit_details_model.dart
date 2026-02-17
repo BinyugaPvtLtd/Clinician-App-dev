@@ -55,8 +55,10 @@ class Patient {
 class PlanOfCare {
   final int employeeTypeId;
   final String abbreviation;
+  final String color;
 
   PlanOfCare({
+    required this.color,
     required this.employeeTypeId,
     required this.abbreviation,
   });
@@ -76,7 +78,11 @@ class OtherClinician {
   final String employeeTypeAbbreviation;
   final String phone;
   final String imageUrl;
+  final String employeeTypeColor;
+  final int userId;
   OtherClinician({
+    required this.userId,
+    required this.employeeTypeColor,
     required this.employeeId,
     required this.name,
     required this.employeeTypeAbbreviation,
