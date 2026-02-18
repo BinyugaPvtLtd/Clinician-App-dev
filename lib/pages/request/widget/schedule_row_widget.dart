@@ -30,8 +30,8 @@ class _ScheduleRowWidgetState extends State<ScheduleRowWidget> {
           ),
           customWidth(2.w),
           Container(
-            padding: EdgeInsets.symmetric(vertical: 3.h, horizontal: 3.w),
-            width: 19.w,
+            padding: EdgeInsets.symmetric(vertical: 3.h, horizontal: 2.w),
+            width:20.w,
             alignment: Alignment.center,
             margin: EdgeInsets.only(right: 2.w),
             decoration: BoxDecoration(

@@ -153,20 +153,28 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
                 children: [
-                  Container(
-                    width: 56.w,
-                    decoration: const BoxDecoration(shape: BoxShape.circle),
-                    clipBehavior: Clip.hardEdge,
-                    child: widget.data.patientImage.isEmpty
-                        ? Image.asset(
-                      AppAsset.profilePicImg,
-                      fit: BoxFit.cover,
-                    )
-                        : Image.network(
-                      widget.data.patientImage,
-                      fit: BoxFit.cover,
-                    ),
+                  widget.data.patientImage.isEmpty ?  CircleAvatar(
+                    radius: 28,
+                    backgroundImage:AssetImage(AppAsset.profilePicImg),
+                  ) :CircleAvatar(
+                    radius: 28,
+                    backgroundImage:NetworkImage( widget.data.patientImage),
+                    backgroundColor: Colors.transparent,
                   ),
+                  // Container(
+                  //   width: 56.w,
+                  //   decoration: const BoxDecoration(shape: BoxShape.circle),
+                  //   clipBehavior: Clip.hardEdge,
+                  //   child: widget.data.patientImage.isEmpty
+                  //       ? Image.asset(
+                  //     AppAsset.profilePicImg,
+                  //     fit: BoxFit.cover,
+                  //   )
+                  //       : Image.network(
+                  //     widget.data.patientImage,
+                  //     fit: BoxFit.cover,
+                  //   ),
+                  // ),
                   customWidth(10.w),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

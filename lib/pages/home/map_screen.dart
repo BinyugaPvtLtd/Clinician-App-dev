@@ -680,7 +680,7 @@ class CustomTimelineCard extends StatelessWidget {
             children: [
               customWidth(35.w),
               Text(
-                '${index + 1}',
+                (index + 1).toString().padLeft(2, '0'),
                 style: AppTextStyle.normal12style.copyWith(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w700,

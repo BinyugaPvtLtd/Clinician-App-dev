@@ -62,13 +62,14 @@ class PrimaryDropDown extends StatefulWidget {
     this.iconStyleData,
     this.buttonStyleData,
     this.menuItemStyleData = const MenuItemStyleData(),
+    this.dropdownHeight = 250, // Fixed dropdown menu height
+    this.itemHeight = 45,      // Fixed item height
   });
+
   final String? value;
   final List<DropdownMenuItem<String>>? items;
-
   final List<Widget> Function(BuildContext)? selectedItemBuilder;
   final DropdownStyleData? dropdownStyleData;
-  //
   final String? hintText;
   final String? labelText;
   final String? helperText;
@@ -120,101 +121,96 @@ class PrimaryDropDown extends StatefulWidget {
   final IconStyleData? iconStyleData;
   final ButtonStyleData? buttonStyleData;
   final MenuItemStyleData menuItemStyleData;
+  final double dropdownHeight;
+  final double itemHeight;
+
   @override
   State<PrimaryDropDown> createState() => _PrimaryDropDownState();
 }
 
 class _PrimaryDropDownState extends State<PrimaryDropDown> {
   final searchController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField2<String>(
-
       dropdownSearchData:
-          widget.isSearchable
-              ? DropdownSearchData(
-                searchController: searchController,
-                searchMatchFn: (item, searchValue) {
-                  return (item.value ?? "").toLowerCase().contains(searchValue);
-                },
-                searchInnerWidget: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
-                    vertical: 10.h,
-                  ),
-                  child: PrimaryTextField(
-                    controller: searchController,
-                    textInputAction: TextInputAction.done,
-                    hintText: 'Search Here...',
-                  ),
-                ),
-                searchInnerWidgetHeight: 40.h,
-              )
-              : null,
+      widget.isSearchable
+          ? DropdownSearchData(
+        searchController: searchController,
+        searchMatchFn: (item, searchValue) {
+          return (item.value ?? "").toLowerCase().contains(searchValue);
+        },
+        searchInnerWidget: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: 10.w,
+            vertical: 10.h,
+          ),
+          child: PrimaryTextField(
+            controller: searchController,
+            textInputAction: TextInputAction.done,
+            hintText: 'Search Here...',
+          ),
+        ),
+        searchInnerWidgetHeight: 40.h,
+      )
+          : null,
       value: (widget.value ?? '').isEmpty ? null : widget.value,
       isExpanded: true,
       items: widget.items,
-      menuItemStyleData: widget.menuItemStyleData,
+      menuItemStyleData: MenuItemStyleData(
+        height: widget.itemHeight, // Fixed item height
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
       buttonStyleData:
-          widget.buttonStyleData ??
+      widget.buttonStyleData ??
           ButtonStyleData(height: 40.h, width: double.maxFinite),
       hint: Align(
         alignment: Alignment.centerLeft,
         child: Padding(
-          padding: widget.prefixIcon != null ? EdgeInsets.all(0.h)  :EdgeInsets.all(8.h),
+          padding: widget.prefixIcon != null
+              ? EdgeInsets.all(0.h)
+              : EdgeInsets.all(8.h),
           child: Text(
             widget.hintText ?? '--select--',
-            style:
-                widget.hintStyle ??AppTextStyle.normal10style.copyWith(
+            style: widget.hintStyle ??
+                AppTextStyle.normal10style.copyWith(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
                   color: AppColors.hintGrey,
                 ),
-                // AppTextStyle.normal10style.copyWith(
-                //   fontSize: 14.sp,
-                //   fontWeight: FontWeight.w400,
-                //   color: AppColors.hintGrey,
-                // ),
           ),
         ),
       ),
       onChanged: widget.onChanged,
       iconStyleData:
-          widget.iconStyleData ??
+      widget.iconStyleData ??
           const IconStyleData(icon: Icon(Icons.keyboard_arrow_down_rounded)),
       selectedItemBuilder: widget.selectedItemBuilder,
       alignment: Alignment.center,
       validator: widget.validator,
       decoration: InputDecoration(
-        // errorStyle: const TextStyle(height: 0, fontSize: 0),
-        // errorText: null,
-        // errorMaxLines: 1,
         prefixIcon: widget.prefixIcon,
         prefixIconConstraints: widget.prefixIconConstraints,
         hoverColor: widget.hoverColor,
         prefixText: widget.prefixText,
         prefixStyle: widget.prefixTextStyle,
         isDense: true,
-
         contentPadding:
-            widget.contentPadding ??
-            (const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
+        widget.contentPadding ??
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         enabledBorder:
-            widget.focusedBorder ??
+        widget.focusedBorder ??
             UnderlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(
-                color: AppColors.textFieldBackGColor,
-              ),
+              borderSide: const BorderSide(color: AppColors.textFieldBackGColor),
             ),
         floatingLabelStyle: widget.floatingLabelStyle,
         focusedBorder:
-            widget.focusedBorder ??
+        widget.focusedBorder ??
             UnderlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
-              borderSide: const BorderSide(
-                color: AppColors.textFieldBackGColor,
-              ),
+              borderSide: const BorderSide(color: AppColors.textFieldBackGColor),
             ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.r),
@@ -224,7 +220,7 @@ class _PrimaryDropDownState extends State<PrimaryDropDown> {
           ),
         ),
         border:
-            widget.focusedBorder ??
+        widget.focusedBorder ??
             UnderlineInputBorder(
               borderRadius: BorderRadius.circular(10.r),
               borderSide: const BorderSide(
@@ -238,31 +234,29 @@ class _PrimaryDropDownState extends State<PrimaryDropDown> {
         ),
         fillColor: widget.filledColor ?? AppColors.textFieldBackGColor,
         filled: widget.filled ?? true,
-        // hintStyle: widget.hintStyle ??
-        //     AppTextStyle.normal10style.copyWith(
-        //         fontSize: 15.sp,
-        //         fontWeight: FontWeight.w400,
-        //         color: AppColors.hintGreyColor),
-        // hintText: widget.hintText ?? "",
         enabled: widget.enabled ?? true,
         suffixIcon:
-            widget.enableSuffixIcon
-                ? widget.suffixIcon ?? const SizedBox.shrink()
-                : null,
+        widget.enableSuffixIcon
+            ? widget.suffixIcon ?? const SizedBox.shrink()
+            : null,
         labelStyle: widget.labelStyle,
         labelText: widget.labelText,
         helperText: widget.helperText,
       ),
       dropdownStyleData:
-          widget.dropdownStyleData ??
+      widget.dropdownStyleData ??
           DropdownStyleData(
+            maxHeight: widget.dropdownHeight, // Fixed dropdown menu height
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10.r),
               color: Theme.of(context).colorScheme.onInverseSurface,
             ),
+            scrollbarTheme: ScrollbarThemeData(
+              radius: const Radius.circular(40),
+              thickness: WidgetStateProperty.all(6),
+              thumbVisibility: WidgetStateProperty.all(true),
+            ),
           ),
-
-      //This to clear the search value when you close the menu
       onMenuStateChange: (isOpen) {
         if (!isOpen) {
           searchController.clear();

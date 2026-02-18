@@ -74,7 +74,20 @@ class HomeController extends GetxController {
       print("✅ todayVisitsModel updated. total visits: ${v.visits.length}");
     });
   }
-
+  void clearAllData(){
+    todayVisitsModel.value = TodayVisitsModel(todaysDate: '', visits: []);
+    patientScheduleModel.value = PatientScheduleModel(
+      imageUrl: '',
+      patientName: '',
+      diagnosisName: '',
+      zoneName: '',
+      inZone: false,
+      visitTypeName: '',
+      address: '',
+      visitCharge: 0.0,
+      weeks: [],
+    );
+  }
   // ✅ NEW: start polling every 2 seconds
   void startAutoRefresh({Duration interval = const Duration(seconds: 1)}) {
     stopAutoRefresh();

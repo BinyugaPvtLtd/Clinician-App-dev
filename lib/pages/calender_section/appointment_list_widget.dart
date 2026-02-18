@@ -58,18 +58,27 @@ class _AppointmentListWidgetState extends State<AppointmentListWidget> {
                     Row(
                       children: [
                         customWidth(20.w),
-                        Container(
-                          width: 56.w,
-                          decoration: BoxDecoration(shape: BoxShape.circle),
-                          clipBehavior: Clip.hardEdge,
-                          child: widget.dataList.patientImgUrl.isEmpty ? Image.asset(
-                            AppAsset.profilePicImg,
-                            fit: BoxFit.cover,
-                          ):Image.network(
-                            widget.dataList.patientImgUrl,
-                            fit: BoxFit.cover,
-                          ),
+                        widget.dataList.patientImgUrl.isEmpty  ?  CircleAvatar(
+                          radius: 28,
+                          backgroundImage:AssetImage(AppAsset.profilePicImg),
+                        ) :CircleAvatar(
+                          radius: 28,
+                          backgroundImage:NetworkImage( widget.dataList.patientImgUrl),
+                          backgroundColor: Colors.transparent,
                         ),
+
+                        // Container(
+                        //   width: 56.w,
+                        //   decoration: BoxDecoration(shape: BoxShape.circle),
+                        //   clipBehavior: Clip.hardEdge,
+                        //   child: widget.dataList.patientImgUrl.isEmpty ? Image.asset(
+                        //     AppAsset.profilePicImg,
+                        //     fit: BoxFit.cover,
+                        //   ):Image.network(
+                        //     widget.dataList.patientImgUrl,
+                        //     fit: BoxFit.cover,
+                        //   ),
+                        // ),
                         customWidth(10.w),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

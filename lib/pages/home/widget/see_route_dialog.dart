@@ -140,40 +140,43 @@ class _SeeRouteDialogState extends State<SeeRouteDialog> {
                           final selectedName = liveMapController.selectedPatientName.value;
                           final safeValue = names.contains(selectedName) ? selectedName : null;
 
-                          return PrimaryDropDown(
-                            contentPadding: EdgeInsets.symmetric(vertical: 0),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppColors.borderGrey,
-                                width: 1.w,
+                          return SizedBox(
+                            height: 37.h,
+                            child: PrimaryDropDown(
+                              contentPadding: EdgeInsets.symmetric(vertical: 0),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.borderGrey,
+                                  width: 1.w,
+                                ),
                               ),
-                            ),
-                            hintText: "Select Patient",
-                            value: safeValue,
-                            items: uniqueVisits.map((item) {
-                              return DropdownMenuItem<String>(
-                                value: item.patientName!,
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.h),
-                                  child: Text(
-                                   item.patientName,
-                                    style: AppTextStyle.normal12style
-                                        .copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.defaultTxtGrey,
+                              hintText: "Select Patient",
+                              value: safeValue,
+                              items: uniqueVisits.map((item) {
+                                return DropdownMenuItem<String>(
+                                  value: item.patientName!,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.h),
+                                    child: Text(
+                                     item.patientName,
+                                      style: AppTextStyle.normal12style
+                                          .copyWith(
+                                        fontWeight: FontWeight.w400,
+                                        color: AppColors.defaultTxtGrey,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value == null) return;
-                              liveMapController.selectedPatientName.value = value;
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value == null) return;
+                                liveMapController.selectedPatientName.value = value;
 
-                              // If multiple visits have same name, this picks the first
-                              final first = visits.firstWhere((e) => e.patientName == value);
-                              liveMapController.selectedPatientId.value = first.patientId ?? 0;
-                            },
+                                // If multiple visits have same name, this picks the first
+                                final first = visits.firstWhere((e) => e.patientName == value);
+                                liveMapController.selectedPatientId.value = first.patientId ?? 0;
+                              },
+                            ),
                           );
                         })
                         // SizedBox(

@@ -9,7 +9,7 @@ import '../token_manager/token_manager_service.dart';
 class ApiService extends GetxService {
   late dio.Dio dioClient;
   String? _accessToken;
-
+  bool _isNavigatingToLogin = false;
   @override
   void onInit() {
     super.onInit();
@@ -65,7 +65,12 @@ class ApiService extends GetxService {
           // ✅ Handle auth cases
           if (error.response!.data["message"] == "Unauthorized") {
              TokenManager.removeAccessToken();
-            Get.offAll(() => LoginScreen());
+             if (!_isNavigatingToLogin) {
+               _isNavigatingToLogin = true;
+               Get.offAll(() => LoginScreen())!.then((_) {
+                 _isNavigatingToLogin = false;
+               });
+             }
             // Pass the error along (or you can return a custom response)
             return handler.next(error);
           }

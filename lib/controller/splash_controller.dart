@@ -20,7 +20,7 @@ class SplashController extends GetxController {
     print('Auth token: $authToken');
 
     if (authToken.isEmpty) {
-      Get.offAll(() => LoginScreen());
+      // Get.offAll(() => LoginScreen());
     } else {
       Get.offAll(() => HomeScreen());
     }

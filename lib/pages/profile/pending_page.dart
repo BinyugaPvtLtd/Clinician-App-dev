@@ -308,18 +308,26 @@ class _PendingVisitsState extends State<PendingVisits> {
                               Row(
                                 children: [
                                   customWidth(20.w),
-                                  Container(
-                                    width: 54.w,
-                                    decoration: const BoxDecoration(shape: BoxShape.circle),
-                                    clipBehavior: Clip.hardEdge,
-                                    child: visitsItem.imageUrl.isEmpty ? Image.asset(
-                                      AppAsset.profilePicImg,
-                                      fit: BoxFit.cover,
-                                    ):Image.network(
-                                      visitsItem.imageUrl,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  visitsItem.imageUrl.isEmpty ? CircleAvatar(
+                                    radius: 28,
+                                    backgroundImage:AssetImage(AppAsset.profilePicImg),
+                                  ) :CircleAvatar(
+                                    radius: 28,
+                                    backgroundImage:NetworkImage(visitsItem.imageUrl),
+                                    backgroundColor: Colors.transparent,
                                   ),
+                                  // Container(
+                                  //   width: 54.w,
+                                  //   decoration: const BoxDecoration(shape: BoxShape.circle),
+                                  //   clipBehavior: Clip.hardEdge,
+                                  //   child: visitsItem.imageUrl.isEmpty ? Image.asset(
+                                  //     AppAsset.profilePicImg,
+                                  //     fit: BoxFit.cover,
+                                  //   ):Image.network(
+                                  //     visitsItem.imageUrl,
+                                  //     fit: BoxFit.cover,
+                                  //   ),
+                                  // ),
                                   customWidth(10.w),
                                   Expanded(
                                     child: Row(
