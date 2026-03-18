@@ -2,6 +2,7 @@ import 'package:clinician_app/core/constant/app_string.dart';
 import 'package:get/get.dart';
 
 import '../model/request/request_data_model.dart';
+import '../pages/auth/login_screen.dart';
 import '../services/auth_api_services/auth_services.dart';
 import '../services/token_manager/token_manager_service.dart';
 import 'calling_controller.dart';
@@ -36,10 +37,12 @@ class AuthController extends GetxController {
         int departmentId = res.data['user']["departmentId"] ?? 0;
         int companyId = res.data['user']["company_id"] ?? 0;
         int userId = res.data['user']["userId"] ?? 0;
+        String refreshToken = res.data['refreshToken'] ?? "";
         String userEmail = res.data['user']["email"] ?? email;
         callController.initFCM(deviceName: 'MOBILE',);
         TokenManager.setAccessToken(
           token: token,
+          refreshToken: refreshToken,
           username: username,
           departmentId: departmentId,
           companyId: companyId,
@@ -132,10 +135,12 @@ class AuthController extends GetxController {
         int departmentId = res.data['user']["departmentId"] ?? 0;
         int companyId = res.data['user']["company_id"] ?? 0;
         int userId = res.data['user']["userId"] ?? 0;
+        String refreshToken = res.data['refreshToken'] ?? "";
         String userEmail = res.data['user']["email"] ?? email;
 
         TokenManager.setAccessToken(
           token: token,
+          refreshToken: refreshToken,
           username: username,
           departmentId: departmentId,
           companyId: companyId,
@@ -245,4 +250,103 @@ class AuthController extends GetxController {
   //   if (v is int) return v;
   //   return int.tryParse(v.toString()) ?? 0;
   // }
+
+  Future<ApiData> refreshAccessToken({
+    required String refreshToken,
+  }) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final res = await _api.post('/auth/refresh', {
+        "refreshToken":refreshToken
+      });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        print("New refresh accessToken ${res.data["accessToken"]}");
+        String token = res.data["accessToken"] ?? "";
+        String username = "${res.data['user']['firstName']} ${res.data['user']['lastName']}";
+        int departmentId = res.data['user']["departmentId"] ?? 0;
+        int companyId = res.data['user']["company_id"] ?? 0;
+        int userId = res.data['user']["userId"] ?? 0;
+        String refreshToken = res.data['refreshToken'] ?? "";
+        String userEmail = res.data['user']["email"] ?? '';
+        callController.initFCM(deviceName: 'MOBILE',);
+        TokenManager.setAccessToken(
+          token: token,
+          refreshToken: refreshToken,
+          username: username,
+          departmentId: departmentId,
+          companyId: companyId,
+          userID: userId,
+          email: userEmail,
+        );
+
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }else{
+        error.value = "Login failed";
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<ApiData> logoutCurrentuser({
+    required String refreshToken,
+  }) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final res = await _api.post('/auth/logout', {
+        "refreshToken":refreshToken
+      });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        // final data = res.data as Map<String, dynamic>;
+        TokenManager.removeAccessToken();
+        Get.offAll(()=>LoginScreen());
+
+        return ApiData(
+            success: true,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }else{
+        error.value = "Login failed";
+        return ApiData(
+            success: false,
+            message: res.statusMessage!,
+            statusCode: res.statusCode!
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+          success: false,
+          message:AppString.somethingWentWrong,
+          statusCode: 404
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
 }

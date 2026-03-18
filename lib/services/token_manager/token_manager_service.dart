@@ -13,6 +13,13 @@ class TokenManager extends GetxService {
     // }
     return _box.read("accessToken") ?? "";
   }
+  static String getRefreshAccessToken() {
+    // final bool isOnBoardToken = getIsOnBoardingToken();
+    // if (isOnBoardToken) {
+    //   return _box.read("accessTokenRegister") ?? "";
+    // }
+    return _box.read("refreshToken") ?? "";
+  }
 
   static String getUserName() {
     return _box.read("userName") ?? "";
@@ -60,15 +67,17 @@ class TokenManager extends GetxService {
 
   /// ---------- SETTERS ----------
 
-  static void setAccessToken({
+  static Future<void> setAccessToken({
     required String token,
+    required String refreshToken,
     required String username,
     required int departmentId,
     required int companyId,
     required int userID,
     required String email,
-  }) {
+  }) async {
     _box.write("accessToken", token);
+    _box.write("refreshToken", refreshToken);
     _box.write("userName", username);
     _box.write("companyId", companyId);
     _box.write("userId", userID);

@@ -21,7 +21,7 @@ class _HistoryPageState extends State<HistoryPage> {
   final TimeController timeController = Get.put(TimeController());
   @override
   void initState() {
-    timeController.fetchEmpHistoryTimeOff(employeeId: 51);
+    timeController.fetchEmpHistoryTimeOff(employeeId: widget.employeeId);
     super.initState();
   }
   @override

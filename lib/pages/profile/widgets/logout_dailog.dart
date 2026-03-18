@@ -5,6 +5,7 @@ import 'package:clinician_app/pages/auth/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/auth_controller.dart';
 import '../../../controller/calling_controller.dart';
 import '../../../controller/home_controller.dart';
 import '../../../controller/profile_controller.dart';
@@ -12,6 +13,7 @@ import '../../../services/token_manager/token_manager_service.dart';
 
 void showLogoutConfirmationDialog(BuildContext context) {
   final callController = Get.put(CallingController());
+  final authController = Get.put(AuthController());
   // final homeController = Get.put(HomeController());
 
   ProfileController profileController = Get.put(ProfileController());
@@ -82,19 +84,43 @@ void showLogoutConfirmationDialog(BuildContext context) {
                       buttonColor: Colors.red,
                       onPressed: () async{
                         final fcmToken = await TokenManager.getFcmTokenRegister();
+                        final refreshToken = await TokenManager.getRefreshAccessToken();
                         if(fcmToken.isEmpty){
-                          profileController.clearEmpId();
-                          // homeController.clearAllData();
-                          TokenManager.removeAccessToken();
-                          Get.offAll(()=>LoginScreen());
+                          var refreshResponse = await authController.logoutCurrentuser(refreshToken: refreshToken);
+                          if(refreshResponse.statusCode == 200 || refreshResponse.statusCode == 204){
+                            profileController.clearEmpId();
+                            print('User logged out successfully');
+                            // TokenManager.removeAccessToken();
+                            // Navigator.pushNamedAndRemoveUntil(
+                            //     buildContext, LoginScreen.routeName, (route) => false);
+                          }else{
+                            print('Failed to log out user');
+                            profileController.clearEmpId();
+                            // homeController.clearAllData();
+                            TokenManager.removeAccessToken();
+                            Get.offAll(()=>LoginScreen());
+                          }
+
                         }else{
                           var response = await callController.unRegisterDevice(context: context, fcmToken: fcmToken);
                           if(response.statusCode == 201 || response.statusCode == 200){
-                            profileController.clearEmpId();
-                            // homeController.clearAllData();
-                            TokenManager.removeFCMToken();
-                            TokenManager.removeAccessToken();
-                            Get.offAll(()=>LoginScreen());
+                            var refreshResponse = await authController.logoutCurrentuser(refreshToken: refreshToken);
+                            if(refreshResponse.statusCode == 200 || refreshResponse.statusCode == 204){
+                              profileController.clearEmpId();
+                              TokenManager.removeFCMToken();
+                              print('User logged out successfully');
+                              // TokenManager.removeAccessToken();
+                              // Navigator.pushNamedAndRemoveUntil(
+                              //     buildContext, LoginScreen.routeName, (route) => false);
+                            }else{
+                              print('Failed to log out user');
+                              profileController.clearEmpId();
+                              // homeController.clearAllData();
+                              TokenManager.removeFCMToken();
+                              TokenManager.removeAccessToken();
+                              Get.offAll(()=>LoginScreen());
+                            }
+
                           }
                         }
 
