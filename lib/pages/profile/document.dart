@@ -196,7 +196,7 @@ class _DocumnetPageState extends State<DocumnetPage>
                                                        color: AppColors.grey,
                                                        fontWeight: FontWeight.w400,
                                                      ),
-                                                     maxLines: 2,
+                                                     maxLines: 1,
                                                      overflow: TextOverflow.ellipsis,
                                                    ),
                                                  ),
