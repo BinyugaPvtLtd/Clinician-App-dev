@@ -205,7 +205,7 @@ class CalenderListController extends GetxController {
                 patientName: v['patientName'] ?? '',
                 patientImgUrl: v['patientImgUrl'] ?? '',
                 address: v['address'] ?? '--',
-                visitType: v['visitTypeName'] ?? '',
+                 visitType: v['visitTypeName'] ?? '',
                 primaryDiagnosis: v['primaryDiagnosis'] ?? '',
                 timeFrom:
                 v['timeFrom'] != null ? formatTimeToAMPM(v['timeFrom']) : '',
@@ -213,7 +213,10 @@ class CalenderListController extends GetxController {
                 v['timeTo'] != null ? formatTimeToAMPM(v['timeTo']) : '',
                 inZone: v['inZone'] ?? false,
                 distance: v['distance'] ?? 0.0,
-                visitCharge: v['visit_charge'] ?? 0.0,
+                visitCharge: double.parse(
+                  (((v['visit_charge'] as num?)?.toDouble() ?? 0.0)
+                      .toStringAsFixed(2)),
+                ),
               ),
             );
           }

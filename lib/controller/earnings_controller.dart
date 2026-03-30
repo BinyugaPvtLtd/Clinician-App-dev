@@ -103,7 +103,10 @@ class EarningsController extends GetxController {
               startTime: items['startTime'] != null ? formatTimeToAMPM(items['startTime']) : '',
               endTime: items['endTime'] != null ? formatTimeToAMPM(items['endTime']) : '',
               dayLabel: items['dayLabel'] ?? '',
-              visit_charge: items['visit_charge'] ?? 0
+              visit_charge: double.parse(
+                (((items['visit_charge'] as num?)?.toDouble() ?? 0.0)
+                    .toStringAsFixed(2)),
+              )
               ));
         }
 
