@@ -44,40 +44,69 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     SizedBox(height: 24),
 
                     // Upload and Capture Buttons
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //   Obx(()=>docCtrl.fileName.isEmpty ? _uploadCaptureOption(
+                    //     isRedValidation:  docCtrl.fileNameValidation.value.isEmpty ? false : true,
+                    //       label2: docCtrl.fileNameValidation.value.isEmpty ? "Upload document" : docCtrl.fileNameValidation.value,
+                    //       icon: AppAsset.upload,
+                    //       label: "Upload here",
+                    //       onTap: () {
+                    //         docCtrl.pickPdf();
+                    //         // Handle file picker
+                    //       },
+                    //     ) : _uploadCaptureOption(
+                    //     isRedValidation: false,
+                    //     label2: docCtrl.fileName.value,
+                    //     icon: AppAsset.upload,
+                    //     label: "Upload here",
+                    //     onTap: () {
+                    //       docCtrl.pickPdf();
+                    //       // Handle file picker
+                    //     },
+                    //   )),
+                    //     // Padding(
+                    //     //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    //     //   child: Text("\nor"),
+                    //     // ),
+                    //     // _uploadCaptureOption(
+                    //     //   label2: "Capture document",
+                    //     //   icon: AppAsset.captured,
+                    //     //   label: "Capture here",
+                    //     //   onTap: () {
+                    //     //     // Handle camera capture
+                    //     //   },
+                    //     // ),
+                    //   ],
+                    // ),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                      Obx(()=>docCtrl.fileName.isEmpty ? _uploadCaptureOption(
-                        isRedValidation:  docCtrl.fileNameValidation.value.isEmpty ? false : true,
-                          label2: docCtrl.fileNameValidation.value.isEmpty ? "Upload document" : docCtrl.fileNameValidation.value,
-                          icon: AppAsset.upload,
-                          label: "Upload here",
-                          onTap: () {
-                            docCtrl.pickPdf();
-                            // Handle file picker
-                          },
-                        ) : _uploadCaptureOption(
-                        isRedValidation: false,
-                        label2: docCtrl.fileName.value,
-                        icon: AppAsset.upload,
-                        label: "Upload here",
-                        onTap: () {
-                          docCtrl.pickPdf();
-                          // Handle file picker
-                        },
-                      )),
-                        // Padding(
-                        //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        //   child: Text("\nor"),
-                        // ),
-                        // _uploadCaptureOption(
-                        //   label2: "Capture document",
-                        //   icon: AppAsset.captured,
-                        //   label: "Capture here",
-                        //   onTap: () {
-                        //     // Handle camera capture
-                        //   },
-                        // ),
+                        Expanded(   // ← ADD THIS
+                          child: Obx(() => docCtrl.fileName.isEmpty
+                              ? _uploadCaptureOption(
+                            isRedValidation: docCtrl.fileNameValidation.value.isEmpty ? false : true,
+                            label2: docCtrl.fileNameValidation.value.isEmpty
+                                ? "Upload document"
+                                : docCtrl.fileNameValidation.value,
+                            icon: AppAsset.upload,
+                            label: "Upload here",
+                            onTap: () {
+                              docCtrl.pickPdf();
+                            },
+                          )
+                              : _uploadCaptureOption(
+                            isRedValidation: false,
+                            label2: docCtrl.fileName.value,
+                            icon: AppAsset.upload,
+                            label: "Upload here",
+                            onTap: () {
+                              docCtrl.pickPdf();
+                            },
+                          )),
+                        ),   // ← CLOSE Expanded
                       ],
                     ),
                     SizedBox(height: 24),
@@ -139,7 +168,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                       width: double.infinity,
                       child: Obx(() {
                         return PrimaryDropDown(
-                           validator: (value) => Validators.validateRequired(docCtrl.selectedSubDocName.value,'Sub document'),
+                          validator: (value) => Validators.validateRequired(docCtrl.selectedSubDocName.value,'Sub document'),
                           contentPadding: EdgeInsets.zero,
                           filled: false,
                           value: docCtrl.selectedSubDocName.value,
@@ -187,7 +216,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     ),
                     SizedBox(height: 15.h),
                     // Expiry Date Field
-                  Obx(()=>  docCtrl.isExpDateShown.value ? Align(
+                    Obx(()=>  docCtrl.isExpDateShown.value ? Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Expiry date of document",
@@ -198,28 +227,28 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     ) : SizedBox.shrink()),
                     SizedBox(height: 8),
 
-                  Obx(()=> docCtrl.isExpDateShown.value ? PrimaryTextField(
-                    // validator: (value) => Validators.validateRequired(value!,'Expiry date'),
-                    readonly: true,
-                    controller: expDateController,
+                    Obx(()=> docCtrl.isExpDateShown.value ? PrimaryTextField(
+                      // validator: (value) => Validators.validateRequired(value!,'Expiry date'),
+                      readonly: true,
+                      controller: expDateController,
                       hintStyle: AppTextStyle.regular12style.copyWith(
                         fontWeight: FontWeight.w400,
                         color: AppColors.defaultTxtGrey,
                       ),
-                    onTap: () async{
-                      FocusScope.of(Get.context!).unfocus();
-                      final String? selectedDate =
-                      await Get.dialog(CalenderDatePickDialogWidget());
+                      onTap: () async{
+                        FocusScope.of(Get.context!).unfocus();
+                        final String? selectedDate =
+                        await Get.dialog(CalenderDatePickDialogWidget());
 
-                      if (selectedDate != null) {
-                        // show only in UI
-                        expDateController.text = selectedDate;
+                        if (selectedDate != null) {
+                          // show only in UI
+                          expDateController.text = selectedDate;
 
-                        // convert to ISO and store separately
-                        final DateTime datePicked = DateFormat("yyyy-MM-dd").parse(selectedDate);
-                        docCtrl.expiryIsoDate.value = datePicked.toUtc().toIso8601String(); // ✅ ISO (Z included)
-                      }
-                    },
+                          // convert to ISO and store separately
+                          final DateTime datePicked = DateFormat("yyyy-MM-dd").parse(selectedDate);
+                          docCtrl.expiryIsoDate.value = datePicked.toUtc().toIso8601String(); // ✅ ISO (Z included)
+                        }
+                      },
                       suffixIcon: Icon(Icons.calendar_month_outlined),
                     ) : SizedBox.shrink()),
                     SizedBox(height: 24),
@@ -256,48 +285,48 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                             ),
                           ): PrimaryButton(
                             onTap: () async{
-      if (_formKey.currentState!.validate()){
-        if(docCtrl.fileNameValidation.value.isNotEmpty){
-          var uploadResponse = await docCtrl.postUploadDocumentBase64Data(
-              docMetaId: docCtrl.selectedMasterMetaDocId.value,
-              docTypeSetupId: docCtrl.selectedSubDocId.value,
-              empId: empId,
-              base64File: docCtrl.selectedPdfFile.value!,
-              documentName: docCtrl.fileName.value,
-              expiryDate: expDateController.text.isEmpty ? null : docCtrl.expiryIsoDate.value);
-          if(uploadResponse.statusCode == 200 || uploadResponse.statusCode ==201){
-            Get.back();
-            docCtrl.clearAll();
-            docCtrl.fetchDocListDetails(empId: empId, approveOnly: 'no', searchText: 'all');
-            showSucessDialog( context: context,
-                message: 'Document uploaded successfully',
-                title: 'Successfully');
-          }else{
+                              if (_formKey.currentState!.validate()){
+                                if(docCtrl.fileNameValidation.value.isNotEmpty){
+                                  var uploadResponse = await docCtrl.postUploadDocumentBase64Data(
+                                      docMetaId: docCtrl.selectedMasterMetaDocId.value,
+                                      docTypeSetupId: docCtrl.selectedSubDocId.value,
+                                      empId: empId,
+                                      base64File: docCtrl.selectedPdfFile.value!,
+                                      documentName: docCtrl.fileName.value,
+                                      expiryDate: expDateController.text.isEmpty ? null : docCtrl.expiryIsoDate.value);
+                                  if(uploadResponse.statusCode == 200 || uploadResponse.statusCode ==201){
+                                    Get.back();
+                                    docCtrl.clearAll();
+                                    docCtrl.fetchDocListDetails(empId: empId, approveOnly: 'no', searchText: 'all');
+                                    showSucessDialog( context: context,
+                                        message: 'Document uploaded successfully',
+                                        title: 'Successfully');
+                                  }else{
 
-          }
-        }else{
-          docCtrl.fileNameValidation.value = 'Please upload document';
-          print('Validation failed');
-        }
+                                  }
+                                }else{
+                                  docCtrl.fileNameValidation.value = 'Please upload document';
+                                  print('Validation failed');
+                                }
 
-        // if(docCtrl.fileName.value.isEmpty){
-        //   docCtrl.fileNameValidation.value = 'Please upload document';
-        //   //return;
-        // }else{
-        //
-        //   // var response = await docCtrl.postUploadDocumentData(
-        //   //     docMetaId: docCtrl.selectedMasterMetaDocId.value,
-        //   //     docTypeSetupId: docCtrl.selectedSubDocId.value,
-        //   //     empId: empId);
-        //   // if(response.statusCode == 200 || response.statusCode == 201){
-        //   //
-        //   // }
-        // }
+                                // if(docCtrl.fileName.value.isEmpty){
+                                //   docCtrl.fileNameValidation.value = 'Please upload document';
+                                //   //return;
+                                // }else{
+                                //
+                                //   // var response = await docCtrl.postUploadDocumentData(
+                                //   //     docMetaId: docCtrl.selectedMasterMetaDocId.value,
+                                //   //     docTypeSetupId: docCtrl.selectedSubDocId.value,
+                                //   //     empId: empId);
+                                //   // if(response.statusCode == 200 || response.statusCode == 201){
+                                //   //
+                                //   // }
+                                // }
 
-      }else{
-        docCtrl.fileNameValidation.value = 'Please upload document';
-        print('Validation failed');
-      }
+                              }else{
+                                docCtrl.fileNameValidation.value = 'Please upload document';
+                                print('Validation failed');
+                              }
                             },
                             width: 100.w,
                             height: 30.h,
@@ -338,6 +367,9 @@ Widget _uploadCaptureOption({
         style: AppTextStyle.bold12style.copyWith(
           color: isRedValidation ? AppColors.redColor : AppColors.defaultTxtGrey,
         ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
       ),
       customHeight(12.h),
       InkWell(
