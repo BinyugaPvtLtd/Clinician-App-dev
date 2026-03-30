@@ -22,10 +22,17 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   ProfileController controller = Get.put(ProfileController());
+  @override
+  void initState() {
+    // TODO: implement initState
+    controller.fetchClinitionLoginDetails();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     FocusScope.of(context).unfocus();
+    // controller.fetchClinitionLoginDetails();
     return SafeArea(
       child: Scaffold(
         body: Column(
@@ -57,66 +64,67 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  Obx(()=>
+                      Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
 
-                      child: Row(
-                        children: [
-                          Stack(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: Colors.white,
-                                backgroundImage: controller.clinitinaLoginDataModel.value.imageUrl.isEmpty ? 
-                                AssetImage(AppAsset.profilePicImg) : NetworkImage(controller.clinitinaLoginDataModel.value.imageUrl),
-                                radius: 40,
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(top: 50.h, left: 50.w),
-                                child: Container(
-                                  height: 20.h,
+                    child: Row(
+                      children: [
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.white,
+                              backgroundImage: controller.clinitinaLoginDataModel.value.imageUrl.isEmpty ?
+                              AssetImage(AppAsset.profilePicImg) : NetworkImage(controller.clinitinaLoginDataModel.value.imageUrl),
+                              radius: 40,
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(top: 50.h, left: 50.w),
+                              child: Container(
+                                height: 20.h,
 
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 5,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: hexToColor(controller.clinitinaLoginDataModel.value.color),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      controller.clinitinaLoginDataModel.value.abbreviation,
-                                      style: AppTextStyle.normal10style
-                                          .copyWith(color: Colors.white),
-                                    ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: hexToColor(controller.clinitinaLoginDataModel.value.color),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    controller.clinitinaLoginDataModel.value.abbreviation,
+                                    style: AppTextStyle.normal10style
+                                        .copyWith(color: Colors.white),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                          customWidth(20.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                controller.clinitinaLoginDataModel.value.clinicianFullName,
-                                style: AppTextStyle.regular16style.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.defaultTxtGrey,
-                                ),
+                            ),
+                          ],
+                        ),
+                        customWidth(20.w),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              controller.clinitinaLoginDataModel.value.clinicianFullName,
+                              style: AppTextStyle.regular16style.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.defaultTxtGrey,
                               ),
-                              Text(
-                                "${controller.clinitinaLoginDataModel.value.gender} | ${controller.clinitinaLoginDataModel.value.age}y",
-                                style: AppTextStyle.regular16style.copyWith(
-                                  fontWeight: FontWeight.w300,
-                                  color: AppColors.defaultTxtGrey,
-                                ),
+                            ),
+                            Text(
+                              "${controller.clinitinaLoginDataModel.value.gender} | ${controller.clinitinaLoginDataModel.value.age}y",
+                              style: AppTextStyle.regular16style.copyWith(
+                                fontWeight: FontWeight.w300,
+                                color: AppColors.defaultTxtGrey,
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
+                  ),) ,
                     customHeight(10.h),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w),

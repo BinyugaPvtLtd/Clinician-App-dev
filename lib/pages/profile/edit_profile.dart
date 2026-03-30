@@ -31,6 +31,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           child: Column(
             children: [
               Obx(() =>   CommonAppbar(
+                onTap: () async {
+                  await controller.fetchClinitionLoginDetails();
+                  Get.back(result: controller.clinitinaLoginDataModel.value); // pass updated data back
+                },
                 label: "Edit Profile",
                 trailing: controller.isEmployeeSaveLoading.value ? Padding(
                   padding: EdgeInsets.symmetric(horizontal:20.w ),
@@ -83,6 +87,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             employeeaddress: "");
                         if (response.statusCode == 200 ||
                             response.statusCode == 201) {
+                          controller.fetchClinitionLoginDetails();
                             showSucessDialog(
                                 context: context,
                                 message: 'Profile updated successfully',

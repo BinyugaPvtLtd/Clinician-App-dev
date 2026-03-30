@@ -378,7 +378,7 @@ dio.InterceptorsWrapper buildAuthInterceptor(dio.Dio client) {
               Get.isRegistered<ProfileController>()
                   ? Get.find<ProfileController>()
                   : Get.put(ProfileController());
-              profileController.fetchClinitionLoginDetails();
+              profileController.fetchRecordType();
             } catch (e) {
               if (kDebugMode) debugPrint('ProfileController error after refresh: $e');
             }
