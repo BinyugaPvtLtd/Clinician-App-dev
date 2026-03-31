@@ -414,7 +414,10 @@ class ProfileController extends GetxController{
                   visitDateTimeTo: p['visitDateTimeTo'] != null ? formatTimeToAMPM(p['visitDateTimeTo']) : '',
                   isVisitCompleted: p['isVisitCompleted'] ?? false,
                   isVisitMissed: p['isVisitMissed'] ?? false,
-                  visitCharge: p["visit_charge"] ?? 0
+                  visitCharge: double.parse(
+                    (((p['visit_charge'] as num?)?.toDouble() ?? 0.0)
+                        .toStringAsFixed(2)),
+                  ),
 
               ),
             );
