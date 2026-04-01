@@ -562,7 +562,7 @@ class _MapScreenState extends State<MapScreen> {
                   ],
                 ),
               ),
-              Positioned(
+              mapInx.value == 0 ? Positioned(
                 left: 0,
                 bottom: 68.h,
                 child: InkWell(
@@ -590,7 +590,10 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                 ),
-              ),
+              ) : Positioned(
+                  left: 0,
+                  bottom: 68.h,
+                  child: SizedBox()),
               Positioned(right: 25.w, bottom: 58.h, child: ChatFABWidget()),
             ],
           ),
