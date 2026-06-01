@@ -24,3 +24,24 @@ class ApiData{
   final int? chatId;
   ApiData({this.chatId,required this.success, required this.message, required this.statusCode, this.data});
 }
+
+
+class CompanyListResponse {
+  final List<Company> companies;
+  final int statusCode;
+  final String message;
+  final bool success;
+  CompanyListResponse({required this.companies, required this.statusCode, required this.message, required this.success});
+}
+
+class Company {
+  final int companyId;
+  final String name;
+  final String companyAlias;
+
+  Company({
+    required this.companyId,
+    required this.name,
+    required this.companyAlias,
+  });
+}

@@ -9,6 +9,7 @@ import 'calling_controller.dart';
 
 class AuthController extends GetxController {
   final ApiService _api = Get.put(ApiService());
+  final ApiAuthService  _authApi = Get.put(ApiAuthService());
   final callController = Get.put(CallingController());
   final isLoading = false.obs;
   final error = ''.obs;
@@ -349,4 +350,50 @@ class AuthController extends GetxController {
     }
   }
 
+  /// Get company list auth
+   Future<CompanyListResponse> getCompanyList(String email) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      print("$email");
+      final response = await _authApi.post('/auth/check-user-companies', {
+        "email": email,
+      });
+
+      print("<<<>>>${response.statusCode}");
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final List companiesJson = response.data['companies'] ?? [];  // 👈 parse list
+        final List<Company> companies = companiesJson
+            .map((e) => Company(
+          companyId: e['company_id'] ?? 0,
+          name: e['name'] ?? "",
+          companyAlias: e['company_alias'] ?? "",
+        ))
+            .toList();
+
+        return CompanyListResponse(
+            statusCode: response.statusCode!,
+            companies: companies,
+            message: "Success",
+            success: true);  // 👈 pass parsed companies
+      } else {
+        error.value = "Company failed";
+        return CompanyListResponse(
+            statusCode: response.statusCode!,
+            companies: [],
+            message: response.data["message"] ?? "Failed",
+            success: false);
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return CompanyListResponse(
+          statusCode: 404,
+          companies: [],
+          message: "Something went wrong",
+          success: false);
+    }finally{
+      isLoading.value = false;
+    }
+    }
 }
