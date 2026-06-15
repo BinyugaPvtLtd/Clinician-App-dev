@@ -136,7 +136,7 @@ class _MapScreenState extends State<MapScreen> {
                               },
                             ),
                           ),
-                          customHeight(110.h),
+                          customHeight(15.h),
                           // Flexible(
                           //   child: Timeline.tileBuilder(
                           //     builder: TimelineTileBuilder(
@@ -592,9 +592,12 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ) : Positioned(
                   left: 0,
-                  bottom: 68.h,
+                  bottom: 5.h,
                   child: SizedBox()),
-              Positioned(right: 25.w, bottom: 58.h, child: ChatFABWidget()),
+              Positioned(
+                  right: 25.w,
+                  bottom: 5.h,
+                  child: ChatFABWidget()),
             ],
           ),
         );}),

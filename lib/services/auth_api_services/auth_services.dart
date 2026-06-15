@@ -443,7 +443,7 @@ class ApiService extends GetxService {
   void onInit() {
     super.onInit();
     dioClient = dio.Dio(dio.BaseOptions(
-      baseUrl:        ApiAppConstant.endPointByAlias(1, 'dev'),
+      baseUrl:        ApiAppConstant.endPointByAlias(3, 'dev'),
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
     ));

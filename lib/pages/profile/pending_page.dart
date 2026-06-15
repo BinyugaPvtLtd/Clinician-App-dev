@@ -248,6 +248,7 @@ class _PendingVisitsState extends State<PendingVisits> {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             Get.to(() => VisitDetailPage(
                               visitId: visitsItem.visitId,
+                              employeeTypeId: visitsItem.employeeTypeId,
                             ));
                           });
                         },

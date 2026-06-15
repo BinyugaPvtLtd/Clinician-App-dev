@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:clinician_app/controller/repository/request_repo.dart';
 import 'package:clinician_app/core/constant/list_content.dart';
@@ -46,18 +47,18 @@ class HomeController extends GetxController {
       .toList()
       .obs;
 
-  // ✅ NEW: first time loader control (UI should use this)
+  // ✅ first time loader control (UI should use this)
   final RxBool showFirstLoader = true.obs;
 
-  // ✅ NEW: optional thin refresh indicator (not blocking UI)
+  // ✅ optional thin refresh indicator (not blocking UI)
   final RxBool isSilentRefreshing = false.obs;
 
-  // ✅ NEW: store latest params for polling/search/filter
+  // ✅ store latest params for polling/search/filter
   int _lastClinicianId = 0;
-  String _lastVisitStatus = 'Pending';
+  String _lastVisitStatus = 'pending';
   String _lastPatientName = 'all';
 
-  // ✅ NEW: polling + debounce + overlap protection
+  // ✅ polling + debounce + overlap protection
   Timer? _pollTimer;
   Timer? _debounceTimer;
   bool _isFetching = false;
@@ -74,7 +75,8 @@ class HomeController extends GetxController {
       print("✅ todayVisitsModel updated. total visits: ${v.visits.length}");
     });
   }
-  void clearAllData(){
+
+  void clearAllData() {
     todayVisitsModel.value = TodayVisitsModel(todaysDate: '', visits: []);
     patientScheduleModel.value = PatientScheduleModel(
       imageUrl: '',
@@ -87,12 +89,14 @@ class HomeController extends GetxController {
       visitCharge: 0.0,
       weeks: [],
     );
+    showFirstLoader.value = true;
   }
-  // ✅ NEW: start polling every 2 seconds
-  void startAutoRefresh({Duration interval = const Duration(seconds: 1)}) {
+
+  /// ✅ start polling (default 10s — 1s is too heavy on backend + battery)
+  void startAutoRefresh({Duration interval = const Duration(seconds: 10)}) {
     stopAutoRefresh();
     _pollTimer = Timer.periodic(interval, (_) async {
-      // silent poll (no first loader)
+      if (_lastClinicianId == 0) return; // never poll with invalid id
       await fetchListAllDetails(
         clinicianId: _lastClinicianId,
         visitStatus: _lastVisitStatus,
@@ -102,20 +106,19 @@ class HomeController extends GetxController {
     });
   }
 
-  // ✅ NEW: stop polling
+  /// ✅ stop polling
   void stopAutoRefresh() {
     _pollTimer?.cancel();
     _pollTimer = null;
   }
 
-  // ✅ NEW: debounce search (call this from UI onChanged)
+  /// ✅ debounce search (call this from UI onChanged)
   void debounceSearch({
     required String patientName,
     Duration delay = const Duration(milliseconds: 500),
   }) {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(delay, () async {
-      // update patient name and fetch (not polling)
       await fetchListAllDetails(
         clinicianId: _lastClinicianId,
         visitStatus: _lastVisitStatus,
@@ -136,37 +139,53 @@ class HomeController extends GetxController {
   }
 
   /// ---------------- FETCH METHODS ----------------
-  /// ✅ CHANGED ONLY THIS METHOD (others Future methods untouched)
+
   Future<void> fetchListAllDetails({
     required int clinicianId,
     required String visitStatus,
     required String patientName,
 
-    /// ✅ NEW: if true -> this is background refresh (no first loader)
+    /// if true -> this is background refresh (no first loader)
     bool isPollingCall = false,
   }) async {
+    // ✅ guard: never call API with an invalid clinician id
+    if (clinicianId == 0) {
+      print('⚠️ fetchListAllDetails skipped: clinicianId is 0');
+      return;
+    }
+
+    // ✅ status always lowercase so polling/refresh can't mismatch
+    final normalizedStatus = visitStatus.toLowerCase();
+
     // store latest params for polling/search/filter
     _lastClinicianId = clinicianId;
-    _lastVisitStatus = visitStatus;
+    _lastVisitStatus = normalizedStatus;
     _lastPatientName = patientName.trim().isEmpty ? 'all' : patientName.trim();
 
-    // avoid overlapping calls (very important for 2 sec polling)
+    // avoid overlapping calls (very important for polling)
     if (_isFetching) return;
     _isFetching = true;
 
     try {
-      // ✅ show small indicator only for polling refresh
+      // show small indicator only for polling refresh
       if (isPollingCall && !showFirstLoader.value) {
         isSilentRefreshing.value = true;
       }
 
-      todayVisitsModel.value = await getRequestListData(
+      final result = await getRequestListData(
         clinicianId: clinicianId,
-        visitStatus: visitStatus,
+        visitStatus: normalizedStatus,
         patientName: _lastPatientName,
       );
 
-      // ✅ After first successful load, disable first loader forever
+      // ✅ on a SILENT poll, don't wipe existing data if the call errored
+      if (isPollingCall && error.value.isNotEmpty && result.visits.isEmpty) {
+        print('⚠️ polling call failed, keeping existing data');
+      } else {
+        todayVisitsModel.value = result;
+      }
+
+      // After first successful load, disable first loader forever
       if (showFirstLoader.value) {
         showFirstLoader.value = false;
       }
@@ -181,7 +200,6 @@ class HomeController extends GetxController {
   }
 
   /// ---------------- API METHODS ----------------
-  /// ✅ UNCHANGED BELOW (as you requested)
 
   Future<TodayVisitsModel> getRequestListData({
     required int clinicianId,
@@ -190,21 +208,48 @@ class HomeController extends GetxController {
   }) async {
     TodayVisitsModel? itemData;
 
-    String formatIOSDate(String iosDate) {
-      if (iosDate.isEmpty) return '';
-      final DateTime dateTime = DateTime.parse(iosDate);
-      return DateFormat('dd MMM yyyy').format(dateTime).toLowerCase();
+    // ---------- type-safe helpers ----------
+    String asString(dynamic v, [String def = '']) {
+      if (v == null) return def;
+      return v.toString();
     }
 
-    String formatTimeToAMPM(String? dateTimeString) {
-      if (dateTimeString == null || dateTimeString.isEmpty) return '';
+    int asInt(dynamic v, [int def = 0]) {
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v) ?? def;
+      return def;
+    }
+
+    double asDouble(dynamic v, [double def = 0.0]) {
+      if (v is double) return v;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? def;
+      return def;
+    }
+
+    String formatIOSDate(dynamic iosDate) {
+      final s = asString(iosDate);
+      if (s.isEmpty) return '';
       try {
-        final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
+        final DateTime dateTime = DateTime.parse(s);
+        return DateFormat('dd MMM yyyy').format(dateTime).toLowerCase();
+      } catch (_) {
+        return s; // show raw value instead of crashing
+      }
+    }
+
+    String formatTimeToAMPM(dynamic dateTimeString) {
+      final s = asString(dateTimeString);
+      if (s.isEmpty) return '';
+      try {
+        final DateTime dateTime = DateTime.parse(s).toLocal();
         return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
       } catch (_) {
         return '';
       }
     }
+    // ----------------------------------------
 
     try {
       isRequestLoading.value = true;
@@ -219,78 +264,85 @@ class HomeController extends GetxController {
       );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
+        // ✅ handle response arriving as a raw String
+        final dynamic body =
+        res.data is String ? jsonDecode(res.data as String) : res.data;
+
+        final visitsRaw = (body['visits'] as List?) ?? [];
+        print('✅ raw visits count: ${visitsRaw.length}');
+
         final List<PatientVisitModel> allVisits = [];
 
-        final visitsRaw = (res.data['visits'] as List?) ?? [];
         for (final v in visitsRaw) {
-          final List<VisitDetailsModel> visitDetails = [];
+          try {
+            final List<VisitDetailsModel> visitDetails = [];
+            final visitListRaw = (v['visitList'] as List?) ?? [];
 
-          final visitListRaw = (v['visitList'] as List?) ?? [];
-          for (final x in visitListRaw) {
-            visitDetails.add(
-              VisitDetailsModel(
-                visitId: x['visitId'] ?? 0,
-                visitDateFrom: x['visitDateFrom'] != null
-                    ? formatIOSDate(x['visitDateFrom'])
-                    : '',
-                visitDateTo: x['visitDateTo'] != null
-                    ? formatIOSDate(x['visitDateTo'])
-                    : '',
-                employeeTypeId: x['employeeTypeId'] ?? 0,
-                employeeTypeAbbreviation: x['employeeTypeAbbreviation'] ?? '',
-                employeeTypeColor: x['employeeTypeColor'] ?? '',
-                visitStartTime: x['visitDateFrom'] != null
-                    ? formatTimeToAMPM(x['visitDateFrom'])
-                    : '',
-                visitEndTime: x['visitDateTo'] != null
-                    ? formatTimeToAMPM(x['visitDateTo'])
-                    : '',
+            for (final x in visitListRaw) {
+              visitDetails.add(
+                VisitDetailsModel(
+                  visitId: asInt(x['visitId']),
+                  visitDateFrom: formatIOSDate(x['visitDateFrom']),
+                  visitDateTo: formatIOSDate(x['visitDateTo']),
+                  employeeTypeId: asInt(x['employeeTypeId']),
+                  employeeTypeAbbreviation:
+                  asString(x['employeeTypeAbbreviation']),
+                  employeeTypeColor: asString(x['employeeTypeColor']),
+                  visitStartTime: formatTimeToAMPM(x['visitDateFrom']),
+                  visitEndTime: formatTimeToAMPM(x['visitDateTo']),
+                ),
+              );
+            }
+
+            allVisits.add(
+              PatientVisitModel(
+                visitId: asInt(v['visitId']),
+                visitDateTime: formatIOSDate(v['visitDateTime']),
+                visitStatus: asString(v['visitStatus']),
+                visitTime: formatTimeToAMPM(v['visitDateTime']),
+                ptId: asInt(v['pt_id']),
+                patientName: asString(v['patientName']),
+                patientImage: asString(v['patientImage']),
+                patientGenderId: asInt(v['patientGenderId']),
+                genderName: asString(v['genderName']),
+                patientAge: asInt(v['patientAge']),
+                primaryDiagnosisId: asInt(v['primaryDiagnosisId']),
+                primaryDiagnosisName:
+                asString(v['primaryDiagnosisName'], '--'),
+                // ✅ inZone may come as bool OR String from the API
+                inZone: asString(v['inZone']),
+                warning: asString(v['warning']),
+                zoneId: asInt(v['zoneId']),
+                zoneName: asString(v['zoneName'], '--'),
+                patientAddress: asString(v['patientAddress'], '--'),
+                visitNote: asString(v['visit_note']),
+                // ✅ int from JSON no longer crashes a double field
+                distance: asDouble(v['distance']),
+                visitCharge: double.parse(
+                  asDouble(v['visit_charge']).toStringAsFixed(2),
+                ),
+                visitList: visitDetails,
               ),
             );
+          } catch (rowError) {
+            // ✅ skip the one bad row, keep the rest
+            print('⚠️ skipped one visit row: $rowError');
           }
-
-          allVisits.add(
-            PatientVisitModel(
-              visitId: v['visitId'] ?? 0,
-              visitDateTime: v['visitDateTime'] != null
-                  ? formatIOSDate(v['visitDateTime'])
-                  : '',
-              visitStatus: v['visitStatus'] ?? '',
-              visitTime: v['visitDateTime'] != null
-                  ? formatTimeToAMPM(v['visitDateTime'])
-                  : '',
-              ptId: v['pt_id'] ?? 0,
-              patientName: v['patientName'] ?? '',
-              patientImage: v['patientImage'] ?? '',
-              patientGenderId: v['patientGenderId'] ?? 0,
-              genderName: v['genderName'] ?? '',
-              patientAge: v['patientAge'] ?? 0,
-              primaryDiagnosisId: v['primaryDiagnosisId'] ?? 0,
-              primaryDiagnosisName: v['primaryDiagnosisName'] ?? '--',
-              inZone: v['inZone'] ?? '',
-              warning: v['warning'] ?? '',
-              zoneId: v['zoneId'] ?? 0,
-              zoneName: v['zoneName'] ?? '--',
-              patientAddress: v['patientAddress'] ?? '--',
-              visitNote: v['visit_note'] ?? '',
-              distance: v['distance'] ?? 0.0,
-              visitCharge: double.parse(
-                (((v['visit_charge'] as num?)?.toDouble() ?? 0.0)
-                    .toStringAsFixed(2)),
-              ),
-              visitList: visitDetails,
-            ),
-          );
         }
 
         itemData = TodayVisitsModel(
-          todaysDate: res.data['todaysDate'] ?? '',
+          todaysDate: asString(body['todaysDate']),
           visits: allVisits,
         );
+        print('✅ parsed visits count: ${allVisits.length}');
+        return itemData;
       } else {
         error.value = "Failed to list data";
       }
-    } catch (e) {
+    } catch (e, st) {
+      // ✅ print the REAL error so parsing failures are never silent
+      print('❌ getRequestListData ERROR: $e');
+      print(st);
       error.value = e.toString();
     } finally {
       isRequestLoading.value = false;
@@ -308,10 +360,12 @@ class HomeController extends GetxController {
       isScheduleLoading.value = true;
       error.value = '';
 
-      final res = await _api.get(RequestTabRepo.getRequestSchedule(visitId: visitId));
+      final res =
+      await _api.get(RequestTabRepo.getRequestSchedule(visitId: visitId));
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        final data = res.data;
+        final dynamic data =
+        res.data is String ? jsonDecode(res.data as String) : res.data;
 
         final List<WeekSchedule> weeksList = [];
         final weeksRaw = (data['weeks'] as List?) ?? [];
@@ -357,7 +411,9 @@ class HomeController extends GetxController {
       } else {
         error.value = "Failed to list data";
       }
-    } catch (e) {
+    } catch (e, st) {
+      print('❌ getVisitScheduleData ERROR: $e');
+      print(st);
       error.value = e.toString();
     } finally {
       isScheduleLoading.value = false;

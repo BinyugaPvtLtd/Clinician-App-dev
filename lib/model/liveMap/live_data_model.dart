@@ -44,7 +44,7 @@ class VisitDashData {
   final String timeRange;
   final String visitCount;
   final dynamic distance; // can be null or number/string
-  final int visitCharge;
+  final double visitCharge;
 
   VisitDashData({
     required this.visitType,

@@ -7,6 +7,7 @@ class CalenderListModel{
 
 class VisitsListData {
   final int visitId;
+  final int employeeTypeId;
   final String visitType;
   final String patientName;
   final String patientImgUrl;
@@ -19,6 +20,7 @@ class VisitsListData {
   final double visitCharge;
 
   VisitsListData({
+    required this.employeeTypeId,
     required this.distance,
     required this.visitCharge,
     required this.visitId,

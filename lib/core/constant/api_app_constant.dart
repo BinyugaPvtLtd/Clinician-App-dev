@@ -7,7 +7,7 @@ class ApiAppConstant {
 
   static const int proHealth = 2;
   static const int clinician = 1;
-  // 👇 pass appType to get dynamic base URL
+  //  pass appType to get dynamic base URL
   static String endPointByAlias(int appType,String aliasString) {
     switch (appType) {
       case clinician:
@@ -17,8 +17,8 @@ class ApiAppConstant {
         domain = "https://dev.symmetry.care";
         return "https://dev.symmetry.care";
       default:
-        domain = "https://$aliasString.symmetry.care";
-        return "https://$aliasString.symmetry.care";
+        domain = "https://demo.symmetry.care/";
+        return "https://demo.symmetry.care/";
     }
   }
 }

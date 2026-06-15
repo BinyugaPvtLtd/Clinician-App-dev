@@ -311,6 +311,7 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                   Get.to(
                                         () => VisitDetailPage(
                                       visitId: visitListData.visitId,
+                                          employeeTypeId: items[index].employeeTypeId,
                                     ),
                                   );
                                 });

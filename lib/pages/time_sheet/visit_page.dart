@@ -128,12 +128,20 @@ class _VisitPageState extends State<VisitPage> {
                                 backgroundImage:NetworkImage(item.ptImage),
                                 backgroundColor: Colors.transparent,
                               )
-                                  : Container(
-                                    height: 50.h,
-                                    width: 60.w,
-                                    alignment: Alignment.center,
-                                    child: SvgPicture.asset(AppAsset.carSvgIcon),
-                                  ),
+                                  : item.ptImage.isEmpty ? CircleAvatar(
+                                radius: 30,
+                                backgroundImage:AssetImage(AppAsset.profilePicImg),
+                              ) :CircleAvatar(
+                                radius: 30,
+                                backgroundImage:NetworkImage(item.ptImage),
+                                backgroundColor: Colors.transparent,
+                              ),
+                              // Container(
+                              //       height: 50.h,
+                              //       width: 60.w,
+                              //       alignment: Alignment.center,
+                              //       child: SvgPicture.asset(AppAsset.carSvgIcon),
+                              //     ),
                               customWidth(10.w),
                               Expanded(
                                 child: Column(
@@ -150,7 +158,7 @@ class _VisitPageState extends State<VisitPage> {
                                               Text(
                                                 !item.onWay
                                                     ? "${item.ptFirstName} ${item.ptLastName}"
-                                                    : "Going for Office Visit",
+                                                    : "${item.ptFirstName} ${item.ptLastName}",//"Going for Office Visit",
                                                 style: AppTextStyle.normal12style
                                                     .copyWith(
                                                       color:
