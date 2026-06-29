@@ -455,6 +455,65 @@ class TimeSheetController extends GetxController {
     // ✅ return ONLY here
     return itemData;
   }
+
+
+
+
+
+  ///patch  api edit
+  Future<ApiData> patchEditVisitData({
+    required int visitId,
+    required int recordTypeId,
+    required int visitMasterId,
+    required String visitDate,
+    required String startTime,
+    required String endTime,
+    required String status,
+    required bool inZone,
+  }) async {
+    try {
+      isVisitSaveLoading.value = true;
+      error.value = '';
+
+      final res = await _api.patch(TimeSheetRepository.visitEdit, {
+        "visitId": visitId,
+        "recordTypeId": recordTypeId,
+        "visitMasterId": visitMasterId,
+        "visitDate": visitDate,
+        "startTime": startTime,
+        "endTime": endTime,
+        "status": status,
+        "inZone": inZone,
+      });
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        return ApiData(
+          success: true,
+          message: res.statusMessage!,
+          statusCode: res.statusCode!,
+        );
+      } else {
+        error.value = res.statusMessage!;
+        return ApiData(
+          success: false,
+          message: res.statusMessage!,
+          statusCode: res.statusCode!,
+        );
+      }
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 404,
+      );
+    } finally {
+      isVisitSaveLoading.value = false;
+    }
+  }
 }
+
+
+
 
 
