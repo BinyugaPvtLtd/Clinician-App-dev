@@ -5,6 +5,7 @@ import 'package:clinician_app/pages/video_calling/call_background_noti.dart';
 import 'package:clinician_app/pages/video_calling/call_ring.dart';
 import 'package:clinician_app/pages/video_calling/calling_notification.dart';
 import 'package:clinician_app/pages/video_calling/message_notification.dart';
+import 'package:clinician_app/services/chat_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -143,18 +144,43 @@ void setupForegroundCallListener() {
   });
 }
 
+@pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final data = message.data;
-  if (data['type'] != 'CALL_INCOMING') return;
+  final type = (data['type'] ?? '').toString();
 
-  await CallNotificationService.showIncomingCall(
-    callId: (data['callId'] ?? '').toString(),
-    callerName: (data['callerName'] ?? 'Unknown').toString(),
-    profileUrl: (data['contactImage'] ?? '').toString(),
-    isVideo: (data['isVideo'] ?? 'false').toString(),
+  // Incoming call → full-screen call notification
+  if (type == 'CALL_INCOMING') {
+    await CallNotificationService.showIncomingCall(
+      callId: (data['callId'] ?? '').toString(),
+      callerName: (data['callerName'] ?? 'Unknown').toString(),
+      profileUrl: (data['contactImage'] ?? '').toString(),
+      isVideo: (data['isVideo'] ?? 'false').toString(),
+    );
+    return;
+  }
+
+  // Call lifecycle events — nothing to show
+  if (type == 'CALL_MISSED' || type == 'CALL_ENDED' || type == 'CALL_DECLINED') {
+    return;
+  }
+
+  // Chat / all other notifications — show heads-up notification
+  final title = message.notification?.title ??
+      (data['title'] as String?)?.trim() ?? '';
+  final body = message.notification?.body ??
+      (data['body'] as String?)?.trim() ?? '';
+
+  if (title.isEmpty && body.isEmpty) return;
+
+  await ChatNotificationService.show(
+    id: message.hashCode,
+    title: title.isEmpty ? 'New Message' : title,
+    body: body,
+    senderImageUrl: (data['senderImage'] ?? data['imageUrl'] ?? data['contactImage'] ?? '').toString(),
+    payloadData: data,
   );
 }
 

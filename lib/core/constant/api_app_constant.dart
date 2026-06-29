@@ -17,8 +17,8 @@ class ApiAppConstant {
         domain = "https://dev.symmetry.care";
         return "https://dev.symmetry.care";
       default:
-        domain = "https://demo.symmetry.care/";
-        return "https://demo.symmetry.care/";
+        domain = "https://dev.symmetry.care/";
+        return "https://dev.symmetry.care/";
     }
   }
 }
