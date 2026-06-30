@@ -72,7 +72,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                   children: [
                     Expanded(
                       child: SizedBox(
-                        height: 30.h,
+                        height: 35.h,
                         child: PrimaryTextField(
                           controller: searchController,
                           onChanged: (value){
@@ -91,22 +91,22 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                         ),
                       ),
                     ),
-                    customWidth(15.w),
-                    PrimaryOutlinedButton(
-                      text: "Add Visit",
-                      onPressed: () {
-                        Get.to(() => AddVisitPage());
-                      },
-                      textStyle: AppTextStyle.normal12style.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryAppColor,
-                      ),
-                      width: 110.w,
-                      radius: 6,
-                      height: 35.h,
-                      borderWidth: 1.w,
-                      icon: Icon(Icons.add, color: AppColors.primaryAppColor),
-                    ),
+                    // customWidth(15.w),
+                    // PrimaryOutlinedButton(
+                    //   text: "Add Visit",
+                    //   onPressed: () {
+                    //     Get.to(() => AddVisitPage());
+                    //   },
+                    //   textStyle: AppTextStyle.normal12style.copyWith(
+                    //     fontWeight: FontWeight.w700,
+                    //     color: AppColors.primaryAppColor,
+                    //   ),
+                    //   width: 110.w,
+                    //   radius: 6,
+                    //   height: 35.h,
+                    //   borderWidth: 1.w,
+                    //   icon: Icon(Icons.add, color: AppColors.primaryAppColor),
+                    // ),
                   ],
                 ),
               ),

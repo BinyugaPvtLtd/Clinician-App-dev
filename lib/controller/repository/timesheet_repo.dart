@@ -12,4 +12,8 @@ class TimeSheetRepository{
   static String getPatientNameData({required String search}) {
     return '$patientName/$search';
   }
+
+  static String editVisit({required int visitId}) {
+    return '$visitEdit/$visitId';
+  }
 }

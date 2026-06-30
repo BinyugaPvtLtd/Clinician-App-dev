@@ -31,23 +31,62 @@ class EligibleClinician{
   EligibleClinician({required this.empTypeId, required this.color,required this.empName});
 }
 
-class TimeSheetAllData{
+class TimeSheetAllData {
+  final int visitId;
   final int ptId;
+  final int employeeId;
+  final int employeeTypeId;
+  final int visitType;
+  final String visiteDateTimeFrom;
+  final String visitDateTimeTo;
+  final bool isVisitCompleted;
+  final bool isVisitMissed;
+  final bool onWay;
+  final int? recordTypeId;
+  final bool inZone;
+  final String? eligibility;
+  final String patientName;
+  final String location;
+  final int visitTypeId;
+  final String visitTypeName;
+  final int typeOfVisitId;
+  final String typeOfVisitName;
+  final String? recordTypeName;
   final String ptFirstName;
   final String ptLastName;
   final String ptAddress;
-  final String ptImage;
-  final int fkPtDiagnosisId;
-  final String fkPtDiagnosisName;
-  final bool isVisitCompleted;
-  final bool onWay;
-  final int recrdTypeId;
-  final String recordTypeName;
+  final String ptImgUrl;
+  final int fkPtPrimaryDiagnosis;
+  final String fkPtPrimaryDiagnosisName;
   final String date;
-  final String visitDateTimeFrom;
-  final String visitDateTimeto;
-  TimeSheetAllData({required this.ptId, required this.ptFirstName, required this.ptLastName, required this.ptAddress,
-      required this.ptImage, required this.fkPtDiagnosisId, required this.fkPtDiagnosisName,
-      required this.isVisitCompleted, required this.onWay, required this.recrdTypeId, required this.recordTypeName,
-      required this.date, required this.visitDateTimeFrom, required this.visitDateTimeto});
+
+  TimeSheetAllData({
+    required this.visitId,
+    required this.ptId,
+    required this.employeeId,
+    required this.employeeTypeId,
+    required this.visitType,
+    required this.visiteDateTimeFrom,
+    required this.visitDateTimeTo,
+    required this.isVisitCompleted,
+    required this.isVisitMissed,
+    required this.onWay,
+    this.recordTypeId,
+    required this.inZone,
+    this.eligibility,
+    required this.patientName,
+    required this.location,
+    required this.visitTypeId,
+    required this.visitTypeName,
+    required this.typeOfVisitId,
+    required this.typeOfVisitName,
+    this.recordTypeName,
+    required this.ptFirstName,
+    required this.ptLastName,
+    required this.ptAddress,
+    required this.ptImgUrl,
+    required this.fkPtPrimaryDiagnosis,
+    required this.fkPtPrimaryDiagnosisName,
+    required this.date,
+  });
 }
