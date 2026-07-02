@@ -99,7 +99,8 @@ class _VisitPageState extends State<VisitPage> {
                       hoverColor: Colors.transparent,
                       focusColor: Colors.transparent,
                       onTap: () {
-                        Get.to(() => EditVisitPage(item: item));
+                        item.recordTypeName == "Case Conference" || item.recordTypeName == "Miscellaneous" ?
+                        Get.to(() => EditVisitPage(item: item)): null ;
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
