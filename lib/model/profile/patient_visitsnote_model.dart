@@ -13,6 +13,7 @@ class PatientVisitItems{
   final int visitId;
   final int employeeId;
   final int pt_id;
+  final int employeeTypeId;
   final String patientName;
   final String imageUrl;
   final PrimaryDiagnosis primaryDiagnosis;
@@ -23,6 +24,7 @@ class PatientVisitItems{
   final bool isVisitMissed;
   final double visitCharge;
   PatientVisitItems({
+    required this.employeeTypeId,
     required this.visitCharge,
     required this.visitId,
     required this.employeeId,

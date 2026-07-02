@@ -161,7 +161,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                         ],
                       ),
                       Text(
-                        'Distance 4.5km',
+                        'Distance ${liveMapController.visitDashboardDetails.value.visit.distance ?? "--"}km',
                         style: AppTextStyle.normal12style.copyWith(
                           color: AppColors.textGreyColor,
                         ),

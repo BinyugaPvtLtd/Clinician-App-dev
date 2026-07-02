@@ -239,13 +239,18 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SvgPicture.asset(AppAsset.locationFillSvgIcon),
                   customWidth(4.w),
-                  Text(
-                    widget.data.patientAddress,
-                    style: AppTextStyle.normal12style.copyWith(
-                      color: AppColors.defaultTxtGrey,
+                  Expanded(
+                    child: Text(
+                      widget.data.patientAddress,
+                      style: AppTextStyle.normal12style.copyWith(
+                        color: AppColors.defaultTxtGrey,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

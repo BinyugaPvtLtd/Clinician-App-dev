@@ -202,6 +202,7 @@ class CalenderListController extends GetxController {
             visitDataList.add(
               VisitsListData(
                 visitId: v['visitId'] ?? 0,
+                employeeTypeId: v['employeeTypeId'] ?? 0,
                 patientName: v['patientName'] ?? '',
                 patientImgUrl: v['patientImgUrl'] ?? '',
                 address: v['address'] ?? '--',

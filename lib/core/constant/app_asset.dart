@@ -26,6 +26,8 @@ class AppAsset {
   static const String question = 'assets/png/question-square 1.png';
   static const String googleMapIcon = 'assets/png/google_map_icon.png';
   static const String sucessImg = 'assets/png/sucess.png';
+  static const String passwordImg = 'assets/png/password.png';
+  static const String loginBgImg = 'assets/png/login.png';
 
   // -------------------- SVG -----------------------
   static const String calenderSvgIcon = 'assets/svg/calender_icon.svg';

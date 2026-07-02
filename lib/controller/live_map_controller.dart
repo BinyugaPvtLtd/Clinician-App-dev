@@ -209,7 +209,7 @@ visitsMapModel.value = await getMapListVisit();
           timeRange: visitData['timeRange'] ?? '',
           visitCount: visitData['visitCount'] ?? '',
           distance: visitData['distance'], // can be null
-          visitCharge: visitData['visit_charge'] ?? 0,
+          visitCharge: double.parse(((visitData['visit_charge'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)),
         );
 
         // ✅ Patient object

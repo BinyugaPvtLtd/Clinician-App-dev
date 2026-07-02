@@ -13,7 +13,9 @@ class TimeSheetController extends GetxController {
 
   final isLoading = false.obs;
   final isVisitSaveLoading = false.obs;
+  final isTimeSheetLoading = false.obs;
   final error = ''.obs;
+
   // ✅ store record types here (dropdown list)
   final recordTypes = <RecordTypeData>[].obs;
   final visitMaster = <VisitMasterData>[].obs;
@@ -39,7 +41,7 @@ class TimeSheetController extends GetxController {
   final selectedTypeRecord = 'All'.obs;
   final selectedDate = ''.obs;
   final searchText = 'all'.obs;
-  final  clinitianId = 0.obs; // you can set this from profile or auth controller
+  final clinitianId = 0.obs; // you can set this from profile or auth controller
   TimeOfDay _selectedTime = TimeOfDay.now();
   Timer? _pollTimer;
   Worker? _everWorker; // <— IMPORTANT
@@ -56,7 +58,7 @@ class TimeSheetController extends GetxController {
 
     // Save the worker so you can dispose it
     _everWorker = everAll(
-      [selectedTypeRecord, selectedDate, searchText,clinitianId],
+      [selectedTypeRecord, selectedDate, searchText, clinitianId],
           (_) => fetchTimeSheetRecord(),
     );
 
@@ -82,8 +84,6 @@ class TimeSheetController extends GetxController {
   }
 
 
-
-
   Future<void> fetchTimeSheetRecord({bool silent = false}) async {
     if (isFetching.value) return;
     isFetching.value = true;
@@ -93,16 +93,14 @@ class TimeSheetController extends GetxController {
     }
 
     try {
-      final list = await getAllTimeSheetData(
+      final list = await getTimeSheetAllData(
         recordType: selectedTypeRecord.value,
-        selectDate: selectedDate.value,
-        searchText: searchText.value, clinicianId: clinitianId.value,
+        chooseDate: selectedDate.value,
+        search: searchText.value,
+        clinicianId: clinitianId.value,
       );
 
-      // update only if changed (optional)
-      if (list.toString() != timeSheetRecord.toString()) {
-        timeSheetRecord.assignAll(list);
-      }
+      timeSheetRecord.assignAll(list);
     } catch (_) {
       // handle error silently
     } finally {
@@ -110,6 +108,7 @@ class TimeSheetController extends GetxController {
       isInitialLoading.value = false;
     }
   }
+
   Future<void> fetchRecordType() async {
     final list = await getRecordType();
     recordTypes.assignAll(list);
@@ -122,6 +121,7 @@ class TimeSheetController extends GetxController {
     //   selectedRecordName.value = '';
     // }
   }
+
   Future<void> fetchVisitMaster() async {
     final list = await getAllVisitMaster();
     visitMaster.assignAll(list);
@@ -134,6 +134,7 @@ class TimeSheetController extends GetxController {
     //   selectedMasterVisitName.value = '';
     // }
   }
+
   Future<void> fetchPatientMaster() async {
     final list = await getAllPatientMaster(search: 'all');
     patientMaster.assignAll(list);
@@ -167,6 +168,7 @@ class TimeSheetController extends GetxController {
       return "$weekday , $day $month $year";
     }
   }
+
   String _weekdayName(int weekday) {
     const days = [
       "Monday",
@@ -179,6 +181,7 @@ class TimeSheetController extends GetxController {
     ];
     return days[weekday - 1];
   }
+
   String _monthName(int month) {
     const months = [
       "January",
@@ -196,12 +199,14 @@ class TimeSheetController extends GetxController {
     ];
     return months[month - 1];
   }
+
   String formatTimeRange(String from, String to) {
     final fromDate = DateTime.parse(from);
     final toDate = DateTime.parse(to);
 
     return "${_formatTime(fromDate)}-${_formatTime(toDate)}";
   }
+
   String _formatTime(DateTime date) {
     final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
     final minute = date.minute.toString().padLeft(2, '0');
@@ -211,14 +216,14 @@ class TimeSheetController extends GetxController {
   }
 
   String _twoDigits(int n) => n.toString().padLeft(2, '0');
+
   String _todayDate() {
     final now = DateTime.now();
     return "${now.year}-${_twoDigits(now.month)}-${_twoDigits(now.day)}";
   }
-  Future<void> selectStartTime(
-      BuildContext context,
-      TextEditingController controller,
-      ) async {
+
+  Future<void> selectStartTime(BuildContext context,
+      TextEditingController controller,) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialEntryMode: TimePickerEntryMode.input,
@@ -241,8 +246,6 @@ class TimeSheetController extends GetxController {
       controller.text = "$hh:$mm"; // ✅ 09:20 / 14:55
     }
   }
-
-
 
 
   //// API calls ////
@@ -291,11 +294,11 @@ class TimeSheetController extends GetxController {
         for (var i in res.data) {
           List<EligibleClinician> cliniciansList = [];
 
-          if (i['eligibleClinicians'] != null) {
-            for (var c in i['eligibleClinicians']) {
+          if (i['eligibleClinician'] != null) {
+            for (var c in i['eligibleClinician']) {
               cliniciansList.add(
                 EligibleClinician(
-                 empTypeId: c['employeeTypeId'] ?? 0,
+                  empTypeId: c['employeeTypeId'] ?? 0,
                   color: c['color'] ?? '',
                   empName: c['eligibleClinician'] ?? '',),
               );
@@ -304,8 +307,8 @@ class TimeSheetController extends GetxController {
           itemData.add(
             VisitMasterData(
               visitMasterId: i['visitId'] ?? 0,
-              typeOfVisit:  i['typeOfVisit'] ?? '',
-              serviceId:  i['serviceId'] ?? '',
+              typeOfVisit: i['typeOfVisit'] ?? '',
+              serviceId: i['serviceId'] ?? '',
               eligibleClinicians: cliniciansList,
             ),
           );
@@ -322,22 +325,24 @@ class TimeSheetController extends GetxController {
     // ✅ return ONLY here
     return itemData;
   }
+
   Future<List<PatientNameData>> getAllPatientMaster(
-  {required String search}
-      ) async {
+      {required String search}) async {
     List<PatientNameData> itemData = [];
     try {
       isLoading.value = true;
       error.value = '';
 
-      final res = await _api.get(TimeSheetRepository.getPatientNameData(search: search));
+      final res = await _api.get(
+          TimeSheetRepository.getPatientNameData(search: search));
       if (res.statusCode == 200 || res.statusCode == 201) {
         for (var i in res.data) {
           itemData.add(
             PatientNameData(
                 ptId: i['pt_id'] ?? 0,
-                ptName: "${i['pt_first_name']??''} ${i['pt_last_name']??''}",
-                ptAddress: i['pt_address'] ??''
+                ptName: "${i['pt_first_name'] ?? ''} ${i['pt_last_name'] ??
+                    ''}",
+                ptAddress: i['pt_address'] ?? ''
             ),
           );
         }
@@ -353,6 +358,7 @@ class TimeSheetController extends GetxController {
     // ✅ return ONLY here
     return itemData;
   }
+
   Future<ApiData> postAddVisitData({
     required int ptId,
     required int recordTypeId,
@@ -367,14 +373,13 @@ class TimeSheetController extends GetxController {
       error.value = '';
 
       final res = await _api.post(TimeSheetRepository.visitAdd, {
-          "pt_id": ptId,
-          "recordTypeId": recordTypeId,
-          "visitMasterId": visitMasterId,
-          "visitDate": visitDate,
-          "startTime": startTime,
-          "endTime": endTime,
-          "status": status
-
+        "pt_id": ptId,
+        "recordTypeId": recordTypeId,
+        "visitMasterId": visitMasterId,
+        "visitDate": visitDate,
+        "startTime": startTime,
+        "endTime": endTime,
+        "status": status
       });
 
       if (res.statusCode == 200 || res.statusCode == 201) {
@@ -384,7 +389,7 @@ class TimeSheetController extends GetxController {
             message: res.statusMessage!,
             statusCode: res.statusCode!
         );
-      }else{
+      } else {
         error.value = res.statusMessage!;
         return ApiData(
             success: false,
@@ -396,7 +401,7 @@ class TimeSheetController extends GetxController {
       error.value = e.toString();
       return ApiData(
           success: false,
-          message:AppString.somethingWentWrong,
+          message: AppString.somethingWentWrong,
           statusCode: 404
       );
     } finally {
@@ -405,56 +410,125 @@ class TimeSheetController extends GetxController {
   }
 
   /// time sheet main data
-  Future<List<TimeSheetAllData>> getAllTimeSheetData({
+// ── GET visits filtered by record type + date + search ────────────────────────
+  Future<List<TimeSheetAllData>> getTimeSheetAllData({
     required String recordType,
-    required String selectDate,
-    required String searchText,
+    required String chooseDate,
+    required String search,
     required int clinicianId,
-}) async {
-    List<TimeSheetAllData> itemData = [];
+  }) async {
+    List<TimeSheetAllData> itemsList = [];
     try {
-      isLoading.value = true;
+      isTimeSheetLoading.value = true;
       error.value = '';
 
-      final res = await _api.get(TimeSheetRepository.getTimeSheetData(
+      final res = await _api.get(
+        TimeSheetRepository.getTimeSheetData(
           recordType: recordType,
-          chooseData: selectDate,
-          search: searchText, clinicianId: clinicianId));
+          chooseData: chooseDate,
+          search: search,
+          clinicianId: clinicianId,
+        ),
+      );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        for (var i in res.data) {
-          itemData.add(
+        for (var item in res.data) {
+          itemsList.add(
             TimeSheetAllData(
-                ptId: i['pt_id'] ?? 0,
-                ptFirstName: i['pt_first_name'] ?? '',
-                ptLastName: i['pt_last_name'] ?? '',
-                ptAddress: i['pt_address'] ?? '',
-                ptImage: i['pt_img_url'] ?? '',
-                fkPtDiagnosisId: i['fk_pt_primary_diagnosis'] ?? 0,
-                fkPtDiagnosisName: i['fk_pt_primary_diagnosis_name'] ?? '',
-                isVisitCompleted: i['isVisitCompleted'] ?? false,
-                onWay: i['onWay'] ?? false,
-                recrdTypeId: i['recordTypeId'] ?? 0,
-                recordTypeName: i['recordTypeName'] ?? '',
-                date: i['date'] ?? '',
-                visitDateTimeFrom: i['visiteDateTimeFrom'] ?? '',
-                visitDateTimeto: i['visitDateTimeTo'] ?? ''
-
+              visitId: item['visitId'],
+              ptId: item['pt_id'],
+              employeeId: item['employeeId'],
+              employeeTypeId: item['employeeTypeId'],
+              visitType: item['visitType'],
+              visiteDateTimeFrom: item['visiteDateTimeFrom'],
+              visitDateTimeTo: item['visitDateTimeTo'],
+              isVisitCompleted: item['isVisitCompleted'],
+              isVisitMissed: item['isVisitMissed'],
+              onWay: item['onWay'],
+              recordTypeId: item['recordTypeId'],
+              inZone: item['inZone'],
+              eligibility: item['eligibility'],
+              patientName: item['patientName'],
+              location: item['location'],
+              visitTypeId: item['visitTypeId'],
+              visitTypeName: item['visitTypeName'],
+              typeOfVisitId: item['typeOfVisitId'],
+              typeOfVisitName: item['typeOfVisitName'],
+              recordTypeName: item['recordTypeName'],
+              ptFirstName: item['pt_first_name'],
+              ptLastName: item['pt_last_name'],
+              ptAddress: item['pt_address'],
+              ptImgUrl: item['pt_img_url'] ?? '',
+              fkPtPrimaryDiagnosis: item['fk_pt_primary_diagnosis'],
+              fkPtPrimaryDiagnosisName: item['fk_pt_primary_diagnosis_name'],
+              date: item['date'],
             ),
           );
         }
       } else {
-        error.value = "failed to load data";
+        error.value = res.statusMessage!;
+      }
+      return itemsList;
+    } catch (e) {
+      error.value = e.toString();
+      return itemsList;
+    } finally {
+      isTimeSheetLoading.value = false;
+    }
+  }
+
+
+  // ── PATCH edit visit ──────────────────────────────────────────────────────────
+  Future<ApiData> patchEditVisitData({
+    required int visitId,
+    required int recordTypeId,
+    required int visitMasterId,
+    required String visitDate,
+    required String startTime,
+    required String endTime,
+    required String status,
+    required bool inZone,
+  }) async {
+    try {
+      isVisitSaveLoading.value = true;
+      error.value = '';
+
+      final res = await _api.patch(
+        TimeSheetRepository.editVisit(visitId: visitId),
+        {
+          "recordTypeId": recordTypeId,
+          "visitMasterId": visitMasterId,
+          "visitDate": visitDate,
+          "startTime": startTime,
+          "endTime": endTime,
+          "status": status,
+          "inZone": inZone,
+        },
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        return ApiData(
+          success: true,
+          message: res.statusMessage!,
+          statusCode: res.statusCode!,
+        );
+      } else {
+        error.value = res.statusMessage!;
+        return ApiData(
+          success: false,
+          message: res.statusMessage!,
+          statusCode: res.statusCode!,
+        );
       }
     } catch (e) {
       error.value = e.toString();
+      return ApiData(
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 404,
+      );
     } finally {
-      isLoading.value = false;
+      isVisitSaveLoading.value = false;
     }
-
-    // ✅ return ONLY here
-    return itemData;
   }
 }
-
-

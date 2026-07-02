@@ -21,7 +21,8 @@ import '../../model/profile/visit_details_model.dart';
 
 class VisitDetailPage extends StatefulWidget {
   final int visitId;
-  const VisitDetailPage({super.key, required this.visitId});
+  final int employeeTypeId;
+  const VisitDetailPage({super.key, required this.visitId, required this.employeeTypeId});
 
   @override
   State<VisitDetailPage> createState() => _VisitDetailPageState();
@@ -33,7 +34,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
   void initState() {
     // TODO: implement initState
    controller.fetchVisitDetails(visitId: widget.visitId);
-   controller.fetchAssistanceDropdown(clinicianEmployeeTypeId: 4);
+   controller.fetchAssistanceDropdown(clinicianEmployeeTypeId: widget.employeeTypeId);
     super.initState();
   }
   @override
@@ -158,10 +159,14 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                               children: [
                                 SvgPicture.asset(AppAsset.locationFillSvgIcon),
                                 customWidth(4.w),
-                                Text(
-                                  controller.visitDetailModel.value!.patient.address,
-                                  style: AppTextStyle.normal12style.copyWith(
-                                    color: AppColors.defaultTxtGrey,
+                                Expanded(
+                                  child: Text(
+                                    controller.visitDetailModel.value!.patient.address,
+                                    style: AppTextStyle.normal12style.copyWith(
+                                      color: AppColors.defaultTxtGrey,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],

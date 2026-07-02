@@ -398,6 +398,7 @@ class ProfileController extends GetxController{
               PatientVisitItems(
                   visitId: p['visitId'] ?? 0,
                   employeeId: p['employeeId'] ?? 0,
+                  employeeTypeId:  p["employeeTypeId"] ?? 0,
                   pt_id: p['pt_id'] ?? 0,
                   patientName: p['patientName'] ?? '',
                   imageUrl: p['imageUrl'] ?? '',

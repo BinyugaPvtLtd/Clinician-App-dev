@@ -4,7 +4,6 @@ import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
 import 'package:clinician_app/pages/auth/forgot_pass_screen.dart';
-import 'package:clinician_app/pages/auth/password_screen.dart';
 import 'package:clinician_app/pages/auth/register_screen.dart';
 import 'package:clinician_app/pages/auth/widget/error_dailog.dart';
 import 'package:clinician_app/pages/home/home_screen.dart';
@@ -14,19 +13,18 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../controller/auth_controller.dart';
-import '../../core/constant/api_app_constant.dart';
-import 'company_list_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class PasswordScreen extends StatefulWidget {
+  final String email;
+  const PasswordScreen({super.key, required this.email});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<PasswordScreen> createState() => _PasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _PasswordScreenState extends State<PasswordScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  TextEditingController emailController = TextEditingController();
+  // TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   final auth = Get.put(AuthController());
   final profileController = Get.put(ProfileController());
@@ -45,12 +43,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   customHeight(10.h),
-                  Image.asset(AppAsset.loginBgImg, height: 243.h),
+                  Image.asset(AppAsset.passwordImg, height: 243.h),
                   customHeight(46.h),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Login',
+                      'Password',
                       style: AppTextStyle.normal14style.copyWith(
                         color: AppColors.defaultTxtGrey,
                         fontWeight: FontWeight.w600,
@@ -61,79 +59,71 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Using credentials from Pro Health',
+                      'Enter your password to login',
                       style: AppTextStyle.normal12style.copyWith(
                         color: AppColors.defaultTxtGrey,
                         fontWeight: FontWeight.w300,
                       ),
                     ),
                   ),
-                  customHeight(24.h),
-                  PrimaryTextField(
-                    controller: emailController,
-                    hintText: 'Your Email',
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) => Validators.validateEmail(value),
-                    prefixIcon: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: SvgPicture.asset(AppAsset.emailSvgIcon),
-                    ),
-                  ),
-                  // customHeight(20.h),
+                  // customHeight(24.h),
                   // PrimaryTextField(
-                  //   controller: passwordController,
-                  //   hintText: 'Password',
-                  //   textInputAction: TextInputAction.done,
-                  //   keyboardType: TextInputType.visiblePassword,
-                  //   validator:
-                  //       (value) => Validators.validatePassword(value ?? ''),
+                  //   controller: emailController,
+                  //   hintText: 'Your Email',
+                  //   keyboardType: TextInputType.emailAddress,
+                  //   validator: (value) => Validators.validateEmail(value),
                   //   prefixIcon: Padding(
                   //     padding: EdgeInsets.symmetric(horizontal: 15.w),
-                  //     child: SvgPicture.asset(AppAsset.passwordSvgIcon),
+                  //     child: SvgPicture.asset(AppAsset.emailSvgIcon),
                   //   ),
                   // ),
-                  customHeight(10.h),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: InkWell(
-                      onTap: () {
-                        Get.to(() => ForgotPassScreen());
-                      },
-                      child: Text(
-                        'Forgot password?',
-                        style: AppTextStyle.normal10style.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryAppColor,
-                        ),
-                      ),
+                  customHeight(20.h),
+                  PrimaryTextField(
+                    controller: passwordController,
+                    hintText: 'Password',
+                    textInputAction: TextInputAction.done,
+                    keyboardType: TextInputType.visiblePassword,
+                    validator:
+                        (value) => Validators.validatePassword(value ?? ''),
+                    prefixIcon: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 15.w),
+                      child: SvgPicture.asset(AppAsset.passwordSvgIcon),
                     ),
                   ),
+                  // customHeight(10.h),
+                  // Align(
+                  //   alignment: Alignment.centerRight,
+                  //   child: InkWell(
+                  //     onTap: () {
+                  //       Get.to(() => ForgotPassScreen());
+                  //     },
+                  //     child: Text(
+                  //       'Forgot password?',
+                  //       style: AppTextStyle.normal10style.copyWith(
+                  //         fontWeight: FontWeight.w500,
+                  //         color: AppColors.primaryAppColor,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                   customHeight(64.h),
-              Obx(() => auth.isLoading.value ? Padding(
-                padding:  EdgeInsets.symmetric(vertical:12.h ),
-                child: CircularProgressIndicator(
-                  color: AppColors.primaryAppColor,
-                ),
-              ):PrimaryButton(
+                  Obx(() => auth.isLoading.value ? Padding(
+                    padding:  EdgeInsets.symmetric(vertical:12.h ),
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryAppColor,
+                    ),
+                  ):PrimaryButton(
                     onTap: () async{
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
-                        final response = await auth.getCompanyList(emailController.text,);
+                        final response = await auth.signInAuth(
+                            email: widget.email,
+                            password: passwordController.text);
                         if (response.success) {
-                        // await profileController.fetchRecordType();
-                        // await profileController.fetchClinitionLoginDetails();
-                        if (response.companies.length == 1) {
-                          // 👈 skip screen, directly use first company alias
-                          String companyAlias = response.companies.first.companyAlias;
-                          print("Auto selected company: $companyAlias");
-                          String endWith = await ApiAppConstant.endPointByAlias(3, "dev");
-                          print("Endpoint set to: ${ApiAppConstant.domain}");
-                          await Get.offAll(() => PasswordScreen(email: emailController.text));
-                        } else {
-                          // 👈 show company list screen when multiple companies
-                          Get.offAll(() => CompanyListScreen(email: emailController.text, companyList: response.companies,));
-                        }
-                          // print('Form validated successfully');
+                          await profileController.fetchRecordType();
+                          await profileController.fetchClinitionLoginDetails();
+                          print('Form validated successfully');
+                          Get.offAll(() => HomeScreen());
                         }else{
                           print('Error');
                           showErrorDialog(

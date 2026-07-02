@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 
 import '../../controller/timesheet_controller.dart';
 import '../../model/timesheet/timesheet_model.dart';
+import 'edit_visit_page.dart';
 
 class VisitPage extends StatefulWidget {
   const VisitPage({super.key});
@@ -33,19 +34,19 @@ class _VisitPageState extends State<VisitPage> {
           children: [
             Row(
               children: [
-    Obx(() {
-      return Text(
-                  timeSheetController.formatSmartDate(timeSheetController.selectedDate.value),
-                  style: AppTextStyle.normal12style.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                );}),
+                Obx(() {
+                  return Text(
+                    timeSheetController.formatSmartDate(timeSheetController.selectedDate.value),
+                    style: AppTextStyle.normal12style.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );}),
                 Spacer(),
                 PrimaryOutlinedButton(
                   text: "Choose Date",
                   onPressed: () async{
                     final String? selectedDate =
-                        await Get.dialog(CalenderDatePickDialogWidget());
+                    await Get.dialog(CalenderDatePickDialogWidget());
 
                     if (selectedDate != null) {
                       timeSheetController.selectedDate.value = selectedDate;
@@ -76,24 +77,31 @@ class _VisitPageState extends State<VisitPage> {
                   )),
                 );
               }
-                if (timeSheetController.timeSheetRecord.isEmpty) {
-                  return const Expanded(
-                    child: Center(child: Text("No Records Found")),
-                  );
-                }
-                return Expanded(
-                  child: ListView.separated(
-                    padding: EdgeInsets.symmetric(vertical: 10.h),
-                    separatorBuilder: (context, index) {
-                      return Divider();
-                    },
-                    itemCount: timeSheetController.timeSheetRecord.length,
-                    itemBuilder: (context, index) {
-                      final item = timeSheetController.timeSheetRecord[index];
-                      final visitTiming = timeSheetController.formatTimeRange(
-                          timeSheetController.timeSheetRecord[index].visitDateTimeFrom,
-                          timeSheetController.timeSheetRecord[index].visitDateTimeto);
-                      return Column(
+              if (timeSheetController.timeSheetRecord.isEmpty) {
+                return const Expanded(
+                  child: Center(child: Text("No Records Found!")),
+                );
+              }
+              return Expanded(
+                child: ListView.separated(
+                  padding: EdgeInsets.symmetric(vertical: 10.h),
+                  separatorBuilder: (context, index) {
+                    return Divider();
+                  },
+                  itemCount: timeSheetController.timeSheetRecord.length,
+                  itemBuilder: (context, index) {
+                    final item = timeSheetController.timeSheetRecord[index];
+                    final visitTiming = timeSheetController.formatTimeRange(
+                        timeSheetController.timeSheetRecord[index].visiteDateTimeFrom,
+                        timeSheetController.timeSheetRecord[index].visitDateTimeTo);
+                    return InkWell(
+                      highlightColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                      focusColor: Colors.transparent,
+                      onTap: () {
+                        Get.to(() => EditVisitPage(item: item));
+                      },
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
@@ -120,20 +128,28 @@ class _VisitPageState extends State<VisitPage> {
                           Row(
                             children: [
                               !item.onWay
-                                  ? item.ptImage.isEmpty ? CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage:AssetImage(AppAsset.profilePicImg),
-                                  ) :CircleAvatar(
+                                  ? item.ptImgUrl.isEmpty ? CircleAvatar(
                                 radius: 30,
-                                backgroundImage:NetworkImage(item.ptImage),
+                                backgroundImage:AssetImage(AppAsset.profilePicImg),
+                              ) :CircleAvatar(
+                                radius: 30,
+                                backgroundImage:NetworkImage(item.ptImgUrl),
                                 backgroundColor: Colors.transparent,
                               )
-                                  : Container(
-                                    height: 50.h,
-                                    width: 60.w,
-                                    alignment: Alignment.center,
-                                    child: SvgPicture.asset(AppAsset.carSvgIcon),
-                                  ),
+                                  : item.ptImgUrl.isEmpty ? CircleAvatar(
+                                radius: 30,
+                                backgroundImage:AssetImage(AppAsset.profilePicImg),
+                              ) :CircleAvatar(
+                                radius: 30,
+                                backgroundImage:NetworkImage(item.ptImgUrl),
+                                backgroundColor: Colors.transparent,
+                              ),
+                              // Container(
+                              //       height: 50.h,
+                              //       width: 60.w,
+                              //       alignment: Alignment.center,
+                              //       child: SvgPicture.asset(AppAsset.carSvgIcon),
+                              //     ),
                               customWidth(10.w),
                               Expanded(
                                 child: Column(
@@ -145,28 +161,28 @@ class _VisitPageState extends State<VisitPage> {
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 !item.onWay
                                                     ? "${item.ptFirstName} ${item.ptLastName}"
-                                                    : "Going for Office Visit",
+                                                    : "${item.ptFirstName} ${item.ptLastName}",//"Going for Office Visit",
                                                 style: AppTextStyle.normal12style
                                                     .copyWith(
-                                                      color:
-                                                          AppColors.textGreyColor,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
+                                                  color:
+                                                  AppColors.textGreyColor,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               if (index.isEven)
                                                 Text(
-                                                  item.fkPtDiagnosisName,
+                                                  item.fkPtPrimaryDiagnosisName,
                                                   style: AppTextStyle.normal12style
                                                       .copyWith(
-                                                        fontWeight: FontWeight.w300,
-                                                      ),
+                                                    fontWeight: FontWeight.w300,
+                                                  ),
                                                 ),
                                             ],
                                           ),
@@ -176,9 +192,9 @@ class _VisitPageState extends State<VisitPage> {
                                           visitTiming,
                                           style: AppTextStyle.normal12style
                                               .copyWith(
-                                                color: AppColors.textGreyColor,
-                                                fontWeight: FontWeight.w400,
-                                              ),
+                                            color: AppColors.textGreyColor,
+                                            fontWeight: FontWeight.w400,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -196,11 +212,12 @@ class _VisitPageState extends State<VisitPage> {
                             ],
                           ),
                         ],
-                      );
-                    },
-                  ),
-                );
-              }
+                      ),
+                    );
+                  },
+                ),
+              );
+            }
             ),
           ],
         ),
