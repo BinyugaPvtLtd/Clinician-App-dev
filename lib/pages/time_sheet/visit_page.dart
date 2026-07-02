@@ -10,7 +10,8 @@ import '../../model/timesheet/timesheet_model.dart';
 import 'edit_visit_page.dart';
 
 class VisitPage extends StatefulWidget {
-  const VisitPage({super.key});
+
+  const VisitPage({super.key,});
 
   @override
   State<VisitPage> createState() => _VisitPageState();
@@ -99,7 +100,8 @@ class _VisitPageState extends State<VisitPage> {
                       hoverColor: Colors.transparent,
                       focusColor: Colors.transparent,
                       onTap: () {
-                        Get.to(() => EditVisitPage(item: item));
+                        item.recordTypeName == "Case Conference" || item.recordTypeName == "Miscellaneous" ?
+                        Get.to(() => EditVisitPage(item: item)): null ;
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
