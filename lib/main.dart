@@ -24,6 +24,16 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // Request notification permission (Android 13+ requires this at runtime)
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // Create the chat notification channel on the device
+  await ChatNotificationService.init();
+
   setupForegroundCallListener();
   setupBackgroundCallListener();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);

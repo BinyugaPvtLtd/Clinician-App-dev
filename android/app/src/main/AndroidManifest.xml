@@ -9,6 +9,18 @@
         android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
+    <!-- ✅ Required on Android 13+ (API 33+) to show any notification -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- ✅ Required for notification vibration -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <!-- ✅ Required for flutter_local_notifications to wake device for heads-up -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!-- ✅ Required to show full-screen call notifications on locked screen -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+
     <application
         android:label="Clinician"
         android:name="${applicationName}"
@@ -45,6 +57,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- ✅ FCM background message handler (required for firebase_messaging with AGP 8+) -->
+        <service
+            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+            android:exported="false">
+            <intent-filter android:priority="-500">
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
     </application>
 
     <queries>
