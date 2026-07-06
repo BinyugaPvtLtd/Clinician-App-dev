@@ -49,6 +49,7 @@ final callController = Get.put(CallingController());
 void setupForegroundCallListener() {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final data = message.data;
+    print("📲 Received foreground notification: ${message.data}");
     debugPrint("Message: $data");
 
     // =========================
@@ -138,6 +139,7 @@ void setupForegroundCallListener() {
     // OTHER NOTIFICATION TYPE
     // =========================
     else {
+      print("📲 Received foreground notification: ${message.data}");
       final title = message.notification?.title ?? 'New message';
       final body = message.notification?.body ?? 'You have a new notification';
 

@@ -180,6 +180,14 @@ class CalenderListController extends GetxController {
         return '';
       }
     }
+    String toShortForm(String? name) {
+      if (name == null || name.trim().isEmpty) return '';
+      return name
+          .trim()
+          .split(RegExp(r'\s+'))          // split on one or more spaces
+          .map((word) => word[0].toUpperCase())
+          .join();
+    }
 
     try {
       if (showLoader) {
@@ -206,7 +214,7 @@ class CalenderListController extends GetxController {
                 patientName: v['patientName'] ?? '',
                 patientImgUrl: v['patientImgUrl'] ?? '',
                 address: v['address'] ?? '--',
-                 visitType: v['visitTypeName'] ?? '',
+                 visitType: v['visitTypeName'] != null ? toShortForm(v['visitTypeName']) : '',
                 primaryDiagnosis: v['primaryDiagnosis'] ?? '',
                 timeFrom:
                 v['timeFrom'] != null ? formatTimeToAMPM(v['timeFrom']) : '',
