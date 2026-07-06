@@ -32,7 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               RequestPage(),
               CalenderScreen(),
-              homeController.isLiveView.value ? LivePage() : MapScreen(),
+              // homeController.isLiveView.value ? LivePage() :
+              MapScreen(),
               TimeSheetPage(),
               ProfilePage(),
             ],

@@ -384,6 +384,14 @@ class ProfileController extends GetxController{
         return '';
       }
     }
+    String toShortForm(String? name) {
+      if (name == null || name.trim().isEmpty) return '';
+      return name
+          .trim()
+          .split(RegExp(r'\s+'))          // split on one or more spaces
+          .map((word) => word[0].toUpperCase())
+          .join();
+    }
     try {
       isEmployeeLoading.value = true;
       error.value = '';
@@ -409,7 +417,7 @@ class ProfileController extends GetxController{
                   ),
                   visitType: VisitType(
                       id: visitType['id'] ?? 0,
-                      name: visitType['name'] ?? ''
+                      name: visitType['name'] != null ? toShortForm(visitType['name']) : '',
                   ),
                   visiteDateTimeFrom: p['visiteDateTimeFrom'] != null ? formatTimeToAMPM(p['visiteDateTimeFrom']) : '',
                   visitDateTimeTo: p['visitDateTimeTo'] != null ? formatTimeToAMPM(p['visitDateTimeTo']) : '',
