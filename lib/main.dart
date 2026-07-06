@@ -21,9 +21,14 @@ Future<void> main() async {
   await GetStorage.init();
 
   // if (Firebase.apps.isEmpty) {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  //WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,);
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') rethrow;
+  }
+
   // Request notification permission (Android 13+ requires this at runtime)
   await FirebaseMessaging.instance.requestPermission(
     alert: true,

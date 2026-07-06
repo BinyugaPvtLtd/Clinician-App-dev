@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   firebase_core
   iris_method_channel
+  media_kit_libs_windows_audio
   mobkit_calendar
   permission_handler_windows
   printing

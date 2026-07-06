@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:clinician_app/controller/repository/calling_repo.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -16,46 +18,74 @@ import '../services/token_manager/token_manager_service.dart';
 class CallingController extends GetxController{
   final ApiService _api = Get.put(ApiService());
   String fcmToken = '';
-  Future<void> initFCM({
-    required String deviceName}) async {
+  Future<void> initFCM({required String deviceName}) async {
     final userId = await TokenManager.getUserId();
-    // 1️⃣ ASK PERMISSION (Web + iOS)
+
+    // 1️⃣ ASK PERMISSION (iOS + Android 13+)
     NotificationSettings settings =
     await FirebaseMessaging.instance.requestPermission();
 
     print("🔔 Notification permission: ${settings.authorizationStatus}");
 
-    // 2️⃣ Get web FCM token
+    if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      print("🚫 Notifications denied — skipping FCM registration");
+      return;
+    }
+
+    // 2️⃣ iOS: FCM needs the APNS token first. On the simulator (or without
+    // the Push Notifications entitlement) it never arrives — skip gracefully
+    // instead of crashing.
+    if (Platform.isIOS) {
+      String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+
+      // Give it a moment — the APNS token can arrive slightly after launch.
+      if (apnsToken == null) {
+        await Future.delayed(const Duration(seconds: 2));
+        apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      }
+
+      if (apnsToken == null) {
+        print("⚠️ APNS token unavailable (simulator or missing push "
+            "entitlement) — skipping FCM token fetch");
+        return;
+      }
+    }
+
+    // 3️⃣ Get FCM token
     final token = await FirebaseMessaging.instance.getToken();
 
+    if (token == null) {
+      print("⚠️ FCM token is null — skipping device registration");
+      return;
+    }
+
     print("🌐 Mobile FCM Token: $token");
-    fcmToken = token!;
+    fcmToken = token;
+
+    // 4️⃣ Register device with correct platform type
+    final deviceType = Platform.isIOS ? "IOS" : "ANDROID";
 
     var response = await addRegisterDevice(
-        userId: userId,
-        fcmToken: fcmToken,
-        deviceType: "ANDROID",
-        deviceName: "MOBILE DEVICE",
-        );
+      userId: userId,
+      fcmToken: fcmToken,
+      deviceType: deviceType,
+      deviceName: deviceName, // was hardcoded "MOBILE DEVICE"
+    );
 
-    if(response.statusCode == 201 || response.statusCode == 200){
-      String fcmTokenGet = fcmToken;
-      TokenManager.setFcmToken(fcmToken: fcmTokenGet);
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      TokenManager.setFcmToken(fcmToken: fcmToken);
       print('Device data ${response.data}');
-    }else{
+    } else {
       print('Device error ${response.message}');
     }
 
-    // 3️⃣ Listen for messages when the TAB is open (foreground)
+    // 5️⃣ Foreground / tap listeners (uncomment when ready)
     // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     //   print("📩 Foreground message: ${message.data}");
-    //   // show your in-app incoming call popup here
     // });
     //
-    // // 4️⃣ When user clicks notification
     // FirebaseMessaging.onMessageOpenedApp.listen((message) {
     //   print("📲 Opened app from notification");
-    //   // navigate to call screen if needed
     // });
   }
 

@@ -16,8 +16,18 @@ class ChatNotificationService {
     final fln = FlutterLocalNotificationsPlugin();
 
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
     await fln.initialize(
-      const InitializationSettings(android: androidInit),
+      const InitializationSettings(
+        android: androidInit,
+        iOS: iosInit,
+      ),
       onDidReceiveNotificationResponse: (response) {
         if (onNotificationTap == null) return;
         final payload = response.payload;
@@ -32,7 +42,21 @@ class ChatNotificationService {
     await _ensureChannel(fln);
   }
 
-  /// Show a WhatsApp-style heads-up notification with optional sender image.
+  /// Request iOS notification permissions manually (optional).
+  /// Useful if you set request*Permission to false in init() and want
+  /// to ask the user at a better moment in your app flow.
+  static Future<bool> requestIOSPermissions() async {
+    if (!Platform.isIOS) return true;
+    final fln = FlutterLocalNotificationsPlugin();
+    final granted = await fln
+        .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+    return granted ?? false;
+  }
+
+  /// Show a WhatsApp-style heads-up notification with optional sender image
+  /// on Android; standard alert notification on iOS.
   /// Safe to call from both the main isolate and the background isolate.
   static Future<void> show({
     required int id,
@@ -44,21 +68,36 @@ class ChatNotificationService {
     final fln = FlutterLocalNotificationsPlugin();
 
     // Background isolate must re-init independently.
+    // Permission flags are false here so show() never triggers the
+    // iOS permission dialog — that's init()'s job.
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    await fln.initialize(const InitializationSettings(android: androidInit));
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+
+    await fln.initialize(
+      const InitializationSettings(
+        android: androidInit,
+        iOS: iosInit,
+      ),
+    );
+
     await _ensureChannel(fln);
 
-    // Download sender image bytes (works in background isolate — uses dart:io only)
-    final Uint8List? imageBytes = await _downloadImage(senderImageUrl);
+    // Download sender image bytes (works in background isolate — dart:io only).
+    // Only used by Android's messaging style; skip the download on iOS.
+    final Uint8List? imageBytes =
+    Platform.isAndroid ? await _downloadImage(senderImageUrl) : null;
 
-    // Person = the message sender shown like WhatsApp
+    // ---------- Android: WhatsApp-style messaging layout ----------
     final sender = Person(
       name: title,
       important: true,
       icon: imageBytes != null ? ByteArrayAndroidIcon(imageBytes) : null,
     );
 
-    // MessagingStyleInformation gives the WhatsApp bubble layout
     final messagingStyle = MessagingStyleInformation(
       sender,
       groupConversation: false,
@@ -75,7 +114,6 @@ class ChatNotificationService {
       priority: Priority.max,
       category: AndroidNotificationCategory.message,
       styleInformation: messagingStyle,
-      // Large icon (circle on the right side of the notification)
       largeIcon: imageBytes != null ? ByteArrayAndroidBitmap(imageBytes) : null,
       enableVibration: true,
       playSound: true,
@@ -83,15 +121,28 @@ class ChatNotificationService {
       autoCancel: true,
     );
 
+    // ---------- iOS: standard alert notification ----------
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      threadIdentifier: channelId, // groups chat notifications together
+    );
+
     await fln.show(
       id,
       title,
       body,
-      NotificationDetails(android: androidDetails),
+      NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      ),
       payload: payloadData != null ? jsonEncode(payloadData) : null,
     );
   }
 
+  /// Android-only: create the notification channel.
+  /// On iOS resolvePlatformSpecificImplementation returns null → no-op.
   static Future<void> _ensureChannel(FlutterLocalNotificationsPlugin fln) async {
     const channel = AndroidNotificationChannel(
       channelId,
@@ -101,8 +152,9 @@ class ChatNotificationService {
       enableVibration: true,
       playSound: true,
     );
-    final androidPlugin =
-        fln.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+    final androidPlugin = fln.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.createNotificationChannel(channel);
   }
 
