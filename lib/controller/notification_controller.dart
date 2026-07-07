@@ -59,7 +59,7 @@ class NotificationController extends GetxController {
               type: item['type'] ?? '',
               title: item['title'] ?? '',
               body: item['body'] ?? '',
-              data: item['data'] ?? '',
+              // data: item['data'] ?? '',
               isRead: item['isRead'] ?? false,
               callId: item['callId'] ?? 0,
               createdAt: item['createdAt'] != null ? timeAgo(item['createdAt']) : '',

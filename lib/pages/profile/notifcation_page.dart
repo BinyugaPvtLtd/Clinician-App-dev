@@ -100,10 +100,10 @@ class _NotificationPageState extends State<NotificationPage> {
                 // ✅ Convert API data -> NotificationItem (UI model)
                 final notifications = notificationController.notificationModelData
                     .map((i) => NotificationItem(
-                  icon: Icons.notifications,
+                  icon: i.callId != 0 ? Icons.call:Icons.notifications,
                   color: Colors.blue,
-                  title: i.title,
-                  subtitle: i.body,
+                  title: i.type,
+                  subtitle: i.title,
                   time: i.createdAt,
                   // buttonText: i.type == "certificate_expired" ? "Update" : null, // optional
                 ))

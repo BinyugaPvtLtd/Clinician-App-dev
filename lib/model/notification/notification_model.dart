@@ -4,7 +4,7 @@ class NotificationModelData{
   final String type;
   final String title;
   final String body;
-  final String data;
+  // final String data;
   final bool isRead;
   final int callId;
   final String createdAt;
@@ -15,7 +15,7 @@ class NotificationModelData{
     required this.userId,
     required this.title,
     required this.body,
-    required this.data,
+    // required this.data,
     required this.isRead,
     required this.callId,
     required this.createdAt,
