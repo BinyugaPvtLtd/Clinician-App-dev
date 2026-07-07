@@ -23,9 +23,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: controller.isEmployeeLoading.value ?
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: controller.isEmployeeLoading.value ?
         Center(child: CircularProgressIndicator(),) :Form(
           key: _formKey,
           child: Column(

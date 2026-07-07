@@ -38,10 +38,10 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
   }
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Column(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
           children: [
             customHeight(14.h),
             Row(
@@ -93,7 +93,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 ),
               );
             }
-
+            
             final items = homeController.patientScheduleModel == null;
             if (items == true) {
               return const Expanded(
@@ -358,66 +358,66 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
             );}),
           ],
         ),
-        floatingActionButton: ChatFABWidget(),
-        bottomNavigationBar: Container(
-          height: 100.h,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: AppColors.defaultTxtGrey)),
-          ),
-          alignment: Alignment.topCenter,
-          child: Container(
-            height: 38.h,
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            margin: EdgeInsets.only(top: 10.h),
-
-            child: Row(
-              children: [
-                Expanded(
-                  child: PrimaryOutlinedButton(
-                    radius: 6.r,
-                    text: 'Reject',
-                    buttonColor: AppColors.rejectionRedColor,
-                    onPressed: () {
-                      Get.dialog(RejectDialogWidget(visitId: widget.visitId,));
-                    },
-                    textStyle: AppTextStyle.normal12style.copyWith(
-                      color: AppColors.rejectionRedColor,
-                    ),
+      ),
+      floatingActionButton: ChatFABWidget(),
+      bottomNavigationBar: Container(
+        height: 100.h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: AppColors.defaultTxtGrey)),
+        ),
+        alignment: Alignment.topCenter,
+        child: Container(
+          height: 38.h,
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          margin: EdgeInsets.only(top: 10.h),
+    
+          child: Row(
+            children: [
+              Expanded(
+                child: PrimaryOutlinedButton(
+                  radius: 6.r,
+                  text: 'Reject',
+                  buttonColor: AppColors.rejectionRedColor,
+                  onPressed: () {
+                    Get.dialog(RejectDialogWidget(visitId: widget.visitId,));
+                  },
+                  textStyle: AppTextStyle.normal12style.copyWith(
+                    color: AppColors.rejectionRedColor,
                   ),
                 ),
-                customWidth(5.w),
-                Expanded(
-                  child: PrimaryOutlinedButton(
-                    radius: 6.r,
-                    text: 'Reschedule',
-                    buttonColor: AppColors.primaryAppColor,
-                    onPressed: () {
-                      Get.dialog(RescheduleDialogWidget());
-                    },
-                    textStyle: AppTextStyle.normal12style.copyWith(
-                      color: AppColors.primaryAppColor,
-                    ),
+              ),
+              customWidth(5.w),
+              Expanded(
+                child: PrimaryOutlinedButton(
+                  radius: 6.r,
+                  text: 'Reschedule',
+                  buttonColor: AppColors.primaryAppColor,
+                  onPressed: () {
+                    Get.dialog(RescheduleDialogWidget());
+                  },
+                  textStyle: AppTextStyle.normal12style.copyWith(
+                    color: AppColors.primaryAppColor,
                   ),
                 ),
-                customWidth(5.w),
-                Expanded(
-                  child: PrimaryButton(
-                    onTap: () {
-                      Get.dialog(AcceptDialogWidget(visitId: widget.visitId,));
-                    },
-                    padding: EdgeInsets.all(0),
-                    label: 'Accept',
-                    borderRadius: 6.r,
-                    labelStyle: AppTextStyle.normal12style.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    buttonColor: Color(0xff2ED8B6),
+              ),
+              customWidth(5.w),
+              Expanded(
+                child: PrimaryButton(
+                  onTap: () {
+                    Get.dialog(AcceptDialogWidget(visitId: widget.visitId,));
+                  },
+                  padding: EdgeInsets.all(0),
+                  label: 'Accept',
+                  borderRadius: 6.r,
+                  labelStyle: AppTextStyle.normal12style.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
+                  buttonColor: Color(0xff2ED8B6),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

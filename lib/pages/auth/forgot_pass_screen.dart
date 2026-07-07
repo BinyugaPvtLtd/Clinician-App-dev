@@ -22,9 +22,10 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
   final auth = Get.put(AuthController());
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Center(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),

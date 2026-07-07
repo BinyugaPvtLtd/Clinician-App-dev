@@ -33,9 +33,10 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     FocusScope.of(context).unfocus();
     // controller.fetchClinitionLoginDetails();
-    return SafeArea(
-      child: Scaffold(
-        body: Column(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
           children: [
             CommonAppbar(
               isBackButton: false,
@@ -67,7 +68,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   Obx(()=>
                       Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
-
+            
                     child: Row(
                       children: [
                         Stack(
@@ -82,7 +83,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               padding: EdgeInsets.only(top: 50.h, left: 50.w),
                               child: Container(
                                 height: 20.h,
-
+            
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 5,
                                   vertical: 4,

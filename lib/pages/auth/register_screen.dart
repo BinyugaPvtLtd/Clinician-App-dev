@@ -21,10 +21,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),
@@ -49,7 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   customHeight(45.h),
                   PrimaryTextField(
                     hintText: 'Your Email',
-
+            
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) => Validators.validateEmail(value),
                     prefixIcon: Padding(

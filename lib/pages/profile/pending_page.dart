@@ -49,6 +49,7 @@ class _PendingVisitsState extends State<PendingVisits> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [

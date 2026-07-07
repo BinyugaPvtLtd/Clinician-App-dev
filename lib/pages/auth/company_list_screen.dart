@@ -37,9 +37,10 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
   final profileController = Get.put(ProfileController());
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Center(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),
@@ -130,7 +131,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       //   }
                       // }
                       //
-
+            
                     },
                   ),
                   // customHeight(10.h),
@@ -164,7 +165,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                         print("Endpoint set to: ${ApiAppConstant.domain}");
                         await Get.offAll(() => PasswordScreen(email: widget.email));
                         //Get.to(() => HomeScreen());
-
+            
                       } else {
                         // Form is invalid
                         print('Validation failed');

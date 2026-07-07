@@ -35,6 +35,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Form(
           key: _formKey,

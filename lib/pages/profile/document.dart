@@ -39,13 +39,12 @@ class _DocumnetPageState extends State<DocumnetPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: DefaultTabController(
-          length: 3,
-          child: Scaffold(
-            floatingActionButton: ChatFABWidget(),
-
-            body: Column(
+      backgroundColor: Colors.white,
+      floatingActionButton: ChatFABWidget(),
+      body: DefaultTabController(
+        length: 3,
+        child: SafeArea(
+            child: Column(
               children: [
                 // ------ header -------
                 CommonAppbar(
@@ -321,7 +320,7 @@ class _DocumnetPageState extends State<DocumnetPage>
               ],
             ),
           ),
-        ),
+
       ),
     );
   }

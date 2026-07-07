@@ -48,9 +48,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Column(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
           children: [
             CommonAppbar(label: 'Chats'),
             CommonDivider(color: const Color(0xffDADADA)),
@@ -67,11 +68,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 //     ),
                 //   );
                 // }
-
+            
                 if (controller.chatListItem.isEmpty) {
                   return const Center(child: Text("No chats found"));
                 }
-
+            
                 return ListView.separated(
                   itemCount: controller.chatListItem.length,
                   shrinkWrap: true,
@@ -81,14 +82,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   itemBuilder: (context, index) {
                     final item = controller.chatListItem[index];
                     final bg = getColors(index);
-
+            
                     var title = item.isGroup
                         ? (item.groupName ?? '')
                         : TokenManager.getUserId() == item.userId ? "${item.firstName ?? ''} ${item.lastName ?? ''} (You)":  '${item.firstName ?? ''} ${item.lastName ?? ''}'.trim();
-
+            
                     final avatarUrl =
                     item.isGroup ? item.groupProfileUrl : item.imgUrl;
-
+            
                     return InkWell(
                       onTap: () {
                         Get.to(() => ChatScreen(
@@ -116,7 +117,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         child: Row(
                           children: [
                             customWidth(16.w),
-
+            
                             // Avatar (network if available else placeholder)
                             Container(
                               width: 50.h,
@@ -137,9 +138,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                 fit: BoxFit.cover,
                               ),
                             ),
-
+            
                             customWidth(10.w),
-
+            
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -165,9 +166,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                 ],
                               ),
                             ),
-
+            
                             customWidth(10.w),
-
+            
                             Column(
                               children: [
                                 Text(
@@ -179,7 +180,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                   ),
                                 ),
                                 customHeight(3.h),
-
+            
                                item.unseenMessageCount > 0 ?
                                   Container(
                                     height: 12.h,
@@ -201,7 +202,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                  width: 14.w,),
                               ],
                             ),
-
+            
                             customWidth(16.w),
                           ],
                         ),

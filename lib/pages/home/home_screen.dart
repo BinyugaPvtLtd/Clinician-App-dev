@@ -24,128 +24,127 @@ class _HomeScreenState extends State<HomeScreen> {
   final homeController = Get.put(HomeController());
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Obx(
-          () => IndexedStack(
-            index: homeController.homeIndex.value,
-            children: [
-              RequestPage(),
-              CalenderScreen(),
-              // homeController.isLiveView.value ? LivePage() :
-              MapScreen(),
-              TimeSheetPage(),
-              ProfilePage(),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Obx(
+        () => IndexedStack(
+          index: homeController.homeIndex.value,
+          children: [
+            RequestPage(),
+            CalenderScreen(),
+            // homeController.isLiveView.value ? LivePage() :
+            MapScreen(),
+            TimeSheetPage(),
+            ProfilePage(),
+          ],
         ),
-        bottomNavigationBar: Container(
-          height: 70.h,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                offset: Offset(0, -3.h),
-                blurRadius: 7.r,
-                color: const Color(0x20000000),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              ...List.generate(ListContent.homeBottomBarList.length, (index) {
-                if (index == 2) {
-                  return Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        if (homeController.homeIndex.value == 2) {
-                          // toggle between Map and LivePage
-                          homeController.isLiveView.value =
-                              !homeController.isLiveView.value;
-                        } else {
-                          homeController.homeIndex.value = 2;
-                          homeController.isLiveView.value =
-                              false; // reset to MapScreen when switching back
-                        }
-                        log(homeController.homeIndex.value.toString());
-                        setState(() {});
-                      },
-                      child: Transform.translate(
-                        offset: Offset(0, -30),
-                        child: Container(
-                          height: 48.h,
-                          padding: EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryAppColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x3E007B9B),
-                                blurRadius: 4.r,
-                                offset: Offset(4.w, 4.h),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SvgPicture.asset(
-                                ListContent.homeBottomBarList[index].iconPath,
-                                height: 18.h,
-                              ),
-                              Text(
-                                ListContent.homeBottomBarList[index].label,
-                                style: AppTextStyle.normal12style.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }
+      ),
+      bottomNavigationBar: Container(
+        height: 70.h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              offset: Offset(0, -3.h),
+              blurRadius: 7.r,
+              color: const Color(0x20000000),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            ...List.generate(ListContent.homeBottomBarList.length, (index) {
+              if (index == 2) {
                 return Expanded(
                   child: InkWell(
                     onTap: () {
-                      homeController.homeIndex.value = index;
+                      if (homeController.homeIndex.value == 2) {
+                        // toggle between Map and LivePage
+                        homeController.isLiveView.value =
+                            !homeController.isLiveView.value;
+                      } else {
+                        homeController.homeIndex.value = 2;
+                        homeController.isLiveView.value =
+                            false; // reset to MapScreen when switching back
+                      }
                       log(homeController.homeIndex.value.toString());
+                      setState(() {});
                     },
-                    child: Obx(
-                      () => Column(
-                        children: [
-                          customHeight(12.h),
-                          SvgPicture.asset(
-                            ListContent.homeBottomBarList[index].iconPath,
-                            height: 18.h,
-                            width: 21.w,
-                            colorFilter: ColorFilter.mode(
-                              homeController.homeIndex.value == index
-                                  ? AppColors.primaryAppColor
-                                  : AppColors.defaultTxtGrey,
-                              BlendMode.srcIn,
+                    child: Transform.translate(
+                      offset: Offset(0, -30),
+                      child: Container(
+                        height: 48.h,
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryAppColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x3E007B9B),
+                              blurRadius: 4.r,
+                              offset: Offset(4.w, 4.h),
                             ),
-                          ),
-                          customHeight(9.h),
-                          Text(
-                            ListContent.homeBottomBarList[index].label,
-                            style: AppTextStyle.normal10style.copyWith(
-                              color:
-                                  homeController.homeIndex.value == index
-                                      ? AppColors.primaryAppColor
-                                      : AppColors.defaultTxtGrey,
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              ListContent.homeBottomBarList[index].iconPath,
+                              height: 18.h,
                             ),
-                          ),
-                        ],
+                            Text(
+                              ListContent.homeBottomBarList[index].label,
+                              style: AppTextStyle.normal12style.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 );
-              }),
-            ],
-          ),
+              }
+              return Expanded(
+                child: InkWell(
+                  onTap: () {
+                    homeController.homeIndex.value = index;
+                    log(homeController.homeIndex.value.toString());
+                  },
+                  child: Obx(
+                    () => Column(
+                      children: [
+                        customHeight(12.h),
+                        SvgPicture.asset(
+                          ListContent.homeBottomBarList[index].iconPath,
+                          height: 18.h,
+                          width: 21.w,
+                          colorFilter: ColorFilter.mode(
+                            homeController.homeIndex.value == index
+                                ? AppColors.primaryAppColor
+                                : AppColors.defaultTxtGrey,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        customHeight(9.h),
+                        Text(
+                          ListContent.homeBottomBarList[index].label,
+                          style: AppTextStyle.normal10style.copyWith(
+                            color:
+                                homeController.homeIndex.value == index
+                                    ? AppColors.primaryAppColor
+                                    : AppColors.defaultTxtGrey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
         ),
       ),
     );

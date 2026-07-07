@@ -32,9 +32,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final profileController = Get.put(ProfileController());
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Center(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),
@@ -142,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               subtitle:"Unable to retrieve credentials for authorizing user.");
                         }
                         //Get.to(() => HomeScreen());
-
+            
                       } else {
                         // Form is invalid
                         print('Validation failed');

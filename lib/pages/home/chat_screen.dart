@@ -572,11 +572,11 @@ class _ChatScreenState extends State<ChatScreen> {
   // ===========================
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        backgroundColor: Colors.white,
-        body: Column(
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
           children: [
             customHeight(13.h),
             Row(
@@ -591,7 +591,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 customWidth(12.w),
-
+            
                 // Avatar
                 SizedBox(
                   width: 45.w,
@@ -617,9 +617,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ],
                   ),
                 ),
-
+            
                 customWidth(18.w),
-
+            
                 // Title + chips
                 Expanded(
                   child: Column(
@@ -636,7 +636,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         Obx(() {
                           final data = controller.groupChatData.value;
                           final chips = <AbbrChipModel>[];
-
+            
                           if (data != null) {
                             for (final p in data.participants) {
                               final abbr = (p.employeeTypeAbbreviation ?? '').toString().trim();
@@ -646,9 +646,9 @@ class _ChatScreenState extends State<ChatScreen> {
                               }
                             }
                           }
-
+            
                           if (chips.isEmpty) return const SizedBox();
-
+            
                           return SizedBox(
                             height: 18.h,
                             child: ListView.separated(
@@ -679,7 +679,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ],
                   ),
                 ),
-
+            
                 // Call buttons
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -690,7 +690,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   AppAsset.audioCallSvgIcon,
                   AppAsset.threeDotSvgIcon,
                 ];
-
+            
                 // 1) Video call
                 if (index == 0) {
                   return widget.isYou ? Offstage(): InkWell(
@@ -730,7 +730,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   );
                 }
-
+            
                 // 2) Audio call
                 if (index == 1) {
                   return widget.isYou ? Offstage():InkWell(
@@ -770,7 +770,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   );
                 }
-
+            
                 // 3) Three-dot menu (PopupMenuButton must be in the tree)
                 return Theme(
                   data: Theme.of(context).copyWith(
@@ -802,7 +802,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             await controller.clearPatientGropChatPatch(
                           id: controller.groupChatData.value!.groupInfo.ptGroupId,
                         );
-
+            
                           // TODO: clear group chat
                         } else if (value == 'Exit Group') {
                           if (controller.groupChatData.value == null) return;
@@ -968,37 +968,37 @@ class _ChatScreenState extends State<ChatScreen> {
               }),
             ],
           ),
-
+            
           customWidth(10.w),
               ],
             ),
-
+            
             customHeight(16.h),
             const CommonDivider(),
-
+            
             // ===================== MESSAGES UI + Voice bubbles =====================
             Expanded(
               child: Obx(() {
                 final apiElements = widget.isGroup
                     ? _mapGroupMessages(controller.groupChatData.value)
                     : _mapEmpMessages(controller.empChatData.value);
-
+            
                 final merged = _mergeMessages(apiElements, _pendingLocal);
-
+            
                 if (controller.chatScreenError.value.isNotEmpty && merged.isEmpty) {
                   return Center(child: Text(controller.chatScreenError.value));
                 }
-
+            
                 if (controller.isLoadingChatScreen.value && merged.isEmpty) {
                   return const Center(
                     child: CircularProgressIndicator(color: AppColors.primaryAppColor),
                   );
                 }
-
+            
                 if (merged.isEmpty) {
                   return const Center(child: Text("No messages"));
                 }
-
+            
                 return controller.isLoadingChatScreen.value
                     ? Container(
                   color: Colors.white.withValues(alpha: 0.25),
@@ -1015,14 +1015,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemBuilder: (context, index) {
                     final element = merged[index];
                     final voiceNoteUrl = element.voiceNotes;
-
+            
                     return Column(
                       crossAxisAlignment: element.isSender
                           ? CrossAxisAlignment.end
                           : CrossAxisAlignment.start,
                       children: [
                         ChatElementWidget(isGroup: widget.isGroup, chat: element),
-
+            
                         // ✅ Voice bubbles below message
                         if (voiceNoteUrl.isNotEmpty)
                           // ...voiceNoteUrl.map(
@@ -1041,7 +1041,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 );
               }),
             ),
-
+            
             // ===================== BOTTOM =====================
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -1096,7 +1096,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ),
-
+            
                 if (showFilePick)
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: 5.h),
@@ -1104,17 +1104,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       pickDocuments: () async {
                         if (_isBusySending) return;
                         showFilePick = false;
-
+            
                         FilePickerResult? result = await FilePicker.platform.pickFiles(
                           type: FileType.custom,
                           allowedExtensions: ['pdf'],
                           allowMultiple: false,
                           withData: true,
                         );
-
+            
                         final fileSize = result?.files.first.size ?? 0;
                         final isAbove20MB = fileSize > (20 * 1024 * 1024);
-
+            
                         if (result != null) {
                           setState(() {
                             for (final f in result.files) {
@@ -1131,17 +1131,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       pickGallery: () async {
                         if (_isBusySending) return;
                         showFilePick = false;
-
+            
                         FilePickerResult? result = await FilePicker.platform.pickFiles(
                           type: FileType.custom,
                           allowedExtensions: ['png', 'jpg', 'jpeg'],
                           allowMultiple: false,
                           withData: true,
                         );
-
+            
                         final fileSize = result?.files.first.size ?? 0;
                         final isAbove20MB = fileSize > (20 * 1024 * 1024);
-
+            
                         if (result != null) {
                           setState(() {
                             for (final f in result.files) {
@@ -1157,18 +1157,18 @@ class _ChatScreenState extends State<ChatScreen> {
                       },
                       pickCamera: () async {
                         if (_isBusySending) return;
-
+            
                         final ImagePicker picker = ImagePicker();
                         final XFile? photo = await picker.pickImage(
                           source: ImageSource.camera,
                           imageQuality: 80,
                         );
                         if (photo == null) return;
-
+            
                         final bytes = await photo.readAsBytes();
                         final fileName =
                             "captured_${DateTime.now().millisecondsSinceEpoch}.jpg";
-
+            
                         setState(() {
                           selectedFiles.add(Uint8List.fromList(bytes));
                           selectedFileNames.add(fileName);
@@ -1178,7 +1178,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       },
                     ),
                   ),
-
+            
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   height: _isRecording ? 56 : 0,
@@ -1207,7 +1207,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                       : const SizedBox.shrink(),
                 ),
-
+            
                 // INPUT
                 Container(
                   padding: EdgeInsets.only(bottom: 20.h, left: 20.w, right: 20.w),

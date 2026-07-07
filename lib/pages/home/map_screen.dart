@@ -70,486 +70,488 @@ class _MapScreenState extends State<MapScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        HomeAppbarWidget(),
-      Obx((){
-        if (liveMapController.isLoading.value) {
-          return Expanded(child: const Center(child: CircularProgressIndicator(color: AppColors.primaryAppColor,)));
-        }
-        // if (controller.error.value.isNotEmpty) {
-        //   return Center(
-        //     child: Text(
-        //       controller.error.value,
-        //       style: AppTextStyle.normal12style,
-        //     ),
-        //   );
-        // }
+    return SafeArea(
+      child: Column(
+        children: [
+          HomeAppbarWidget(),
+        Obx((){
+          if (liveMapController.isLoading.value) {
+            return Expanded(child: const Center(child: CircularProgressIndicator(color: AppColors.primaryAppColor,)));
+          }
+          // if (controller.error.value.isNotEmpty) {
+          //   return Center(
+          //     child: Text(
+          //       controller.error.value,
+          //       style: AppTextStyle.normal12style,
+          //     ),
+          //   );
+          // }
 
-        if (liveMapController.clinicianStats.value.clinician == null) {
-          return Expanded(child: const Center(child: Text("No data found")));
-        }
-        return Expanded(
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Obx(
-                  () => Visibility(
-                    visible: mapInx.value == 0,
-                    // list view
-                    replacement: SizedBox(
-                      width: double.maxFinite,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+          if (liveMapController.clinicianStats.value.clinician == null) {
+            return Expanded(child: const Center(child: Text("No data found")));
+          }
+          return Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Obx(
+                    () => Visibility(
+                      visible: mapInx.value == 0,
+                      // list view
+                      replacement: SizedBox(
+                        width: double.maxFinite,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            customHeight(140.h),
+                            liveMapController.visitsMapModel.value.visits.isEmpty ?
+                                Flexible(child: Center(child: Text('No data found!'),)):Flexible(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: liveMapController.visitsMapModel.value.visits.length,
+                                itemBuilder: (_, index) {
+                                  final user = liveMapController.visitsMapModel.value.visits[index];
+                                  return InkWell(
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    hoverColor: Colors.transparent,
+                                    onTap: ()async{
+                                     await liveMapController.fetchVisitMapDetails(visitId: user.visitId);
+                                      Get.dialog(
+                                        ClinicianInfoDialog(data: liveMapController.visitDashboardDetails.value,
+                                        viditId: user.visitId),
+                                        barrierColor: Colors.white38,
+                                      );
+                                    },
+                                    child: CustomTimelineCard(
+                                      name: user.patientName,
+                                      time: '${user.visitDateTimeTo} ${user.visiteDateTimeFrom}',
+                                      amount: '\$${user.visitCharge}',
+                                      index: index,
+                                      isDone: user.isVisitCompleted,
+                                      isCurrent: user.onWay,
+                                      imageUrl: user.patientImgUrl,
+                                      length: liveMapController.visitsMapModel.value.visits.length,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            customHeight(15.h),
+                            // Flexible(
+                            //   child: Timeline.tileBuilder(
+                            //     builder: TimelineTileBuilder(
+                            //       itemCount: 6,
+                            //       itemExtent: 60.h,
+                            //       startConnectorBuilder:
+                            //           (context, index) =>
+                            //               index > 0
+                            //                   ? DashedLineConnector(
+                            //                     thickness: 2.w,
+                            //                     dash: 4,
+                            //                     color: Colors.black,
+                            //                     gap: 2,
+                            //                   )
+                            //                   : null,
+                            //       endConnectorBuilder:
+                            //           (context, index) =>
+                            //               index < 5
+                            //                   ? DashedLineConnector(
+                            //                     thickness: 2.w,
+                            //                     dash: 4,
+                            //                     color: Colors.black,
+                            //                     gap: 2,
+                            //                   )
+                            //                   : null,
+                            //       indicatorBuilder: (_, index) {
+                            //         final user = users[index];
+                            //         if (user.isCurrent) {
+                            //           return DotIndicator(
+                            //             color: Colors.transparent,
+                            //             child: SvgPicture.asset(
+                            //               AppAsset.locationPinSvgIcon,
+                            //               width: 13.w,
+                            //             ),
+                            //           );
+                            //         } else if (user.isDone) {
+                            //           return DotIndicator(
+                            //             // color: Colors.green,
+                            //             color: Colors.transparent,
+                            //             child: SizedBox(
+                            //               width: 18.w,
+                            //               height: 18.h,
+                            //               child: Radio(
+                            //                 value: true,
+                            //                 groupValue: true,
+                            //                 onChanged: (value) {},
+                            //                 fillColor: WidgetStatePropertyAll(
+                            //                   Colors.green,
+                            //                 ),
+                            //                 activeColor: Colors.green,
+                            //               ),
+                            //             ),
+                            //           );
+                            //         } else {
+                            //           return OutlinedDotIndicator(
+                            //             borderWidth: 2,
+                            //             color: Colors.black,
+                            //             backgroundColor: Colors.white,
+                            //           );
+                            //         }
+                            //       },
+                            //       contentsBuilder: (_, index) {
+                            //         final user = users[index];
+                            //         return Container(
+                            //           width: double.maxFinite,
+                            //           decoration: BoxDecoration(
+                            //             color: Colors.amber,
+                            //           ),
+                            //           padding: const EdgeInsets.all(8.0),
+                            //           child: ListTile(
+                            //             tileColor:
+                            //                 user.isCurrent
+                            //                     ? Colors.blue.shade50
+                            //                     : Colors.white,
+                            //             title: Text(
+                            //               user.name,
+                            //               style: TextStyle(
+                            //                 fontWeight: FontWeight.bold,
+                            //                 color:
+                            //                     user.isCurrent
+                            //                         ? Colors.black
+                            //                         : Colors.grey.shade800,
+                            //               ),
+                            //             ),
+                            //             subtitle: Text('1:00 PM  1:34 PM'),
+                            //             trailing: Text(
+                            //               user.amount,
+                            //               style: TextStyle(
+                            //                 color:
+                            //                     user.isCurrent
+                            //                         ? Colors.blue
+                            //                         : Colors.green,
+                            //                 fontWeight: FontWeight.bold,
+                            //                 fontSize: 16,
+                            //               ),
+                            //             ),
+                            //           ),
+                            //         );
+                            //       },
+                            //     ),
+                            //   ),
+                            // ),
+                          ],
+                        ),
+                      ),
+                      // Map view
+                      child: Stack(
                         children: [
-                          customHeight(140.h),
-                          liveMapController.visitsMapModel.value.visits.isEmpty ?  
-                              Flexible(child: Center(child: Text('No data found!'),)):Flexible(
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: liveMapController.visitsMapModel.value.visits.length,
-                              itemBuilder: (_, index) {
-                                final user = liveMapController.visitsMapModel.value.visits[index];
-                                return InkWell(
-                                  splashColor: Colors.transparent,
-                                  highlightColor: Colors.transparent,
-                                  hoverColor: Colors.transparent,
-                                  onTap: ()async{
-                                   await liveMapController.fetchVisitMapDetails(visitId: user.visitId);
-                                    Get.dialog(
-                                      ClinicianInfoDialog(data: liveMapController.visitDashboardDetails.value,
-                                      viditId: user.visitId),
-                                      barrierColor: Colors.white38,
-                                    );
-                                  },
-                                  child: CustomTimelineCard(
-                                    name: user.patientName,
-                                    time: '${user.visitDateTimeTo} ${user.visiteDateTimeFrom}',
-                                    amount: '\$${user.visitCharge}',
-                                    index: index,
-                                    isDone: user.isVisitCompleted,
-                                    isCurrent: user.onWay,
-                                    imageUrl: user.patientImgUrl,
-                                    length: liveMapController.visitsMapModel.value.visits.length,
+
+
+                          Positioned.fill(
+                            child: Obx(() => GoogleMap(
+                              initialCameraPosition: const CameraPosition(
+                                target: LatLng(19.0760, 72.8777),
+                                zoom: 14,
+                              ),
+                              myLocationEnabled: true,
+                              myLocationButtonEnabled: false,
+                              zoomControlsEnabled: false,
+                              mapToolbarEnabled: false,
+
+                              // ✅ ADD THESE TWO
+                              markers: liveMapController.markers.value,
+                              polylines: liveMapController.polylines.value,
+
+                              onMapCreated: (GoogleMapController controller) {
+                                liveMapController.mapController = controller;
+
+                                // Optional: if data already selected, draw route immediately
+                                // liveMapController.drawRoute();
+                              },
+                            )),
+                          ),
+                          Positioned(
+                            bottom: 110.h,
+                            right: 16.w,
+                            child: Obx(() {
+                              if (liveMapController.polylines.value.isEmpty) {
+                                return const SizedBox.shrink();
+                              }
+
+                              return InkWell(
+                                onTap: () {
+                                  liveMapController.openInGoogleMaps();
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryAppColor,
+                                    borderRadius: BorderRadius.circular(30.r),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.25),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.navigation, color: Colors.white),
+                                      customWidth(6.w),
+                                      Text(
+                                        'Open in Maps',
+                                        style: AppTextStyle.normal12style.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                          Positioned(
+                            right: 0.w,
+                            top: 150.h,
+                            child: InkWell(
+                              onTap: () {
+                                GlobalOverlay().show(
+                                  context: context,
+                                  backgroundColor: Colors.white.withValues(alpha: 0.3),
+                                  child: Positioned(
+                                    right: 0,
+                                    top: 200.h,
+                                    child: VisitOverlayWidget(),
                                   ),
                                 );
                               },
+                              child: Container(
+                                height: 100.h,
+                                width: 8.w,
+                                color: AppColors.primaryAppColor,
+                              )
                             ),
                           ),
-                          customHeight(15.h),
-                          // Flexible(
-                          //   child: Timeline.tileBuilder(
-                          //     builder: TimelineTileBuilder(
-                          //       itemCount: 6,
-                          //       itemExtent: 60.h,
-                          //       startConnectorBuilder:
-                          //           (context, index) =>
-                          //               index > 0
-                          //                   ? DashedLineConnector(
-                          //                     thickness: 2.w,
-                          //                     dash: 4,
-                          //                     color: Colors.black,
-                          //                     gap: 2,
-                          //                   )
-                          //                   : null,
-                          //       endConnectorBuilder:
-                          //           (context, index) =>
-                          //               index < 5
-                          //                   ? DashedLineConnector(
-                          //                     thickness: 2.w,
-                          //                     dash: 4,
-                          //                     color: Colors.black,
-                          //                     gap: 2,
-                          //                   )
-                          //                   : null,
-                          //       indicatorBuilder: (_, index) {
-                          //         final user = users[index];
-                          //         if (user.isCurrent) {
-                          //           return DotIndicator(
-                          //             color: Colors.transparent,
-                          //             child: SvgPicture.asset(
-                          //               AppAsset.locationPinSvgIcon,
-                          //               width: 13.w,
-                          //             ),
-                          //           );
-                          //         } else if (user.isDone) {
-                          //           return DotIndicator(
-                          //             // color: Colors.green,
-                          //             color: Colors.transparent,
-                          //             child: SizedBox(
-                          //               width: 18.w,
-                          //               height: 18.h,
-                          //               child: Radio(
-                          //                 value: true,
-                          //                 groupValue: true,
-                          //                 onChanged: (value) {},
-                          //                 fillColor: WidgetStatePropertyAll(
-                          //                   Colors.green,
-                          //                 ),
-                          //                 activeColor: Colors.green,
-                          //               ),
-                          //             ),
-                          //           );
-                          //         } else {
-                          //           return OutlinedDotIndicator(
-                          //             borderWidth: 2,
-                          //             color: Colors.black,
-                          //             backgroundColor: Colors.white,
-                          //           );
-                          //         }
-                          //       },
-                          //       contentsBuilder: (_, index) {
-                          //         final user = users[index];
-                          //         return Container(
-                          //           width: double.maxFinite,
-                          //           decoration: BoxDecoration(
-                          //             color: Colors.amber,
-                          //           ),
-                          //           padding: const EdgeInsets.all(8.0),
-                          //           child: ListTile(
-                          //             tileColor:
-                          //                 user.isCurrent
-                          //                     ? Colors.blue.shade50
-                          //                     : Colors.white,
-                          //             title: Text(
-                          //               user.name,
-                          //               style: TextStyle(
-                          //                 fontWeight: FontWeight.bold,
-                          //                 color:
-                          //                     user.isCurrent
-                          //                         ? Colors.black
-                          //                         : Colors.grey.shade800,
-                          //               ),
-                          //             ),
-                          //             subtitle: Text('1:00 PM  1:34 PM'),
-                          //             trailing: Text(
-                          //               user.amount,
-                          //               style: TextStyle(
-                          //                 color:
-                          //                     user.isCurrent
-                          //                         ? Colors.blue
-                          //                         : Colors.green,
-                          //                 fontWeight: FontWeight.bold,
-                          //                 fontSize: 16,
-                          //               ),
-                          //             ),
-                          //           ),
-                          //         );
-                          //       },
-                          //     ),
-                          //   ),
-                          // ),
                         ],
-                      ),
+                      )
                     ),
-                    // Map view
-                    child: Stack(
-                      children: [
+                  ),
+                ),
+                Positioned.fill(
+                  child: Column(
+                    children: [
+                      customHeight(10.h),
+                      InkWell(
+                        onTap: () {
 
-
-                        Positioned.fill(
-                          child: Obx(() => GoogleMap(
-                            initialCameraPosition: const CameraPosition(
-                              target: LatLng(19.0760, 72.8777),
-                              zoom: 14,
-                            ),
-                            myLocationEnabled: true,
-                            myLocationButtonEnabled: false,
-                            zoomControlsEnabled: false,
-                            mapToolbarEnabled: false,
-
-                            // ✅ ADD THESE TWO
-                            markers: liveMapController.markers.value,
-                            polylines: liveMapController.polylines.value,
-
-                            onMapCreated: (GoogleMapController controller) {
-                              liveMapController.mapController = controller;
-
-                              // Optional: if data already selected, draw route immediately
-                              // liveMapController.drawRoute();
-                            },
-                          )),
-                        ),
-                        Positioned(
-                          bottom: 110.h,
-                          right: 16.w,
-                          child: Obx(() {
-                            if (liveMapController.polylines.value.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-
-                            return InkWell(
-                              onTap: () {
-                                liveMapController.openInGoogleMaps();
-                              },
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryAppColor,
-                                  borderRadius: BorderRadius.circular(30.r),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.25),
-                                      blurRadius: 6,
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          width: double.maxFinite,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                offset: Offset(2.w, 2.h),
+                                blurRadius: 4.r,
+                                color: Colors.black.withValues(alpha: 0.16),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                height: 51.h,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
                                   children: [
-                                    const Icon(Icons.navigation, color: Colors.white),
-                                    customWidth(6.w),
-                                    Text(
-                                      'Open in Maps',
-                                      style: AppTextStyle.normal12style.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                    Container(
+                                      height: 46.h,
+                                      width: 46.w,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        // border: GradientBoxBorder(
+                                        //   width: 1.w,
+                                        //   // gradient: LinearGradient(
+                                        //   //   colors: [
+                                        //   //     Colors.black,
+                                        //   //     Color(0xffCE9E2F),
+                                        //   //     Color(0xffE4AC31),
+                                        //   //     Color(0xff9F7302),
+                                        //   //     Color(0xffC08503),
+                                        //   //     Color(
+                                        //   //       0xffBB720A,
+                                        //   //     ).withValues(alpha: 0.69),
+                                        //   //     Color(0xffBE892F),
+                                        //   //     Color(
+                                        //   //       0xffC47B13,
+                                        //   //     ).withValues(alpha: 0.69),
+                                        //   //     Color(
+                                        //   //       0xffC58413,
+                                        //   //     ).withValues(alpha: 0.807),
+                                        //   //     Color(0xffB8830F),
+                                        //   //     Color(0xffDD9D34),
+                                        //   //     Colors.black,
+                                        //   //   ],
+                                        //   // ),
+                                        // ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            offset: Offset(2.w, 2.h),
+                                            blurRadius: 4.r,
+                                            color: Colors.black.withValues(
+                                              alpha: 0.16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      clipBehavior: Clip.hardEdge,
+                                      child: liveMapController.clinicianStats.value.clinician.imageUrl.isNotEmpty
+                                          ? Image.network(
+                                              liveMapController.clinicianStats.value.clinician.imageUrl,
+                                              fit: BoxFit.cover,
+                                            )
+                                          :
+                                      Image.asset(AppAsset.profilePicImg,),
+                                    ),
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 2.5.w,
+                                          vertical: 2.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            3.r,
+                                          ),
+                                          color: hexToColor(liveMapController.clinicianStats.value.clinician.employeeTypeColor),
+                                        ),
+                                        child: Text(
+                                          liveMapController.clinicianStats.value.clinician.employeeTypeAbbreviation,
+                                          style: AppTextStyle.normal10style
+                                              .copyWith(
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            );
-                          }),
-                        ),
-                        Positioned(
-                          right: 0.w,
-                          top: 150.h,
-                          child: InkWell(
-                            onTap: () {
-                              GlobalOverlay().show(
-                                context: context,
-                                backgroundColor: Colors.white.withValues(alpha: 0.3),
-                                child: Positioned(
-                                  right: 0,
-                                  top: 200.h,
-                                  child: VisitOverlayWidget(),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              height: 100.h,
-                              width: 8.w,
-                              color: AppColors.primaryAppColor,
-                            )
-                          ),
-                        ),
-                      ],
-                    )
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: Column(
-                  children: [
-                    customHeight(10.h),
-                    InkWell(
-                      onTap: () {
-
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 16.h),
-                        width: double.maxFinite,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              offset: Offset(2.w, 2.h),
-                              blurRadius: 4.r,
-                              color: Colors.black.withValues(alpha: 0.16),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              height: 51.h,
-                              child: Stack(
-                                clipBehavior: Clip.none,
+                              customWidth(10.w),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    height: 46.h,
-                                    width: 46.w,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      // border: GradientBoxBorder(
-                                      //   width: 1.w,
-                                      //   // gradient: LinearGradient(
-                                      //   //   colors: [
-                                      //   //     Colors.black,
-                                      //   //     Color(0xffCE9E2F),
-                                      //   //     Color(0xffE4AC31),
-                                      //   //     Color(0xff9F7302),
-                                      //   //     Color(0xffC08503),
-                                      //   //     Color(
-                                      //   //       0xffBB720A,
-                                      //   //     ).withValues(alpha: 0.69),
-                                      //   //     Color(0xffBE892F),
-                                      //   //     Color(
-                                      //   //       0xffC47B13,
-                                      //   //     ).withValues(alpha: 0.69),
-                                      //   //     Color(
-                                      //   //       0xffC58413,
-                                      //   //     ).withValues(alpha: 0.807),
-                                      //   //     Color(0xffB8830F),
-                                      //   //     Color(0xffDD9D34),
-                                      //   //     Colors.black,
-                                      //   //   ],
-                                      //   // ),
-                                      // ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          offset: Offset(2.w, 2.h),
-                                          blurRadius: 4.r,
-                                          color: Colors.black.withValues(
-                                            alpha: 0.16,
-                                          ),
-                                        ),
-                                      ],
+                                  Text(
+                                    liveMapController.clinicianStats.value.clinician.name,
+                                    style: AppTextStyle.normal10style.copyWith(
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    clipBehavior: Clip.hardEdge,
-                                    child: liveMapController.clinicianStats.value.clinician.imageUrl.isNotEmpty
-                                        ? Image.network(
-                                            liveMapController.clinicianStats.value.clinician.imageUrl,
-                                            fit: BoxFit.cover,
-                                          )
-                                        :
-                                    Image.asset(AppAsset.profilePicImg,),
                                   ),
-                                  Positioned(
-                                    right: 0,
-                                    bottom: 0,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 2.5.w,
-                                        vertical: 2.h,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          3.r,
-                                        ),
-                                        color: hexToColor(liveMapController.clinicianStats.value.clinician.employeeTypeColor),
-                                      ),
-                                      child: Text(
-                                        liveMapController.clinicianStats.value.clinician.employeeTypeAbbreviation,
-                                        style: AppTextStyle.normal10style
-                                            .copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
-                                      ),
+                                  customHeight(6.h),
+                                  Text(
+                                    'Potential Earning  -  \$${liveMapController.clinicianStats.value.potentialEarning}',
+                                    style: AppTextStyle.normal10style.copyWith(
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            customWidth(10.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  liveMapController.clinicianStats.value.clinician.name,
-                                  style: AppTextStyle.normal10style.copyWith(
-                                    fontWeight: FontWeight.w600,
+                              customWidth(30.w),
+                              Column(
+                                children: [
+                                  ImageStack.providers(
+                                    providers: liveMapController.clinicianStats.value.activePatients
+                                        .take(3)
+                                        .map<ImageProvider<Object>>((p) {
+                                      if (p.imageUrl.isNotEmpty) {
+                                        return NetworkImage(p.imageUrl) as ImageProvider<Object>;
+                                      } else {
+                                        return const AssetImage(AppAsset.profilePicImg) as ImageProvider<Object>;
+                                      }
+                                    }).toList(),
+
+
+                                    extraCountBorderColor: Colors.transparent,
+                                    extraCountTextStyle: AppTextStyle.normal10style
+                                        .copyWith(fontWeight: FontWeight.w600),
+                                    // imageBorderColor: AppColors.primaryAppColor,
+
+                                    totalCount: liveMapController.clinicianStats.value.activePatients.length, // ✅ total active patients
+                                    imageRadius: 20.r,
+                                    imageCount: liveMapController.clinicianStats.value.activePatients.length > 3
+                                        ? 3
+                                        : liveMapController.clinicianStats.value.activePatients.length, // ✅ max 3 show
+                                    imageBorderWidth: 0.5.w,
                                   ),
-                                ),
-                                customHeight(6.h),
-                                Text(
-                                  'Potential Earning  -  \$${liveMapController.clinicianStats.value.potentialEarning}',
-                                  style: AppTextStyle.normal10style.copyWith(
-                                    fontWeight: FontWeight.w600,
+
+                                  customHeight(4.h),
+
+                                  Text(
+                                    'Active Patients (${liveMapController.clinicianStats.value.activePatients.length})', // ✅ show count
+                                    style: AppTextStyle.normal10style.copyWith(
+                                      fontWeight: FontWeight.w300,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            customWidth(30.w),
-                            Column(
-                              children: [
-                                ImageStack.providers(
-                                  providers: liveMapController.clinicianStats.value.activePatients
-                                      .take(3)
-                                      .map<ImageProvider<Object>>((p) {
-                                    if (p.imageUrl.isNotEmpty) {
-                                      return NetworkImage(p.imageUrl) as ImageProvider<Object>;
-                                    } else {
-                                      return const AssetImage(AppAsset.profilePicImg) as ImageProvider<Object>;
-                                    }
-                                  }).toList(),
+                                ],
+                              )
 
-
-                                  extraCountBorderColor: Colors.transparent,
-                                  extraCountTextStyle: AppTextStyle.normal10style
-                                      .copyWith(fontWeight: FontWeight.w600),
-                                  // imageBorderColor: AppColors.primaryAppColor,
-
-                                  totalCount: liveMapController.clinicianStats.value.activePatients.length, // ✅ total active patients
-                                  imageRadius: 20.r,
-                                  imageCount: liveMapController.clinicianStats.value.activePatients.length > 3
-                                      ? 3
-                                      : liveMapController.clinicianStats.value.activePatients.length, // ✅ max 3 show
-                                  imageBorderWidth: 0.5.w,
-                                ),
-
-                                customHeight(4.h),
-
-                                Text(
-                                  'Active Patients (${liveMapController.clinicianStats.value.activePatients.length})', // ✅ show count
-                                  style: AppTextStyle.normal10style.copyWith(
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                ),
-                              ],
-                            )
-
-                          ],
-                        ),
-                      ),
-                    ),
-                    customHeight(10.h),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        height: 27.w,
-                        margin: EdgeInsets.only(right: 10.w),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6.r),
-                          border: Border.all(
-                            color: AppColors.primaryAppColor,
-                            width: 1.w,
+                            ],
                           ),
                         ),
-                        clipBehavior: Clip.hardEdge,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: List.generate(
-                            2,
-                            (index) => InkWell(
-                              onTap: () {
-                                mapInx.value = index;
-                              },
-                              child: Obx(
-                                () => Container(
-                                  width: 45.w,
-                                  height: 27.h,
-                                  alignment: Alignment.center,
+                      ),
+                      customHeight(10.h),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          height: 27.w,
+                          margin: EdgeInsets.only(right: 10.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6.r),
+                            border: Border.all(
+                              color: AppColors.primaryAppColor,
+                              width: 1.w,
+                            ),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(
+                              2,
+                              (index) => InkWell(
+                                onTap: () {
+                                  mapInx.value = index;
+                                },
+                                child: Obx(
+                                  () => Container(
+                                    width: 45.w,
+                                    height: 27.h,
+                                    alignment: Alignment.center,
 
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(5.r),
-                                    color:
-                                        mapInx.value == index
-                                            ? AppColors.primaryAppColor
-                                            : Colors.white,
-                                  ),
-                                  child: Text(
-                                    index == 0 ? 'Map' : 'List',
-                                    style: AppTextStyle.normal14style.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5.r),
                                       color:
                                           mapInx.value == index
-                                              ? Colors.white
-                                              : AppColors.primaryAppColor,
+                                              ? AppColors.primaryAppColor
+                                              : Colors.white,
+                                    ),
+                                    child: Text(
+                                      index == 0 ? 'Map' : 'List',
+                                      style: AppTextStyle.normal14style.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color:
+                                            mapInx.value == index
+                                                ? Colors.white
+                                                : AppColors.primaryAppColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -558,50 +560,50 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              mapInx.value == 0 ? Positioned(
-                left: 0,
-                bottom: 68.h,
-                child: InkWell(
-                  onTap: () {
-                    Get.dialog(SeeRouteDialog());
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 13.w,
-                      vertical: 9.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryAppColor,
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(6.r),
-                        bottomRight: Radius.circular(6.r),
+                mapInx.value == 0 ? Positioned(
+                  left: 0,
+                  bottom: 68.h,
+                  child: InkWell(
+                    onTap: () {
+                      Get.dialog(SeeRouteDialog());
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 13.w,
+                        vertical: 9.h,
                       ),
-                    ),
-                    child: Text(
-                      'See Route',
-                      style: AppTextStyle.normal14style.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryAppColor,
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(6.r),
+                          bottomRight: Radius.circular(6.r),
+                        ),
+                      ),
+                      child: Text(
+                        'See Route',
+                        style: AppTextStyle.normal14style.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ) : Positioned(
-                  left: 0,
-                  bottom: 5.h,
-                  child: SizedBox()),
-              Positioned(
-                  right: 25.w,
-                  bottom: 5.h,
-                  child: ChatFABWidget()),
-            ],
-          ),
-        );}),
-      ],
+                ) : Positioned(
+                    left: 0,
+                    bottom: 5.h,
+                    child: SizedBox()),
+                Positioned(
+                    right: 25.w,
+                    bottom: 5.h,
+                    child: ChatFABWidget()),
+              ],
+            ),
+          );}),
+        ],
+      ),
     );
   }
 }
