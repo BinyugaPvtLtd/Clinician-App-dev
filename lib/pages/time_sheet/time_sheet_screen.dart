@@ -87,28 +87,54 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                             hintText: 'Search',
                             filledColor: Color(0xffE9E9E9),
                             prefixIcon: Padding(
-                              padding: const EdgeInsets.all(6.0),
+                              padding: const EdgeInsets.all(8.0),
                               child: SvgPicture.asset(AppAsset.searchSvgIcon),
                             ),
                           ),
                         ),
                       ),
-                      // customWidth(15.w),
-                      // PrimaryOutlinedButton(
-                      //   text: "Add Visit",
-                      //   onPressed: () {
-                      //     Get.to(() => AddVisitPage());
-                      //   },
-                      //   textStyle: AppTextStyle.normal12style.copyWith(
-                      //     fontWeight: FontWeight.w700,
-                      //     color: AppColors.primaryAppColor,
-                      //   ),
-                      //   width: 110.w,
-                      //   radius: 6,
-                      //   height: 35.h,
-                      //   borderWidth: 1.w,
-                      //   icon: Icon(Icons.add, color: AppColors.primaryAppColor),
-                      // ),
+            Obx(
+                  () => timeSheetController.selectedTypeRecord.value != "Visit"
+                      || timeSheetController.selectedTypeRecord.value != "All"
+                  ? customWidth(15.w) : Offstage()),
+                      Obx(() {
+                        final type =
+                            timeSheetController.selectedTypeRecord.value;
+                        final showAddVisit =
+                            type != "Visit" && type != "All";
+
+                        return showAddVisit
+                            ? Padding(
+                          padding: EdgeInsets.only(left: 15.w),
+                          child: PrimaryOutlinedButton(
+                            text: "Add",
+                            onPressed: () {
+                              Get.to(
+                                    () => AddVisitPage(
+                                  visitStatus: timeSheetController
+                                      .selectedTypeRecord.value,
+                                ),
+                                transition: Transition.rightToLeft,
+                                duration:
+                                const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                            textStyle:
+                            AppTextStyle.normal12style.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryAppColor,
+                            ),
+                            width: 80.w,
+                            radius: 6,
+                            height: 35.h,
+                            borderWidth: 1.w,
+                            icon: Icon(Icons.add,
+                                color: AppColors.primaryAppColor),
+                          ),
+                        )
+                            : const SizedBox.shrink();
+                      }),
                     ],
                   ),
                 ),
@@ -161,12 +187,36 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                         radius: 6,
                         height: 24.h,
                       ),
+                      // PrimaryOutlinedButton(
+                      //   text: "Visit",
+                      //   onPressed: () {
+                      //     selectedIndex.value = 1;
+                      //     _tabController.index = 1;
+                      //     timeSheetController.selectedTypeRecord.value = 'Visit';
+                      //   },
+                      //   fillColor:
+                      //       selectedIndex.value == 1
+                      //           ? AppColors.primaryAppColor
+                      //           : Colors.white,
+                      //
+                      //   textStyle: AppTextStyle.normal10style.copyWith(
+                      //     fontWeight: FontWeight.w700,
+                      //     color:
+                      //         selectedIndex.value == 1
+                      //             ? Colors.white
+                      //             : AppColors.primaryAppColor,
+                      //   ),
+                      //   borderWidth: 1.5,
+                      //   width: 110.w,
+                      //   radius: 6,
+                      //   height: 24.h,
+                      // ),
                       PrimaryOutlinedButton(
-                        text: "Visit",
+                        text: "Case Conference",
                         onPressed: () {
-                          selectedIndex.value = 1;
                           _tabController.index = 1;
-                          timeSheetController.selectedTypeRecord.value = 'Visit';
+                          selectedIndex.value = 1;
+                          timeSheetController.selectedTypeRecord.value = 'Case Conference';
                         },
                         fillColor:
                             selectedIndex.value == 1
@@ -180,17 +230,18 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                                   ? Colors.white
                                   : AppColors.primaryAppColor,
                         ),
-                        borderWidth: 1.5,
                         width: 110.w,
                         radius: 6,
+                        borderWidth: 1.5,
                         height: 24.h,
                       ),
+          
                       PrimaryOutlinedButton(
-                        text: "Case Conference",
+                        text: "Miscellaneous ",
                         onPressed: () {
-                          _tabController.index = 2;
                           selectedIndex.value = 2;
-                          timeSheetController.selectedTypeRecord.value = 'Case Conference';
+                          _tabController.index = 2;
+                          timeSheetController.selectedTypeRecord.value = 'Miscellaneous';
                         },
                         fillColor:
                             selectedIndex.value == 2
@@ -209,32 +260,6 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                         borderWidth: 1.5,
                         height: 24.h,
                       ),
-          
-                      PrimaryOutlinedButton(
-                        text: "Miscellaneous ",
-          
-                        onPressed: () {
-                          selectedIndex.value = 3;
-                          _tabController.index = 3;
-                          timeSheetController.selectedTypeRecord.value = 'Miscellaneous';
-                        },
-                        fillColor:
-                            selectedIndex.value == 3
-                                ? AppColors.primaryAppColor
-                                : Colors.white,
-          
-                        textStyle: AppTextStyle.normal10style.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color:
-                              selectedIndex.value == 3
-                                  ? Colors.white
-                                  : AppColors.primaryAppColor,
-                        ),
-                        width: 110.w,
-                        radius: 6,
-                        borderWidth: 1.5,
-                        height: 24.h,
-                      ),
                     ],
                   ),
                 ),
@@ -243,7 +268,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                   child: TabBarView(
                     physics: NeverScrollableScrollPhysics(),
                     controller: _tabController,
-                    children: [VisitPage(), VisitPage(), VisitPage(), VisitPage()],
+                    children: [VisitPage(), VisitPage(), VisitPage()],
                   ),
                 ),
               ],

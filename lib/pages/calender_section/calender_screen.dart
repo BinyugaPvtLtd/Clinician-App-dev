@@ -163,9 +163,9 @@ class _CalenderScreenState extends State<CalenderScreen> {
             
                           // CURRENT DATE LABEL
                           Container(
-                            height: 32.h,
+                            height: 35.h,
                             padding: EdgeInsets.symmetric(
-                              horizontal: 15.w,
+                              horizontal: 17.w,
                               vertical: 8.h,
                             ),
                             alignment: Alignment.center,
@@ -306,6 +306,9 @@ class _CalenderScreenState extends State<CalenderScreen> {
                             itemBuilder: (context, index) {
                               final visitListData = items[index];
                               return InkWell(
+                                splashColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
                                 onTap: () {
                                   WidgetsBinding.instance
                                       .addPostFrameCallback((_) {
@@ -313,6 +316,8 @@ class _CalenderScreenState extends State<CalenderScreen> {
                                           () => VisitDetailPage(
                                         visitId: visitListData.visitId,
                                             employeeTypeId: items[index].employeeTypeId,
+                                            visitStatus: 'accepted',
+
                                       ),
                                     );
                                   });

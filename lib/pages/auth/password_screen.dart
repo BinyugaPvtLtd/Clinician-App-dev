@@ -28,6 +28,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
   TextEditingController passwordController = TextEditingController();
   final auth = Get.put(AuthController());
   final profileController = Get.put(ProfileController());
+  bool _obscurePassword = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,11 +85,25 @@ class _PasswordScreenState extends State<PasswordScreen> {
                     hintText: 'Password',
                     textInputAction: TextInputAction.done,
                     keyboardType: TextInputType.visiblePassword,
+                    obscureText: _obscurePassword,
                     validator:
                         (value) => Validators.validatePassword(value ?? ''),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: SvgPicture.asset(AppAsset.passwordSvgIcon),
+                      child: SvgPicture.asset(AppAsset.passwordSvgIcon,width: 20,      // ← explicit size
+                        height: 20,     // ← explicit size
+                        fit: BoxFit.scaleDown,),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
                   ),
                   // customHeight(10.h),
@@ -121,16 +136,43 @@ class _PasswordScreenState extends State<PasswordScreen> {
                             email: widget.email,
                             password: passwordController.text);
                         if (response.success) {
-                          await profileController.fetchRecordType();
-                          await profileController.fetchClinitionLoginDetails();
-                          print('Form validated successfully');
-                          Get.offAll(() => HomeScreen());
-                        }else{
+                          if (response.roleName == "Clinical") {
+                            await profileController.fetchRecordType();
+                            await profileController.fetchClinitionLoginDetails();
+                            print('Form validated successfully');
+                            await Get.offAll(
+                                  () => HomeScreen(),
+                              transition: Transition.rightToLeftWithFade,
+                              duration: const Duration(milliseconds: 350),
+                              curve: Curves.easeOutCubic,
+                            );
+                          } else {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Row(
+                                    children: [
+                                      Icon(Icons.error_outline, color: Colors.white),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text("Only Clinical users are allowed to log in."),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.all(12),
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          }
+                        } else {
                           print('Error');
                           showErrorDialog(
-                              context:context,
+                              context: context,
                               title: "Invalid credentials!",
-                              subtitle:"Unable to retrieve credentials for authorizing user.");
+                              subtitle: "Unable to retrieve credentials for authorizing user.");
                         }
                         //Get.to(() => HomeScreen());
             

@@ -311,7 +311,7 @@ class HomeController extends GetxController {
                 asString(v['primaryDiagnosisName'], '--'),
                 // ✅ inZone may come as bool OR String from the API
                 inZone: asString(v['inZone']),
-                warning: asString(v['warning']),
+                warning: asString(v['warning'] ?? ''),
                 zoneId: asInt(v['zoneId']),
                 zoneName: asString(v['zoneName'], '--'),
                 patientAddress: asString(v['patientAddress'], '--'),

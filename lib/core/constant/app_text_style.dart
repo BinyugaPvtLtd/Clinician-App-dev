@@ -22,12 +22,12 @@ class AppTextStyle {
   );
   //
   static TextStyle normal10style = TextStyle(
-    fontSize: 10.sp,
+    fontSize: 11.sp,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
   );
   static TextStyle normal12style = TextStyle(
-    fontSize: 12.sp,
+    fontSize: 13.sp,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w400,
   );
@@ -49,12 +49,12 @@ class AppTextStyle {
     fontWeight: FontWeight.w500,
   );
   static TextStyle bold12style = TextStyle(
-    fontSize: 12.sp,
+    fontSize: 13.sp,
     fontFamily: fontFamily,
     fontWeight: FontWeight.w600,
   );
   static TextStyle termsConditionStyle = TextStyle(
-    fontSize: 12.sp,
+    fontSize: 13.sp,
     fontFamily: fontFamily,
     color: AppColors.textGreyColor,
   );

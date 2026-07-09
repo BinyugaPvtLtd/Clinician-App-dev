@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/notification_controller.dart';
+
 class HomeAppbarWidget extends StatefulWidget {
   const HomeAppbarWidget({super.key});
 
@@ -18,7 +20,7 @@ class _HomeAppbarWidgetState extends State<HomeAppbarWidget> {
       padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 14.h),
       child: Row(
         children: [
-          Icon(Icons.menu),
+          // Icon(Icons.menu),
           Expanded(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -36,18 +38,41 @@ class _HomeAppbarWidgetState extends State<HomeAppbarWidget> {
               ],
             ),
           ),
-          InkWell(
-            onTap: () {
-              Get.to(() => NotificationPage());
-            },
-            child: SvgPicture.asset(
-              AppAsset.notificationSvgIcon,
-              colorFilter: ColorFilter.mode(
-                AppColors.defaultTxtGrey,
-                BlendMode.srcIn,
+          Obx(() {
+            final notificationController = Get.put(NotificationController());
+            return InkWell(
+              onTap: () {
+                Get.to(() => NotificationPage()); // ✅ just navigate, no auto-read
+              },
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(Icons.notifications_none_outlined),
+                  // SvgPicture.asset(
+                  //   AppAsset.notificationSvgIcon,
+                  //   colorFilter: ColorFilter.mode(
+                  //     AppColors.defaultTxtGrey,
+                  //     BlendMode.srcIn,
+                  //   ),
+                  // ),
+                  if (notificationController.hasNewNotification.value)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        width: 9.w,
+                        height: 9.w,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            ),
-          ),
+            );
+          })
         ],
       ),
     );

@@ -95,6 +95,8 @@ class CommonMethods {
         return 'In Zone';
       case ZoneType.outOfZone:
         return 'Out of Zone';
+      default: ZoneType.unknown;
+        return '';
     }
   }
 

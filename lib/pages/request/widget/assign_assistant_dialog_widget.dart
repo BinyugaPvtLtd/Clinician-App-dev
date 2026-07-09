@@ -64,152 +64,149 @@ class _AssignAssistantDialogWidgetState
                 ],
               ),
               customHeight(12.h),
-              Padding(
-                padding: EdgeInsets.only(left: 16.w),
-                child: Column(
-                  children: [
-                    Obx(() {
-                      final assistants = controller.employeeAssistantTypeModel
-                          .expand((e) => e.assistants)
-                          .toList();
+              Column(
+                children: [
+                  Obx(() {
+                    final assistants = controller.employeeAssistantTypeModel
+                        .expand((e) => e.assistants)
+                        .toList();
 
-                      return PrimaryDropDown(
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: AppColors.borderGrey,
-                            width: 1.w,
-                          ),
+                    return PrimaryDropDown(
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: AppColors.borderGrey,
+                          width: 1.w,
                         ),
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.all(13),
-                          child: SvgPicture.asset(
-                            AppAsset.profileSvgIcon,
-                            colorFilter: Color(0xff9CA3AF).getSvgColor,
-                            width: 12.w,
-                          ),
-                        ),
-                        validator: (value) => Validators.validateRequired(
-                          controller.selectedDataName.value,
-                          'Assistant Name',
-                        ),
-                        contentPadding: EdgeInsets.zero,
-                         filled: false,
-                        // buttonStyleData: ButtonStyleData(
-                        //   width: 120.w,
-                        //   height: 44.h,
-                        //   decoration: BoxDecoration(
-                        //     border: Border.all(color: AppColors.borderGrey),
-                        //     borderRadius: BorderRadius.circular(6),
-                        //   ),
-                        // ),
-                        hintText: "Select assistance",
-
-                        items: assistants.map((a) {
-                          return DropdownMenuItem<String>(
-                            value: a.userName, // ✅ String
-                            child: Text(
-                              a.userName,
-                              style: AppTextStyle.normal12style.copyWith(
-                                fontWeight: FontWeight.w400,
-                                color: AppColors.defaultTxtGrey,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-
-                        onChanged: (value) {
-                          if (value == null) return;
-
-                          controller.selectedDataName.value = value; // selected assistant name
-
-                          // If you want the selected assistant object/id too:
-                          final selected = assistants.firstWhere(
-                                (x) => x.userName == value,
-                            orElse: () => assistants.first,
-                          );
-                          controller.selectedDataId.value = selected.employeeId;
-                          controller.selectedDataName.value = selected.userName;
-                          controller.emailAssistenseController.value.text = selected.personalEmail;
-
-                        },
-                      );
-                    }),
-                    // PrimaryDropDown(
-                    //   hintText: 'Assistant Name',
-                    //   iconStyleData: IconStyleData(
-                    //     icon: SvgPicture.asset(AppAsset.downArrowFillSvgIcon),
-                    //   ),
-                    //   filledColor: Colors.white,
-                    //   style: AppTextStyle.normal12style.copyWith(
-                    //     color: AppColors.greyColor,
-                    //   ),
-                    //   // prefixIconConstraints: BoxConstraints(maxWidth: 40.w),
-                    //   prefixIcon: Padding(
-                    //     padding: EdgeInsets.all(13),
-                    //     child: SvgPicture.asset(
-                    //       AppAsset.profileSvgIcon,
-                    //       colorFilter: Color(0xff9CA3AF).getSvgColor,
-                    //       width: 12.w,
-                    //     ),
-                    //   ),
-                    //   onChanged: (value) {},
-                    //   focusedBorder: OutlineInputBorder(
-                    //     borderSide: BorderSide(
-                    //       color: AppColors.borderGrey,
-                    //       width: 1.w,
-                    //     ),
-                    //   ),
-                    // ),
-                    customHeight(10.h),
-                    PrimaryTextField(
-                      controller: controller.emailAssistenseController.value,
-                      hintText: 'Assistant Email',
-                      readonly: true,
+                      ),
                       prefixIcon: Padding(
                         padding: EdgeInsets.all(13),
                         child: SvgPicture.asset(
-                          AppAsset.emailSvgIcon,
+                          AppAsset.profileSvgIcon,
                           colorFilter: Color(0xff9CA3AF).getSvgColor,
                           width: 12.w,
                         ),
                       ),
-                      filledColor: Colors.white,
-                      // style: AppTextStyle.normal12style.copyWith(
-                      //   color: AppColors.greyColor,
+                      validator: (value) => Validators.validateRequired(
+                        controller.selectedDataName.value,
+                        'Assistant Name',
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                       filled: false,
+                      // buttonStyleData: ButtonStyleData(
+                      //   width: 120.w,
+                      //   height: 44.h,
+                      //   decoration: BoxDecoration(
+                      //     border: Border.all(color: AppColors.borderGrey),
+                      //     borderRadius: BorderRadius.circular(6),
+                      //   ),
                       // ),
+                      hintText: "Select assistance",
+
+                      items: assistants.map((a) {
+                        return DropdownMenuItem<String>(
+                          value: a.userName, // ✅ String
+                          child: Text(
+                            a.userName,
+                            style: AppTextStyle.normal12style.copyWith(
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.defaultTxtGrey,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+
+                      onChanged: (value) {
+                        if (value == null) return;
+
+                        controller.selectedDataName.value = value; // selected assistant name
+
+                        // If you want the selected assistant object/id too:
+                        final selected = assistants.firstWhere(
+                              (x) => x.userName == value,
+                          orElse: () => assistants.first,
+                        );
+                        controller.selectedDataId.value = selected.employeeId;
+                        controller.selectedDataName.value = selected.userName;
+                        controller.emailAssistenseController.value.text = selected.personalEmail;
+
+                      },
+                    );
+                  }),
+                  // PrimaryDropDown(
+                  //   hintText: 'Assistant Name',
+                  //   iconStyleData: IconStyleData(
+                  //     icon: SvgPicture.asset(AppAsset.downArrowFillSvgIcon),
+                  //   ),
+                  //   filledColor: Colors.white,
+                  //   style: AppTextStyle.normal12style.copyWith(
+                  //     color: AppColors.greyColor,
+                  //   ),
+                  //   // prefixIconConstraints: BoxConstraints(maxWidth: 40.w),
+                  //   prefixIcon: Padding(
+                  //     padding: EdgeInsets.all(13),
+                  //     child: SvgPicture.asset(
+                  //       AppAsset.profileSvgIcon,
+                  //       colorFilter: Color(0xff9CA3AF).getSvgColor,
+                  //       width: 12.w,
+                  //     ),
+                  //   ),
+                  //   onChanged: (value) {},
+                  //   focusedBorder: OutlineInputBorder(
+                  //     borderSide: BorderSide(
+                  //       color: AppColors.borderGrey,
+                  //       width: 1.w,
+                  //     ),
+                  //   ),
+                  // ),
+                  customHeight(10.h),
+                  PrimaryTextField(
+                    controller: controller.emailAssistenseController.value,
+                    hintText: 'Assistant Email',
+                    readonly: true,
+                    prefixIcon: Padding(
+                      padding: EdgeInsets.all(13),
+                      child: SvgPicture.asset(
+                        AppAsset.emailSvgIcon,
+                        colorFilter: Color(0xff9CA3AF).getSvgColor,
+                        width: 12.w,
+                      ),
                     ),
-                    customHeight(20.h),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child:Obx(()=> controller.isAssistantAssignLoading.value ?
-                      CircularProgressIndicator(color: AppColors.primaryAppColor,) :
-                          PrimaryButton(
-                        onTap: () async{
-                          var response = await controller.PostAssignAssistance(
-                              visitId: widget.visitId,
-                              EmployeeId: controller.selectedDataId.value);
-                          if(response.statusCode == 200 || response.statusCode == 201){
-                            Get.back();
-                            showSucessDialog( context: context,
-                                message: 'Assistant assigned successfully',
-                                title: 'Successfully');
-                            controller.selectedDataName.value = '';
-                            controller.selectedDataId.value = 0;
-                            controller.emailAssistenseController.value.clear();
-                          }
-                        },
-                        label: 'Assign',
-                        width: double.infinity,
-                        borderRadius: 6.r,
-                        padding: EdgeInsets.symmetric(vertical: 6.h),
-                        labelStyle: AppTextStyle.normal12style.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      )),
-                    ),
-                  ],
-                ),
+                    filledColor: Colors.white,
+                    // style: AppTextStyle.normal12style.copyWith(
+                    //   color: AppColors.greyColor,
+                    // ),
+                  ),
+                  customHeight(20.h),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child:Obx(()=> controller.isAssistantAssignLoading.value ?
+                    CircularProgressIndicator(color: AppColors.primaryAppColor,) :
+                        PrimaryButton(
+                      onTap: () async{
+                        var response = await controller.PostAssignAssistance(
+                            visitId: widget.visitId,
+                            EmployeeId: controller.selectedDataId.value);
+                        if(response.statusCode == 200 || response.statusCode == 201){
+                          Get.back();
+                          showSucessDialog( context: context,
+                              message: 'Assistant assigned successfully',
+                              title: 'Successfully');
+                          controller.selectedDataName.value = '';
+                          controller.selectedDataId.value = 0;
+                          controller.emailAssistenseController.value.clear();
+                        }
+                      },
+                      label: 'Assign',
+                      width: double.infinity,
+                      borderRadius: 6.r,
+                      padding: EdgeInsets.symmetric(vertical: 6.h),
+                      labelStyle: AppTextStyle.normal12style.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    )),
+                  ),
+                ],
               ),
             ],
           ),

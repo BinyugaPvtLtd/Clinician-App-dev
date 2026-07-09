@@ -1,5 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-enum ZoneType { warning, inZone, outOfZone }
+enum ZoneType { warning, inZone, outOfZone , unknown }
 
 class RequestDataModel {
   final String? status;
@@ -22,7 +22,10 @@ class ApiData{
   final int statusCode;
   final Object? data;
   final int? chatId;
-  ApiData({this.chatId,required this.success, required this.message, required this.statusCode, this.data});
+  final String? roleName;
+  ApiData({
+    this.roleName,
+    this.chatId,required this.success, required this.message, required this.statusCode, this.data});
 }
 
 

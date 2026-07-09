@@ -130,7 +130,7 @@ class PrimaryTextField extends StatelessWidget {
         readOnly: readonly ?? false,
         controller: controller,
         focusNode: focusNode,
-        maxLines: maxLines,
+        maxLines: obscureText ? 1 : maxLines,
         initialValue: initialValue,
         keyboardType:  isUsPhone ? TextInputType.phone : keyboardType,
         textCapitalization: textCapitalization,
@@ -165,7 +165,7 @@ class PrimaryTextField extends StatelessWidget {
         textAlign: textAlign,
         cursorColor: style?.color,
         cursorHeight: style?.height ?? 22,
-        obscuringCharacter: obscuringCharacter ?? "●",
+        // obscuringCharacter: obscuringCharacter ?? "●",
         style: style ?? AppTextStyle.normal12style.copyWith(
           fontWeight: FontWeight.w400,
           color: AppColors.defaultTxtGrey,

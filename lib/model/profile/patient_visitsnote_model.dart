@@ -22,8 +22,10 @@ class PatientVisitItems{
   final String visitDateTimeTo;
   final bool isVisitCompleted;
   final bool isVisitMissed;
+  final bool isVisitAccepted;
   final double visitCharge;
   PatientVisitItems({
+    required this.isVisitAccepted,
     required this.employeeTypeId,
     required this.visitCharge,
     required this.visitId,

@@ -32,61 +32,35 @@ class EligibleClinician{
 }
 
 class TimeSheetAllData {
-  final int visitId;
-  final int ptId;
+  final int dataId;
   final int employeeId;
   final int employeeTypeId;
-  final int visitType;
+  final int ptId;
+  final int recordTypeId;
+  final String source;
+  final String recordTypeName;
   final String visiteDateTimeFrom;
   final String visitDateTimeTo;
-  final bool isVisitCompleted;
-  final bool isVisitMissed;
-  final bool onWay;
-  final int? recordTypeId;
-  final bool inZone;
-  final String? eligibility;
-  final String patientName;
+  final String status;
   final String location;
-  final int visitTypeId;
-  final String visitTypeName;
-  final int typeOfVisitId;
-  final String typeOfVisitName;
-  final String? recordTypeName;
-  final String ptFirstName;
-  final String ptLastName;
-  final String ptAddress;
-  final String ptImgUrl;
-  final int fkPtPrimaryDiagnosis;
-  final String fkPtPrimaryDiagnosisName;
-  final String date;
+  final double visitRate;
+  final String patientName;
+  final String patientImgUrl;
 
   TimeSheetAllData({
-    required this.visitId,
-    required this.ptId,
+    required this.dataId,
     required this.employeeId,
     required this.employeeTypeId,
-    required this.visitType,
+    required this.ptId,
+    required this.recordTypeId,
+    required this.source,
+    required this.recordTypeName,
     required this.visiteDateTimeFrom,
     required this.visitDateTimeTo,
-    required this.isVisitCompleted,
-    required this.isVisitMissed,
-    required this.onWay,
-    this.recordTypeId,
-    required this.inZone,
-    this.eligibility,
-    required this.patientName,
+    required this.status,
     required this.location,
-    required this.visitTypeId,
-    required this.visitTypeName,
-    required this.typeOfVisitId,
-    required this.typeOfVisitName,
-    this.recordTypeName,
-    required this.ptFirstName,
-    required this.ptLastName,
-    required this.ptAddress,
-    required this.ptImgUrl,
-    required this.fkPtPrimaryDiagnosis,
-    required this.fkPtPrimaryDiagnosisName,
-    required this.date,
+    required this.visitRate,
+    required this.patientName,
+    required this.patientImgUrl,
   });
 }

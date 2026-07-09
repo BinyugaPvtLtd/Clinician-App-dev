@@ -77,7 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: (value) => Validators.validateEmail(value),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: SvgPicture.asset(AppAsset.emailSvgIcon),
+                      child: SvgPicture.asset(AppAsset.emailSvgIcon,width: 20,      // ← explicit size
+                        height: 20,     // ← explicit size
+                        fit: BoxFit.scaleDown,),
                     ),
                   ),
                   // customHeight(20.h),
@@ -129,7 +131,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           print("Auto selected company: $companyAlias");
                           String endWith = await ApiAppConstant.endPointByAlias(3, "dev");
                           print("Endpoint set to: ${ApiAppConstant.domain}");
-                          await Get.offAll(() => PasswordScreen(email: emailController.text));
+                          await Get.offAll(
+                                () => PasswordScreen(email: emailController.text),
+                            transition: Transition.rightToLeft,
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
                         } else {
                           // 👈 show company list screen when multiple companies
                           Get.offAll(() => CompanyListScreen(email: emailController.text, companyList: response.companies,));

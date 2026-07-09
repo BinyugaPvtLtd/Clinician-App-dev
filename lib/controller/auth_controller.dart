@@ -32,29 +32,31 @@ class AuthController extends GetxController {
 
       if (res.statusCode == 200 || res.statusCode == 201) {
        // final data = res.data as Map<String, dynamic>;
-        print("accessToken ${res.data["accessToken"]}");
-        String token = res.data["accessToken"] ?? "";
-        String username = "${res.data['user']['firstName']} ${res.data['user']['lastName']}";
-        int departmentId = res.data['user']["departmentId"] ?? 0;
-        int companyId = res.data['user']["company_id"] ?? 0;
-        int userId = res.data['user']["userId"] ?? 0;
-        String refreshToken = res.data['refreshToken'] ?? "";
-        String userEmail = res.data['user']["email"] ?? email;
-        callController.initFCM(deviceName: 'MOBILE',);
-        TokenManager.setAccessToken(
-          token: token,
-          refreshToken: refreshToken,
-          username: username,
-          departmentId: departmentId,
-          companyId: companyId,
-          userID: userId,
-          email: userEmail,
-        );
-
+        if(res.data['user']['role'] == "Clinical"){
+          print("accessToken ${res.data["accessToken"]}");
+          String token = res.data["accessToken"] ?? "";
+          String username = "${res.data['user']['firstName']} ${res.data['user']['lastName']}";
+          int departmentId = res.data['user']["departmentId"] ?? 0;
+          int companyId = res.data['user']["company_id"] ?? 0;
+          int userId = res.data['user']["userId"] ?? 0;
+          String refreshToken = res.data['refreshToken'] ?? "";
+          String userEmail = res.data['user']["email"] ?? email;
+          callController.initFCM(deviceName: 'MOBILE',);
+          TokenManager.setAccessToken(
+            token: token,
+            refreshToken: refreshToken,
+            username: username,
+            departmentId: departmentId,
+            companyId: companyId,
+            userID: userId,
+            email: userEmail,
+          );
+        }
         return ApiData(
             success: true,
             message: res.statusMessage!,
-            statusCode: res.statusCode!
+            statusCode: res.statusCode!,
+            roleName: res.data['user']["role"] ?? '',
         );
       }else{
         error.value = "Login failed";

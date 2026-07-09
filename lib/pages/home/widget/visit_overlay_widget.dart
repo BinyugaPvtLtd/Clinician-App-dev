@@ -31,7 +31,7 @@ class _VisitOverlayWidgetState extends State<VisitOverlayWidget> {
       child: Material(
         type: MaterialType.transparency,
         child: Container(
-          width: 80.w,
+          width: 90.w,
           padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
           decoration: BoxDecoration(
             color: AppColors.primaryAppColor,

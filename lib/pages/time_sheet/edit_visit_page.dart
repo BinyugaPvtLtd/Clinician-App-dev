@@ -17,7 +17,8 @@ import '../calender_section/widget/calender_date_pick_dialog_widget.dart';
 
 class EditVisitPage extends StatefulWidget {
   final TimeSheetAllData item;
-  const EditVisitPage({super.key, required this.item});
+  final String visitStatus;
+  const EditVisitPage({super.key, required this.item, required this.visitStatus});
 
   @override
   State<EditVisitPage> createState() => _EditVisitPageState();
@@ -32,8 +33,6 @@ class _EditVisitPageState extends State<EditVisitPage> {
   final TextEditingController visitStartTimeController = TextEditingController();
   final TextEditingController visitEndTimeController = TextEditingController();
 
-  final RxBool inZone = false.obs;
-
   @override
   void initState() {
     super.initState();
@@ -44,30 +43,25 @@ class _EditVisitPageState extends State<EditVisitPage> {
     final toDate = DateTime.parse(widget.item.visitDateTimeTo);
 
     // Pre-fill fields from item
-    visitDateController.text = widget.item.date;
+    visitDateController.text =
+        "${fromDate.year}-${fromDate.month.toString().padLeft(2, '0')}-${fromDate.day.toString().padLeft(2, '0')}";
     visitStartTimeController.text =
     "${fromDate.hour.toString().padLeft(2, '0')}:${fromDate.minute.toString().padLeft(2, '0')}";
     visitEndTimeController.text =
     "${toDate.hour.toString().padLeft(2, '0')}:${toDate.minute.toString().padLeft(2, '0')}";
-    inZone.value = widget.item.inZone;
-    visitController.status.value = widget.item.isVisitCompleted ? 'Completed' : 'Ongoing';
+    visitController.status.value = widget.item.status;
 
     // Pre-select dropdowns
     editVisitController.selectedRecordName.value = widget.item.recordTypeName ?? '';
     editVisitController.selectedRecordTypeId.value = widget.item.recordTypeId ?? 0;
-    editVisitController.selectedMasterVisitName.value = widget.item.typeOfVisitName;
-    editVisitController.selectedMasterVisitId.value = widget.item.typeOfVisitId;
 
-    print('@@@EditVisit [INIT] visitId: ${widget.item.visitId}');
+    print('@@@EditVisit [INIT] timesheetId: ${widget.item.dataId}');
     print('@@@EditVisit [INIT] visitDate: ${visitDateController.text}');
     print('@@@EditVisit [INIT] startTime: ${visitStartTimeController.text}');
     print('@@@EditVisit [INIT] endTime: ${visitEndTimeController.text}');
-    print('@@@EditVisit [INIT] inZone: ${inZone.value}');
     print('@@@EditVisit [INIT] status: ${visitController.status.value}');
     print('@@@EditVisit [INIT] recordName: ${editVisitController.selectedRecordName.value}');
     print('@@@EditVisit [INIT] recordTypeId: ${editVisitController.selectedRecordTypeId.value}');
-    print('@@@EditVisit [INIT] visitTypeName: ${editVisitController.selectedMasterVisitName.value}');
-    print('@@@EditVisit [INIT] visitMasterId: ${editVisitController.selectedMasterVisitId.value}');
   }
 
   void _clearAndClose() {
@@ -92,12 +86,13 @@ class _EditVisitPageState extends State<EditVisitPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Column(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
           children: [
             CommonAppbar(
-              label: "Edit Visit",
+              label: "Edit",
               onTap: _clearAndClose,
             ),
             customHeight(10.h),
@@ -110,104 +105,80 @@ class _EditVisitPageState extends State<EditVisitPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
-                        // ── Record Type ──
+            
+                        // ── Record Type (read-only, pre-filled from visitStatus) ──
                         Text("Record Type", style: AppTextStyle.bold14style),
                         customHeight(4.h),
-                        SizedBox(
+                        Container(
                           width: double.infinity,
-                          child: Obx(() => PrimaryDropDown(
-                            validator: (_) => Validators.validateRequired(
-                                editVisitController.selectedRecordName.value, 'Record Type'),
-                            contentPadding: EdgeInsets.zero,
-                            filled: false,
-                            value: editVisitController.selectedRecordName.value.isEmpty
-                                ? null
-                                : editVisitController.selectedRecordName.value,
-                            buttonStyleData: ButtonStyleData(
-                              width: 120.w,
-                              height: 44.h,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.borderGrey),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
+                          height: 44.h,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.borderGrey),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            widget.visitStatus,
+                            style: AppTextStyle.normal12style.copyWith(
+                              fontWeight: FontWeight.w400,
+                              color: AppColors.defaultTxtGrey,
                             ),
-                            hintText: "Select record type",
-                            items: editVisitController.recordTypes.map((item) {
-                              return DropdownMenuItem<String>(
-                                value: item.recordName,
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.h),
-                                  child: Text(item.recordName,
-                                      style: AppTextStyle.normal12style.copyWith(
-                                        fontWeight: FontWeight.w400,
-                                        color: AppColors.defaultTxtGrey,
-                                      )),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              for (var a in editVisitController.recordTypes) {
-                                if (a.recordName == value) {
-                                  editVisitController.selectedRecordName.value = value ?? '';
-                                  editVisitController.selectedRecordTypeId.value = a.recordId;
-                                }
-                              }
-                              print('@@@EditVisit [DROPDOWN] recordName: ${editVisitController.selectedRecordName.value}, recordTypeId: ${editVisitController.selectedRecordTypeId.value}');
-                            },
-                          )),
+                          ),
                         ),
                         customHeight(18.h),
-
+            
                         // ── Visit Type ──
-                        Text("Visit Type", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        SizedBox(
-                          width: double.infinity,
-                          child: Obx(() => PrimaryDropDown(
-                            validator: (_) => Validators.validateRequired(
-                                editVisitController.selectedMasterVisitName.value, 'Visit Type'),
-                            contentPadding: EdgeInsets.zero,
-                            filled: false,
-                            value: editVisitController.selectedMasterVisitName.value.isEmpty
-                                ? null
-                                : editVisitController.selectedMasterVisitName.value,
-                            buttonStyleData: ButtonStyleData(
-                              width: 120.w,
-                              height: 44.h,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.borderGrey),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                            hintText: "Select visit type",
-                            items: editVisitController.visitMaster.map((item) {
-                              return DropdownMenuItem<String>(
-                                value: item.typeOfVisit,
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.h),
-                                  child: Text(item.typeOfVisit,
-                                      style: AppTextStyle.normal12style.copyWith(
-                                        fontWeight: FontWeight.w400,
-                                        color: AppColors.defaultTxtGrey,
-                                      )),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              for (var a in editVisitController.visitMaster) {
-                                if (a.typeOfVisit == value) {
-                                  editVisitController.selectedMasterVisitName.value = value ?? '';
-                                  editVisitController.selectedMasterVisitId.value = a.visitMasterId;
-                                }
-                              }
-                              print('@@@EditVisit [DROPDOWN] typeOfVisit: ${editVisitController.selectedMasterVisitName.value}, visitMasterId: ${editVisitController.selectedMasterVisitId.value}');
-                            },
-                          )),
-                        ),
-                        customHeight(18.h),
-
+                        /// TODO visit type commented as per client requirement
+                        // Text("Visit Type", style: AppTextStyle.bold14style),
+                        // customHeight(4.h),
+                        // SizedBox(
+                        //   width: double.infinity,
+                        //   child: Obx(() => PrimaryDropDown(
+                        //     validator: (_) => Validators.validateRequired(
+                        //         editVisitController.selectedMasterVisitName.value, 'Visit Type'),
+                        //     contentPadding: EdgeInsets.zero,
+                        //     filled: false,
+                        //     value: editVisitController.selectedMasterVisitName.value.isEmpty
+                        //         ? null
+                        //         : editVisitController.selectedMasterVisitName.value,
+                        //     buttonStyleData: ButtonStyleData(
+                        //       width: 120.w,
+                        //       height: 44.h,
+                        //       decoration: BoxDecoration(
+                        //         border: Border.all(color: AppColors.borderGrey),
+                        //         borderRadius: BorderRadius.circular(6),
+                        //       ),
+                        //     ),
+                        //     hintText: "Select visit type",
+                        //     items: editVisitController.visitMaster.map((item) {
+                        //       return DropdownMenuItem<String>(
+                        //         value: item.typeOfVisit,
+                        //         child: Padding(
+                        //           padding: EdgeInsets.all(8.h),
+                        //           child: Text(item.typeOfVisit,
+                        //               style: AppTextStyle.normal12style.copyWith(
+                        //                 fontWeight: FontWeight.w400,
+                        //                 color: AppColors.defaultTxtGrey,
+                        //               )),
+                        //         ),
+                        //       );
+                        //     }).toList(),
+                        //     onChanged: (value) {
+                        //       for (var a in editVisitController.visitMaster) {
+                        //         if (a.typeOfVisit == value) {
+                        //           editVisitController.selectedMasterVisitName.value = value ?? '';
+                        //           editVisitController.selectedMasterVisitId.value = a.visitMasterId;
+                        //         }
+                        //       }
+                        //       print('@@@EditVisit [DROPDOWN] typeOfVisit: ${editVisitController.selectedMasterVisitName.value}, visitMasterId: ${editVisitController.selectedMasterVisitId.value}');
+                        //     },
+                        //   )),
+                        // ),
+                        // customHeight(18.h),
+            
                         // ── Visit Date ──
+
                         Text("Visit Date", style: AppTextStyle.bold14style),
                         customHeight(4.h),
                         PrimaryTextField(
@@ -225,7 +196,7 @@ class _EditVisitPageState extends State<EditVisitPage> {
                           suffixIcon: Icon(Icons.calendar_month_rounded),
                         ),
                         customHeight(18.h),
-
+            
                         // ── Start Time ──
                         Text("Start Time", style: AppTextStyle.bold14style),
                         customHeight(4.h),
@@ -244,13 +215,13 @@ class _EditVisitPageState extends State<EditVisitPage> {
                           ),
                         ),
                         customHeight(18.h),
-
+            
                         // ── End Time ──
                         Text("End Time", style: AppTextStyle.bold14style),
                         customHeight(4.h),
                         PrimaryTextField(
                           onTap: () async {
-                            await editVisitController.selectStartTime(
+                            await editVisitController.selectEndTime(
                                 context, visitEndTimeController);
                             print('@@@EditVisit [DROPDOWN] endTime: ${visitEndTimeController.text}');
                           },
@@ -263,31 +234,31 @@ class _EditVisitPageState extends State<EditVisitPage> {
                           ),
                         ),
                         customHeight(18.h),
-
+            
                         // ── In Zone Toggle ──
-                        Text("In Zone", style: AppTextStyle.bold14style),
-                        customHeight(4.h),
-                        Obx(() => Row(
-                          children: [
-                            Switch(
-                              value: inZone.value,
-                              onChanged: (val) {
-                                inZone.value = val;
-                                print('@@@EditVisit [DROPDOWN] inZone: ${inZone.value}');
-                              },
-                              activeColor: AppColors.primaryAppColor,
-                            ),
-                            customWidth(8.w),
-                            Text(
-                              inZone.value ? "In Zone" : "Out of Zone",
-                              style: AppTextStyle.normal12style.copyWith(
-                                color: AppColors.defaultTxtGrey,
-                              ),
-                            ),
-                          ],
-                        )),
-                        customHeight(18.h),
-
+                        // Text("In Zone", style: AppTextStyle.bold14style),
+                        // customHeight(4.h),
+                        // Obx(() => Row(
+                        //   children: [
+                        //     Switch(
+                        //       value: inZone.value,
+                        //       onChanged: (val) {
+                        //         inZone.value = val;
+                        //         print('@@@EditVisit [DROPDOWN] inZone: ${inZone.value}');
+                        //       },
+                        //       activeColor: AppColors.primaryAppColor,
+                        //     ),
+                        //     customWidth(8.w),
+                        //     Text(
+                        //       inZone.value ? "In Zone" : "Out of Zone",
+                        //       style: AppTextStyle.normal12style.copyWith(
+                        //         color: AppColors.defaultTxtGrey,
+                        //       ),
+                        //     ),
+                        //   ],
+                        // )),
+                        // customHeight(18.h),
+            
                         // ── Status ──
                         Text("Status", style: AppTextStyle.bold14style),
                         customHeight(4.h),
@@ -330,7 +301,7 @@ class _EditVisitPageState extends State<EditVisitPage> {
                           )),
                         ),
                         customHeight(48.h),
-
+            
                         // ── Buttons ──
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -348,7 +319,7 @@ class _EditVisitPageState extends State<EditVisitPage> {
                               radius: 6,
                               height: 30.h,
                             ),
-                            customWidth(5.w),
+                            customWidth(15.w),
                             Obx(() => editVisitController.isVisitSaveLoading.value
                                 ? Padding(
                               padding: EdgeInsets.symmetric(horizontal: 17.h),
@@ -364,7 +335,7 @@ class _EditVisitPageState extends State<EditVisitPage> {
                                   final endParts = visitEndTimeController.text.split(':');
                                   final startMinutes = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
                                   final endMinutes = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
-
+            
                                   if (endMinutes <= startMinutes) {
                                     showErrorDialog(
                                       context: context,
@@ -374,28 +345,30 @@ class _EditVisitPageState extends State<EditVisitPage> {
                                     return;
                                   }
 
-                                  print('@@@EditVisit [PATCH PAYLOAD] visitId: ${widget.item.visitId}');
-                                  print('@@@EditVisit [PATCH PAYLOAD] recordTypeId: ${editVisitController.selectedRecordTypeId.value}');
-                                  print('@@@EditVisit [PATCH PAYLOAD] visitMasterId: ${editVisitController.selectedMasterVisitId.value}');
-                                  print('@@@EditVisit [PATCH PAYLOAD] visitDate: ${visitDateController.text}');
-                                  print('@@@EditVisit [PATCH PAYLOAD] startTime: ${visitStartTimeController.text}');
-                                  print('@@@EditVisit [PATCH PAYLOAD] endTime: ${visitEndTimeController.text}');
-                                  print('@@@EditVisit [PATCH PAYLOAD] status: ${visitController.status.value}');
-                                  print('@@@EditVisit [PATCH PAYLOAD] inZone: ${inZone.value}');
-
+            
                                   final response = await editVisitController.patchEditVisitData(
-                                    visitId: widget.item.visitId,
-                                    recordTypeId: editVisitController.selectedRecordTypeId.value,
-                                    visitMasterId: editVisitController.selectedMasterVisitId.value,
-                                    visitDate: visitDateController.text,
-                                    startTime: visitStartTimeController.text,
-                                    endTime: visitEndTimeController.text,
-                                    status: visitController.status.value,
-                                    inZone: inZone.value,
+                                    timesheetId: widget.item.dataId,
+                                    data: {
+                                      // "pt_id": addVisitController.selectedPatientId.value,
+                                      "recordTypeId": editVisitController.selectedRecordTypeId.value,
+                                      // "visitMasterId": addVisitController.selectedMasterVisitId.value,
+                                      "visitDate": visitDateController.text,
+                                      "startTime": visitStartTimeController.text,
+                                      "endTime": visitEndTimeController.text,
+                                      "status": visitController.status.value,
+                                      // "location": locationController.text
+                                    },
+                                    // recordTypeId: editVisitController.selectedRecordTypeId.value,
+                                    // visitMasterId: editVisitController.selectedMasterVisitId.value,
+                                    // visitDate: visitDateController.text,
+                                    // startTime: visitStartTimeController.text,
+                                    // endTime: visitEndTimeController.text,
+                                    // status: visitController.status.value,
+                                    // inZone: inZone.value,
                                   );
-
+            
                                   print('@@@EditVisit [PATCH RESPONSE] success: ${response.success}, statusCode: ${response.statusCode}, message: ${response.message}');
-
+            
                                   if (response.success) {
                                     await editVisitController.fetchTimeSheetRecord();
                                     // editVisitController.updateLocalVisitRecord(

@@ -1,7 +1,7 @@
 class TimeSheetRepository{
   static String recordType = '/add-visit/record-types';
   static String visitMaster = '/visits/visitList';
-  static String visitAdd = '/patient-visits/add-visit';
+  static String visitAdd = '/employee-timesheet';
   static String timeSheetData = '/patient-visits/recordTypeVisits';
   static String patientName = '/patient-visits/patients-basic';
   static const String visitEdit = '/patient-visits/edit-visit';
@@ -14,6 +14,6 @@ class TimeSheetRepository{
   }
 
   static String editVisit({required int visitId}) {
-    return '$visitEdit/$visitId';
+    return '$visitAdd/$visitId';
   }
 }

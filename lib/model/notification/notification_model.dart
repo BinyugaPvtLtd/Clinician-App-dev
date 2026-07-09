@@ -5,7 +5,7 @@ class NotificationModelData{
   final String title;
   final String body;
   // final String data;
-  final bool isRead;
+  bool isRead;
   final int callId;
   final String createdAt;
   final String updatedAt;

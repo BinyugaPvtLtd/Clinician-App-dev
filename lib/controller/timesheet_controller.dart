@@ -247,6 +247,31 @@ class TimeSheetController extends GetxController {
     }
   }
 
+  Future<void> selectEndTime(BuildContext context,
+      TextEditingController controller,) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialEntryMode: TimePickerEntryMode.input,
+      initialTime: _selectedTime,
+      builder: (context, child) {
+        // ✅ Force 24-hour format in the picker UI also
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      _selectedTime = picked;
+
+      final String hh = picked.hour.toString().padLeft(2, '0');
+      final String mm = picked.minute.toString().padLeft(2, '0');
+
+      controller.text = "$hh:$mm"; // ✅ 09:20 / 14:55
+    }
+  }
+
 
   //// API calls ////
 
@@ -360,27 +385,24 @@ class TimeSheetController extends GetxController {
   }
 
   Future<ApiData> postAddVisitData({
-    required int ptId,
-    required int recordTypeId,
-    required int visitMasterId,
-    required String visitDate,
-    required String startTime,
-    required String endTime,
-    required String status,
+    required Map<String, dynamic> data,
   }) async {
     try {
       isVisitSaveLoading.value = true;
       error.value = '';
 
-      final res = await _api.post(TimeSheetRepository.visitAdd, {
-        "pt_id": ptId,
-        "recordTypeId": recordTypeId,
-        "visitMasterId": visitMasterId,
-        "visitDate": visitDate,
-        "startTime": startTime,
-        "endTime": endTime,
-        "status": status
-      });
+      final res = await _api.post(TimeSheetRepository.visitAdd,
+      data
+      //     {
+      //   "pt_id": ptId,
+      //   "recordTypeId": recordTypeId,
+      //   "visitMasterId": visitMasterId,
+      //   "visitDate": visitDate,
+      //   "startTime": startTime,
+      //   "endTime": endTime,
+      //   "status": status
+      // }
+      );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         // final data = res.data as Map<String, dynamic>;
@@ -418,6 +440,12 @@ class TimeSheetController extends GetxController {
     required int clinicianId,
   }) async {
     List<TimeSheetAllData> itemsList = [];
+    double asDouble(dynamic v, [double def = 0.0]) {
+      if (v is double) return v;
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? def;
+      return def;
+    }
     try {
       isTimeSheetLoading.value = true;
       error.value = '';
@@ -435,33 +463,22 @@ class TimeSheetController extends GetxController {
         for (var item in res.data) {
           itemsList.add(
             TimeSheetAllData(
-              visitId: item['visitId'],
-              ptId: item['pt_id'],
-              employeeId: item['employeeId'],
-              employeeTypeId: item['employeeTypeId'],
-              visitType: item['visitType'],
-              visiteDateTimeFrom: item['visiteDateTimeFrom'],
-              visitDateTimeTo: item['visitDateTimeTo'],
-              isVisitCompleted: item['isVisitCompleted'],
-              isVisitMissed: item['isVisitMissed'],
-              onWay: item['onWay'],
-              recordTypeId: item['recordTypeId'],
-              inZone: item['inZone'],
-              eligibility: item['eligibility'],
-              patientName: item['patientName'],
-              location: item['location'],
-              visitTypeId: item['visitTypeId'],
-              visitTypeName: item['visitTypeName'],
-              typeOfVisitId: item['typeOfVisitId'],
-              typeOfVisitName: item['typeOfVisitName'],
-              recordTypeName: item['recordTypeName'],
-              ptFirstName: item['pt_first_name'],
-              ptLastName: item['pt_last_name'],
-              ptAddress: item['pt_address'],
-              ptImgUrl: item['pt_img_url'] ?? '',
-              fkPtPrimaryDiagnosis: item['fk_pt_primary_diagnosis'],
-              fkPtPrimaryDiagnosisName: item['fk_pt_primary_diagnosis_name'],
-              date: item['date'],
+              dataId: item['id'] ?? 0,
+              source: item['source'] ?? '',
+              employeeId: item['employeeId'] ?? 0,
+              employeeTypeId: item['employeeTypeId'] ?? 0,
+              ptId: item['pt_id'] ?? 0,
+              recordTypeId: item['recordTypeId'] ?? 0,
+              recordTypeName: item['recordTypeName'] ?? '',
+              visiteDateTimeFrom: item['visiteDateTimeFrom'] ?? '',
+              visitDateTimeTo: item['visitDateTimeTo'] ?? '',
+              status: item['status'] ?? '',
+              location: item['location'] ?? '',
+              visitRate: double.parse(
+                asDouble(item['visitRate']).toStringAsFixed(2),
+              ),
+              patientName: item['patientName'] ?? '',
+              patientImgUrl: item['patientImgUrl'] ?? '',
             ),
           );
         }
@@ -480,30 +497,25 @@ class TimeSheetController extends GetxController {
 
   // ── PATCH edit visit ──────────────────────────────────────────────────────────
   Future<ApiData> patchEditVisitData({
-    required int visitId,
-    required int recordTypeId,
-    required int visitMasterId,
-    required String visitDate,
-    required String startTime,
-    required String endTime,
-    required String status,
-    required bool inZone,
+    required int timesheetId,
+    required Map<String, dynamic> data,
   }) async {
     try {
       isVisitSaveLoading.value = true;
       error.value = '';
 
       final res = await _api.patch(
-        TimeSheetRepository.editVisit(visitId: visitId),
-        {
-          "recordTypeId": recordTypeId,
-          "visitMasterId": visitMasterId,
-          "visitDate": visitDate,
-          "startTime": startTime,
-          "endTime": endTime,
-          "status": status,
-          "inZone": inZone,
-        },
+        TimeSheetRepository.editVisit(visitId: timesheetId),
+        data
+        // {
+        //   "recordTypeId": recordTypeId,
+        //   "visitMasterId": visitMasterId,
+        //   "visitDate": visitDate,
+        //   "startTime": startTime,
+        //   "endTime": endTime,
+        //   "status": status,
+        //   "inZone": inZone,
+        // },
       );
 
       if (res.statusCode == 200 || res.statusCode == 201) {

@@ -97,9 +97,9 @@ class _PendingVisitsState extends State<PendingVisits> {
                     customWidth(10.w),
 
                     Container(
-                      height: 32.h,
+                      height: 35.h,
                       padding: EdgeInsets.symmetric(
-                        horizontal: 15.w,
+                        horizontal: 17.w,
                         vertical: 8.h,
                       ),
                       alignment: Alignment.center,
@@ -245,11 +245,15 @@ class _PendingVisitsState extends State<PendingVisits> {
                       // TODO: You can bind real data from items[index] here
                       var visitsItem = items[index];
                       return InkWell(
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                        hoverColor: Colors.transparent,
                         onTap: () {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             Get.to(() => VisitDetailPage(
                               visitId: visitsItem.visitId,
                               employeeTypeId: visitsItem.employeeTypeId,
+                              visitStatus: visitsItem.isVisitAccepted == true ? 'accepted': 'pending',
                             ));
                           });
                         },

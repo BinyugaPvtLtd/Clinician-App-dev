@@ -2,7 +2,6 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/pages/calender_section/widget/calender_date_pick_dialog_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../controller/timesheet_controller.dart';
@@ -98,10 +97,15 @@ class _VisitPageState extends State<VisitPage> {
                     return InkWell(
                       highlightColor: Colors.transparent,
                       hoverColor: Colors.transparent,
-                      focusColor: Colors.transparent,
+                      splashColor: Colors.transparent,
                       onTap: () {
                         item.recordTypeName == "Case Conference" || item.recordTypeName == "Miscellaneous" ?
-                        Get.to(() => EditVisitPage(item: item)): null ;
+                        Get.to(
+                              () => EditVisitPage(item: item, visitStatus: item.recordTypeName!,),
+                          transition: Transition.rightToLeft,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        ): null;
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,17 +114,16 @@ class _VisitPageState extends State<VisitPage> {
                             width: 80.w,
                             height: 20.h,
                             decoration: BoxDecoration(
-                              color: item.isVisitCompleted ?AppColors.chatGreenColor:AppColors.appYellowColor.withOpacity(0.3),
+                              color: item.status == 'Completed' ? AppColors.chatGreenColor : AppColors.appYellowColor.withOpacity(0.3),
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(6),
                               ),
                             ),
                             child: Center(
                               child: Text(
-                                item.isVisitCompleted ? "Completed" : "Ongoing",
+                                item.status,
                                 style: AppTextStyle.normal10style.copyWith(
-                                  color:  item.isVisitCompleted ? AppColors.greenColor : AppColors.warningBackgColor,
-
+                                  color: item.status == 'Completed' ? AppColors.greenColor : AppColors.warningBackgColor,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -129,29 +132,21 @@ class _VisitPageState extends State<VisitPage> {
                           customHeight(6.h),
                           Row(
                             children: [
-                              !item.onWay
-                                  ? item.ptImgUrl.isEmpty ? CircleAvatar(
-                                radius: 30,
-                                backgroundImage:AssetImage(AppAsset.profilePicImg),
-                              ) :CircleAvatar(
-                                radius: 30,
-                                backgroundImage:NetworkImage(item.ptImgUrl),
-                                backgroundColor: Colors.transparent,
-                              )
-                                  : item.ptImgUrl.isEmpty ? CircleAvatar(
-                                radius: 30,
-                                backgroundImage:AssetImage(AppAsset.profilePicImg),
-                              ) :CircleAvatar(
-                                radius: 30,
-                                backgroundImage:NetworkImage(item.ptImgUrl),
-                                backgroundColor: Colors.transparent,
+                              Container(
+                                width: 56.w,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                ),
+                                clipBehavior: Clip.hardEdge,
+                                child: item.patientImgUrl.isEmpty ?
+                                Image.asset(
+                                  AppAsset.profilePicImg,
+                                  fit: BoxFit.cover,
+                                ):Image.network(
+                                  item.patientImgUrl,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                              // Container(
-                              //       height: 50.h,
-                              //       width: 60.w,
-                              //       alignment: Alignment.center,
-                              //       child: SvgPicture.asset(AppAsset.carSvgIcon),
-                              //     ),
                               customWidth(10.w),
                               Expanded(
                                 child: Column(
@@ -161,39 +156,20 @@ class _VisitPageState extends State<VisitPage> {
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
                                         Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                !item.onWay
-                                                    ? "${item.ptFirstName} ${item.ptLastName}"
-                                                    : "${item.ptFirstName} ${item.ptLastName}",//"Going for Office Visit",
-                                                style: AppTextStyle.normal12style
-                                                    .copyWith(
-                                                  color:
-                                                  AppColors.textGreyColor,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              if (index.isEven)
-                                                Text(
-                                                  item.fkPtPrimaryDiagnosisName,
-                                                  style: AppTextStyle.normal12style
-                                                      .copyWith(
-                                                    fontWeight: FontWeight.w300,
-                                                  ),
-                                                ),
-                                            ],
+                                          child: Text(
+                                            item.patientName.isEmpty ?  item.recordTypeName : item.patientName,
+                                            style: AppTextStyle.normal12style.copyWith(
+                                              color: AppColors.textGreyColor,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         SizedBox(width: 8),
                                         Text(
                                           visitTiming,
-                                          style: AppTextStyle.normal12style
-                                              .copyWith(
+                                          style: AppTextStyle.normal12style.copyWith(
                                             color: AppColors.textGreyColor,
                                             fontWeight: FontWeight.w400,
                                           ),
@@ -202,7 +178,7 @@ class _VisitPageState extends State<VisitPage> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      "${item.ptAddress}",
+                                      item.location,
                                       style: AppTextStyle.normal10style.copyWith(
                                         color: AppColors.textGreyColor,
                                         fontWeight: FontWeight.w400,

@@ -22,7 +22,8 @@ import '../../model/profile/visit_details_model.dart';
 class VisitDetailPage extends StatefulWidget {
   final int visitId;
   final int employeeTypeId;
-  const VisitDetailPage({super.key, required this.visitId, required this.employeeTypeId});
+  final String visitStatus;
+  const VisitDetailPage({super.key, required this.visitId, required this.employeeTypeId, required this.visitStatus});
 
   @override
   State<VisitDetailPage> createState() => _VisitDetailPageState();
@@ -390,30 +391,32 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                 },
                               ),
                             ),
-                            customHeight(12.h),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: PrimaryOutlinedButton(
-                                height: 35.h,
-                                borderWidth: 0.8.w,
-                                onPressed: () {
-                                  Get.dialog(AssignRequestClinitianDialogWidget());
-                                },
-                                radius: 6.r,
-                                width: 150.w,
-                                text: 'Request For Clinician',
-                                padding: EdgeInsets.symmetric(),
-                                // padding: EdgeInsets.symmetric(
-                                //   horizontal: 6.w,
-                                //   vertical: 6.h,
-                                // ),
-                                icon: Icon(
-                                  Icons.add,
-                                  color: AppColors.primaryAppColor,
-                                  size: 15,
-                                ),
-                              ),
-                            ),
+
+                            // TODO Assign clinitian
+                            // customHeight(12.h),
+                            // Align(
+                            //   alignment: Alignment.centerRight,
+                            //   child: PrimaryOutlinedButton(
+                            //     height: 35.h,
+                            //     borderWidth: 0.8.w,
+                            //     onPressed: () {
+                            //       Get.dialog(AssignRequestClinitianDialogWidget());
+                            //     },
+                            //     radius: 6.r,
+                            //     width: 150.w,
+                            //     text: 'Request For Clinician',
+                            //     padding: EdgeInsets.symmetric(),
+                            //     // padding: EdgeInsets.symmetric(
+                            //     //   horizontal: 6.w,
+                            //     //   vertical: 6.h,
+                            //     // ),
+                            //     icon: Icon(
+                            //       Icons.add,
+                            //       color: AppColors.primaryAppColor,
+                            //       size: 15,
+                            //     ),
+                            //   ),
+                            // ),
                             customHeight(12.h),
             
                             Flexible(
@@ -590,7 +593,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
         ),
       ),
       floatingActionButton: ChatFABWidget(),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: widget.visitStatus == 'pending' ? Container(
         height: 100.h,
         decoration: BoxDecoration(
           color: Colors.white,
@@ -617,19 +620,19 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                 ),
               ),
               customWidth(5.w),
-              Expanded(
-                child: PrimaryOutlinedButton(
-                  radius: 6.r,
-                  text: 'Reschedule',
-                  buttonColor: AppColors.primaryAppColor,
-                  onPressed: () {
-                    Get.dialog(RescheduleDialogWidget());
-                  },
-                  textStyle: AppTextStyle.normal12style.copyWith(
-                    color: AppColors.primaryAppColor,
-                  ),
-                ),
-              ),
+              // Expanded(
+              //   child: PrimaryOutlinedButton(
+              //     radius: 6.r,
+              //     text: 'Reschedule',
+              //     buttonColor: AppColors.primaryAppColor,
+              //     onPressed: () {
+              //       Get.dialog(RescheduleDialogWidget());
+              //     },
+              //     textStyle: AppTextStyle.normal12style.copyWith(
+              //       color: AppColors.primaryAppColor,
+              //     ),
+              //   ),
+              // ),
               customWidth(5.w),
               Expanded(
                 child: PrimaryButton(
@@ -649,7 +652,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
             ],
           ),
         ),
-      ),
+      ) : Offstage(),
     );
   }
 }

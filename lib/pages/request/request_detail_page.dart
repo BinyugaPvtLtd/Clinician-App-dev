@@ -17,8 +17,9 @@ import '../../controller/profile_controller.dart';
 import '../../core/common/hex_color_decoder.dart';
 
 class RequestDetailPage extends StatefulWidget {
-  const RequestDetailPage({super.key, required this.visitId, required this.noteText});
+  const RequestDetailPage({super.key, required this.visitId, required this.noteText, required this.filterText});
   final int visitId;
+  final String filterText;
   final String noteText;
 
 
@@ -197,29 +198,34 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                     ),
                     customHeight(7.h),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        RichText(
-                          text: TextSpan(
-                            text: homeController.patientScheduleModel.value.zoneName,
-                            style: AppTextStyle.normal12style.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primaryAppColor,
-                            ),
-                            children: [
-                              homeController.patientScheduleModel.value.inZone ?  TextSpan(
-                                text: '(In Zone)',
-                                style: AppTextStyle.normal12style.copyWith(
-                                  fontWeight: FontWeight.w300,
-                                  color: AppColors.primaryAppColor,
-                                ),
-                              ) : TextSpan(
-                                text: '(Out of Zone)',
-                                style: AppTextStyle.normal12style.copyWith(
-                                  fontWeight: FontWeight.w300,
-                                  color: AppColors.appYellowColor,
-                                ),
+                        Flexible(
+                          child: RichText(
+                            text: TextSpan(
+                              text: homeController.patientScheduleModel.value.zoneName,
+                              style: AppTextStyle.normal12style.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryAppColor,
                               ),
-                            ],
+                              children: [
+                                homeController.patientScheduleModel.value.inZone
+                                    ? TextSpan(
+                                  text: ' (In Zone)',
+                                  style: AppTextStyle.normal12style.copyWith(
+                                    fontWeight: FontWeight.w300,
+                                    color: AppColors.primaryAppColor,
+                                  ),
+                                )
+                                    : TextSpan(
+                                  text: ' (Out of Zone)',
+                                  style: AppTextStyle.normal12style.copyWith(
+                                    fontWeight: FontWeight.w300,
+                                    color: AppColors.appYellowColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         Spacer(),
@@ -360,7 +366,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
         ),
       ),
       floatingActionButton: ChatFABWidget(),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: widget.filterText == "pending" ? Container(
         height: 100.h,
         decoration: BoxDecoration(
           color: Colors.white,
@@ -388,19 +394,19 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 ),
               ),
               customWidth(5.w),
-              Expanded(
-                child: PrimaryOutlinedButton(
-                  radius: 6.r,
-                  text: 'Reschedule',
-                  buttonColor: AppColors.primaryAppColor,
-                  onPressed: () {
-                    Get.dialog(RescheduleDialogWidget());
-                  },
-                  textStyle: AppTextStyle.normal12style.copyWith(
-                    color: AppColors.primaryAppColor,
-                  ),
-                ),
-              ),
+              // Expanded(
+              //   child: PrimaryOutlinedButton(
+              //     radius: 6.r,
+              //     text: 'Reschedule',
+              //     buttonColor: AppColors.primaryAppColor,
+              //     onPressed: () {
+              //       Get.dialog(RescheduleDialogWidget());
+              //     },
+              //     textStyle: AppTextStyle.normal12style.copyWith(
+              //       color: AppColors.primaryAppColor,
+              //     ),
+              //   ),
+              // ),
               customWidth(5.w),
               Expanded(
                 child: PrimaryButton(
@@ -420,7 +426,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
             ],
           ),
         ),
-      ),
+      ) : Offstage(),
     );
   }
 }

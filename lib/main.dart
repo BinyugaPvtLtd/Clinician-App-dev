@@ -1,4 +1,5 @@
 import 'package:clinician_app/controller/calling_controller.dart';
+import 'package:clinician_app/controller/notification_controller.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/pages/auth/splash_screen.dart';
 import 'package:clinician_app/pages/video_calling/call_background_noti.dart';
@@ -51,6 +52,18 @@ bool _manuallyRejected = false;
 /// But dialogs/navigation will be handled by GetX.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final callController = Get.put(CallingController());
+
+// ✅ Helper: update bell dot + refresh notification list (safe if controller not created yet)
+void _notifyNewNotification({bool refreshList = true}) {
+  if (Get.isRegistered<NotificationController>()) {
+    final notificationController = Get.find<NotificationController>();
+    notificationController.hasNewNotification.value = true;
+    if (refreshList) {
+      notificationController.fetchNotificationListData();
+    }
+  }
+}
+
 void setupForegroundCallListener() {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final data = message.data;
@@ -66,6 +79,9 @@ void setupForegroundCallListener() {
       final userProfile = (data['contactImage'] ?? '').toString();
       final userName = (data['contactName'] ?? '').toString();
       final isVideo = (data['isVideo'] ?? 'false').toString();
+
+      // ✅ Show bell dot immediately (call appears in notification list)
+      _notifyNewNotification(refreshList: false);
 
       // 🔔 START RINGTONE (Android)
       AndroidCallRingtone.start();
@@ -88,9 +104,9 @@ void setupForegroundCallListener() {
             // ✅ do async work after closing
             () async {
               await callController.handleCallAccepted(
-              {"callId": callId},
-              navigatorKey,
-              isVideo,
+                {"callId": callId},
+                navigatorKey,
+                isVideo,
               );
             }();
           },
@@ -127,6 +143,9 @@ void setupForegroundCallListener() {
       // 🔕 STOP RINGTONE
       AndroidCallRingtone.stop();
 
+      // ✅ Missed/ended call becomes a notification → show dot + refresh list
+      _notifyNewNotification();
+
       // Only auto close when NOT manually rejected
       if (!_manuallyRejected) {
         if (Get.isDialogOpen == true) {
@@ -147,6 +166,9 @@ void setupForegroundCallListener() {
       // print("📲 Received foreground notification: ${message.data}");
       final title = message.notification?.title ?? 'New message';
       final body = message.notification?.body ?? 'You have a new notification';
+
+      // ✅ Show bell dot immediately + refresh notification list
+      _notifyNewNotification();
 
       showTeamsMessageToastTop(
         title: title,
@@ -206,6 +228,11 @@ void setupBackgroundCallListener() {
     debugPrint("📲 Opened from notification (background): ${message.data}");
 
     final data = message.data;
+
+    // ✅ App opened from a notification → refresh list so dot/list is current
+    if (Get.isRegistered<NotificationController>()) {
+      Get.find<NotificationController>().fetchNotificationListData();
+    }
 
     // Only handle call notifications
     if (data['type'] != 'CALL_INCOMING') return;

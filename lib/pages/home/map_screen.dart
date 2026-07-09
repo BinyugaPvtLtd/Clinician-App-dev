@@ -246,8 +246,6 @@ class _MapScreenState extends State<MapScreen> {
                       // Map view
                       child: Stack(
                         children: [
-
-
                           Positioned.fill(
                             child: Obx(() => GoogleMap(
                               initialCameraPosition: const CameraPosition(

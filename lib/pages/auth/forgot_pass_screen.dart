@@ -62,7 +62,9 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
                     validator: (value) => Validators.validateEmail(value),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: SvgPicture.asset(AppAsset.emailSvgIcon),
+                      child: SvgPicture.asset(AppAsset.emailSvgIcon,width: 20,      // ← explicit size
+                        height: 20,     // ← explicit size
+                        fit: BoxFit.scaleDown,),
                     ),
                   ),
                   customHeight(34.h),

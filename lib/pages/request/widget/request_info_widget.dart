@@ -34,6 +34,9 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
         return Colors.green;
       case ZoneType.outOfZone:
         return AppColors.primaryAppColor;
+      case ZoneType.unknown:
+        return Colors.white;
+
     }
   }
 
@@ -62,7 +65,10 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
     return InkWell(
       onTap:
           () {
-        Get.to(() => RequestDetailPage(visitId: widget.data.visitId, noteText: widget.data.visitNote,));
+        Get.to(() => RequestDetailPage(
+          visitId: widget.data.visitId,
+          noteText: widget.data.visitNote,
+          filterText: widget.data.visitStatus,));
       },
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 3.5.h),
@@ -131,13 +137,15 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                 Align(
                   child: Text(
                     CommonMethods.getZoneName(
-                      widget.data.inZone == "true" ? ZoneType.inZone :widget.data.inZone == "false" ? ZoneType.outOfZone : ZoneType.warning,
+                      widget.data.inZone == "true" ? ZoneType.inZone :widget.data.inZone == "false"
+                          ? ZoneType.outOfZone : widget.data.warning.isNotEmpty ? ZoneType.warning : ZoneType.unknown,
 
                     ),
                     style: AppTextStyle.normal12style.copyWith(
                       fontWeight: FontWeight.w700,
                       color: getColor(
-                        widget.data.inZone == "true" ? ZoneType.inZone :widget.data.inZone == "false" ? ZoneType.outOfZone : ZoneType.warning,
+                        widget.data.inZone == "true" ? ZoneType.inZone :widget.data.inZone == "false"
+                            ? ZoneType.outOfZone : widget.data.warning.isNotEmpty ? ZoneType.warning : ZoneType.unknown,
 
                       ),
                     ),
@@ -315,19 +323,19 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
                           ),
                         ),
                         customWidth(5.w),
-                        Expanded(
-                          child: PrimaryOutlinedButton(
-                            radius: 6.r,
-                            text: 'Reschedule',
-                            buttonColor: AppColors.primaryAppColor,
-                            onPressed: () {
-                              Get.dialog(RescheduleDialogWidget());
-                            },
-                            textStyle: AppTextStyle.normal12style.copyWith(
-                              color: AppColors.primaryAppColor,
-                            ),
-                          ),
-                        ),
+                        // Expanded(
+                        //   child: PrimaryOutlinedButton(
+                        //     radius: 6.r,
+                        //     text: 'Reschedule',
+                        //     buttonColor: AppColors.primaryAppColor,
+                        //     onPressed: () {
+                        //       Get.dialog(RescheduleDialogWidget());
+                        //     },
+                        //     textStyle: AppTextStyle.normal12style.copyWith(
+                        //       color: AppColors.primaryAppColor,
+                        //     ),
+                        //   ),
+                        // ),
                         customWidth(5.w),
                         Expanded(
                           child: PrimaryButton(
