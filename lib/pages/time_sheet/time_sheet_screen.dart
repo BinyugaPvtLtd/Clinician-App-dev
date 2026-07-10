@@ -117,7 +117,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                                 transition: Transition.rightToLeft,
                                 duration:
                                 const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
+                                // curve: Curves.easeInOutCubic,
                               );
                             },
                             textStyle:

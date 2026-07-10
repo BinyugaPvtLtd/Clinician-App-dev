@@ -132,7 +132,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: textMenuWidget(
                         title: "Document Update",
                         ontap: () {
-                          Get.to(() => DocumnetPage(empId: controller.employeeId.value,));
+                          Get.to(() => DocumnetPage(empId: controller.employeeId.value,), transition: Transition.cupertino,
+                            duration: const Duration(milliseconds: 350),);
                         },
                         imageicon: AppAsset.document,
                       ),
@@ -142,7 +143,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: textMenuWidget(
                         ontap: () {
-                          Get.to(() => TimeOffPage(employeeId: controller.employeeId.value,));
+                          Get.to(() => TimeOffPage(employeeId: controller.employeeId.value,), transition: Transition.cupertino,
+                            duration: const Duration(milliseconds: 350),);
                         },
                         title: "Time Off",
                         imageicon: AppAsset.timer,
@@ -155,7 +157,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         title: "Pending Visit Notes/ Oasis",
                         imageicon: AppAsset.pending,
                         ontap: () {
-                          Get.to(() => PendingVisits());
+                          Get.to(() => PendingVisits(), transition: Transition.cupertino,
+                            duration: const Duration(milliseconds: 350),);
                         },
                       ),
                     ),
@@ -164,7 +167,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: textMenuWidget(
                         ontap: () {
-                          Get.to(() => MyEarningPage());
+                          Get.to(() => MyEarningPage(), transition: Transition.cupertino,
+                            duration: const Duration(milliseconds: 350),);
                         },
                         title: "My Earning",
                         imageicon: AppAsset.earning,

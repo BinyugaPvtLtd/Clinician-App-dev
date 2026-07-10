@@ -131,15 +131,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           print("Auto selected company: $companyAlias");
                           String endWith = await ApiAppConstant.endPointByAlias(3, "dev");
                           print("Endpoint set to: ${ApiAppConstant.domain}");
-                          await Get.offAll(
+                          await Get.to(
                                 () => PasswordScreen(email: emailController.text),
                             transition: Transition.rightToLeft,
                             duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInOut,
+                            // curve: Curves.easeInOut,
                           );
                         } else {
                           // 👈 show company list screen when multiple companies
-                          Get.offAll(() => CompanyListScreen(email: emailController.text, companyList: response.companies,));
+                          Get.to(() => CompanyListScreen(email: emailController.text, companyList: response.companies,));
                         }
                           // print('Form validated successfully');
                         }else{

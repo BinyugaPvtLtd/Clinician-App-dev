@@ -307,6 +307,8 @@ class ClinicalApp extends StatelessWidget {
           title: 'Clinician App',
           navigatorKey: navigatorKey,
           defaultTransition: Transition.cupertino,
+          transitionDuration: const Duration(milliseconds: 300),
+          popGesture: true,
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(

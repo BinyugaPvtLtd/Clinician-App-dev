@@ -543,7 +543,6 @@ class _AddVisitPageState extends State<AddVisitPage> {
                                     visitRateController.clear();
                                     patientNameController.clear();
                                     visitController.status.value = '';
-
                                   }else{
                                     showErrorDialog(
                                       context: context,

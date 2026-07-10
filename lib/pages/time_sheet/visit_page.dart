@@ -104,7 +104,7 @@ class _VisitPageState extends State<VisitPage> {
                               () => EditVisitPage(item: item, visitStatus: item.recordTypeName!,),
                           transition: Transition.rightToLeft,
                           duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
+                          // curve: Curves.easeInOut,
                         ): null;
                       },
                       child: Column(

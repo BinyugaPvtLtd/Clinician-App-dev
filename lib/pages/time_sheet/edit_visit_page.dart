@@ -65,14 +65,14 @@ class _EditVisitPageState extends State<EditVisitPage> {
   }
 
   void _clearAndClose() {
-    editVisitController.selectedRecordTypeId.value = 0;
-    editVisitController.selectedRecordName.value = '';
-    editVisitController.selectedMasterVisitId.value = 0;
-    editVisitController.selectedMasterVisitName.value = '';
-    visitDateController.clear();
-    visitStartTimeController.clear();
-    visitEndTimeController.clear();
-    visitController.status.value = '';
+    // editVisitController.selectedRecordTypeId.value = 0;
+    // editVisitController.selectedRecordName.value = '';
+    // editVisitController.selectedMasterVisitId.value = 0;
+    // editVisitController.selectedMasterVisitName.value = '';
+    // visitDateController.clear();
+    // visitStartTimeController.clear();
+    // visitEndTimeController.clear();
+    // visitController.status.value = '';
     Get.back();
   }
 
