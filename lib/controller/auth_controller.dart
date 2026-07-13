@@ -41,6 +41,7 @@ class AuthController extends GetxController {
           int userId = res.data['user']["userId"] ?? 0;
           String refreshToken = res.data['refreshToken'] ?? "";
           String userEmail = res.data['user']["email"] ?? email;
+          String userStatus = res.data['user']["status"] ?? '';
           callController.initFCM(deviceName: 'MOBILE',);
           TokenManager.setAccessToken(
             token: token,
@@ -50,6 +51,7 @@ class AuthController extends GetxController {
             companyId: companyId,
             userID: userId,
             email: userEmail,
+            status: userStatus
           );
         }
         return ApiData(
@@ -57,6 +59,7 @@ class AuthController extends GetxController {
             message: res.statusMessage!,
             statusCode: res.statusCode!,
             roleName: res.data['user']["role"] ?? '',
+          status: res.data['user']["status"] ?? '',
         );
       }else{
         error.value = "Login failed";
@@ -139,6 +142,7 @@ class AuthController extends GetxController {
         int companyId = res.data['user']["company_id"] ?? 0;
         int userId = res.data['user']["userId"] ?? 0;
         String refreshToken = res.data['refreshToken'] ?? "";
+        String userStatus = res.data['user']["status"] ?? '';
         String userEmail = res.data['user']["email"] ?? email;
 
         TokenManager.setAccessToken(
@@ -148,6 +152,7 @@ class AuthController extends GetxController {
           departmentId: departmentId,
           companyId: companyId,
           userID: userId,
+          status: userStatus,
           email: userEmail,
         );
 
@@ -275,6 +280,7 @@ class AuthController extends GetxController {
         int userId = res.data['user']["userId"] ?? 0;
         String refreshToken = res.data['refreshToken'] ?? "";
         String userEmail = res.data['user']["email"] ?? '';
+        String userStatus = res.data['user']["status"] ?? '';
         callController.initFCM(deviceName: 'MOBILE',);
         TokenManager.setAccessToken(
           token: token,
@@ -284,6 +290,7 @@ class AuthController extends GetxController {
           companyId: companyId,
           userID: userId,
           email: userEmail,
+          status: userStatus,
         );
 
         return ApiData(

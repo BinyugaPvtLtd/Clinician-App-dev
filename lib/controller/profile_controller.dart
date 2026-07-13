@@ -508,7 +508,7 @@ class ProfileController extends GetxController{
               .map(
                 (o) => OtherClinician(
                   userId: o['userId'] ?? 0,
-                    employeeTypeColor: o['color'] ?? '',
+                    employeeTypeColor: o['employeeTypeColor'] ?? '',
                     employeeId: o['employeeId'] ?? 0,
                     name: o['name'] ?? '',
                     employeeTypeAbbreviation: o['employeeTypeAbbreviation'] ?? '',

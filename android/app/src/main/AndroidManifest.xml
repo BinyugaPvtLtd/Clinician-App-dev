@@ -1,9 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- ✅ Required for video calls -->
+    <uses-permission android:name="android.permission.CAMERA"/>
     <!-- For older android -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28"/>
@@ -20,6 +23,16 @@
 
     <!-- ✅ Required to show full-screen call notifications on locked screen -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+
+    <!-- ✅ Required for flutter_callkit_incoming foreground service -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL"/>
+    <!-- ✅ Required on Android 14+ (API 34+): service starts with FGS type "microphone" -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+    <!-- ✅ Required on Android 14+ (API 34+): FGS type "camera" for video calls -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.MANAGE_OWN_CALLS"/>
 
     <application
         android:label="Symmetry CareGiver"
@@ -58,14 +71,27 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- ✅ FCM background message handler (required for firebase_messaging with AGP 8+) -->
+        <!-- ✅ Custom FCM service: intercepts ALL FCM messages via handleIntent() before
+             Android decides to show a system notification. Priority 1 ensures it wins
+             over FlutterFirebaseMessagingService (priority 0) from the firebase_messaging plugin.
+             For CALL_INCOMING / CALL_ENDED / etc., we show the callkit UI and do NOT call super,
+             preventing any plain system notification. For everything else we call super so Flutter
+             background handler and chat notifications work normally. -->
         <service
-            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+            android:name=".MyFirebaseMessagingService"
             android:exported="false">
-            <intent-filter android:priority="-500">
+            <intent-filter android:priority="1">
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
+
+        <!-- ✅ Override flutter_callkit_incoming service: use phoneCall|microphone|camera
+             FGS type so accepting an audio or video call doesn't crash on Android 14+.
+             tools:replace ensures our type wins over the plugin's. -->
+        <service
+            android:name="com.hiennv.flutter_callkit_incoming.CallkitNotificationService"
+            android:foregroundServiceType="phoneCall|microphone|camera"
+            tools:replace="android:foregroundServiceType"/>
 
     </application>
 

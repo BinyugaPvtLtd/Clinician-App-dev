@@ -1,8 +1,8 @@
 import 'package:clinician_app/controller/calling_controller.dart';
 import 'package:clinician_app/controller/notification_controller.dart';
+import 'package:clinician_app/controller/splash_controller.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/pages/auth/splash_screen.dart';
-import 'package:clinician_app/pages/video_calling/call_background_noti.dart';
 import 'package:clinician_app/pages/video_calling/call_ring.dart';
 import 'package:clinician_app/pages/video_calling/calling_notification.dart';
 import 'package:clinician_app/pages/video_calling/message_notification.dart';
@@ -10,9 +10,12 @@ import 'package:clinician_app/services/chat_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'firebase_options.dart';
 
@@ -37,21 +40,138 @@ Future<void> main() async {
     sound: true,
   );
 
+  // ✅ Request call permissions (mic + camera) so accepting a call on
+  // Android 14+ doesn't crash the FGS with SecurityException.
+  await requestCallPermissions();
+
   // Create the chat notification channel on the device
   await ChatNotificationService.init();
 
   setupForegroundCallListener();
   setupBackgroundCallListener();
+  setupCallkitListener();      // handles Accept/Decline events (foreground + background)
+  setupKilledStateAcceptHandler(); // handles Accept when app was completely killed
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   MediaKit.ensureInitialized();
   runApp(const ClinicalApp());
 }
+
+// ✅ NEW: Request microphone + camera + notification permissions.
+// Must already be GRANTED before the user taps Accept on an incoming call,
+// otherwise the callkit foreground service (type microphone|camera) throws
+// SecurityException on Android 14+.
+Future<void> requestCallPermissions() async {
+  final statuses = await [
+    Permission.microphone,
+    Permission.camera,
+    Permission.notification,
+  ].request();
+
+  if (statuses[Permission.microphone] == PermissionStatus.permanentlyDenied ||
+      statuses[Permission.camera] == PermissionStatus.permanentlyDenied) {
+    debugPrint('⚠️ Mic/Camera permanently denied — calls may fail. '
+        'User must enable them in app settings.');
+    // Optionally: await openAppSettings();
+  }
+}
+
 bool _manuallyRejected = false;
 
 /// If you still need navigatorKey for overlay toast usage, keep it.
 /// But dialogs/navigation will be handled by GetX.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final callController = Get.put(CallingController());
+
+// ── CallKit event listener ────────────────────────────────────────────────
+// Handles Accept / Decline button taps from flutter_callkit_incoming UI.
+// Works for both background (app resuming) and killed (app re-launching) states.
+void setupCallkitListener() {
+  FlutterCallkitIncoming.onEvent.listen((CallEvent? event) {
+    if (event == null) return;
+
+    switch (event) {
+      case CallEventActionCallAccept():
+        final callId  = event.callKitParams.extra?['callId']?.toString()  ?? event.callKitParams.id;
+        final isVideo = event.callKitParams.extra?['isVideo']?.toString() ?? 'false';
+        AndroidCallRingtone.stop();
+        _navigateToCallWhenReady(callId, isVideo);
+      case CallEventActionCallDecline():
+        final callId = event.callKitParams.extra?['callId']?.toString() ?? event.callKitParams.id;
+        AndroidCallRingtone.stop();
+        callController.handleCallDecline({'callId': callId});
+      case CallEventActionCallEnded():
+        AndroidCallRingtone.stop();
+      case CallEventActionCallTimeout():
+        AndroidCallRingtone.stop();
+      default:
+        break;
+    }
+  });
+}
+
+// ── Killed-state Accept handler ───────────────────────────────────────────
+// When the app is killed and the user taps Accept in the callkit notification:
+//   1. CallkitIncomingBroadcastReceiver schedules acceptCallHandleCallback (750 ms delay)
+//   2. TransparentActivity launches MainActivity (cold start — Flutter takes ~1–2 s)
+//   3. We register acceptCallHandle() here so when the 750 ms fires and the method
+//      channel is ready, we immediately navigate to the call.
+//   4. activeCalls() is the fallback for very slow devices where 750 ms is not enough.
+void setupKilledStateAcceptHandler() {
+  // Primary: method-channel callback (fired ~750 ms after Accept tap by native code)
+  FlutterCallkitIncoming.acceptCallHandle((Map<dynamic, dynamic> data) {
+    final callId  = data['callId']?.toString()  ?? '';
+    final isVideo = data['isVideo']?.toString() ?? 'false';
+    if (callId.isEmpty) return;
+    AndroidCallRingtone.stop();
+    _navigateToCallWhenReady(callId, isVideo);
+  });
+
+  // Fallback: if the method call arrived before Flutter was ready, the call is
+  // still persisted as isAccepted=true in SharedPreferences. Check on startup.
+  Future.delayed(const Duration(milliseconds: 1200), () async {
+    try {
+      final calls = await FlutterCallkitIncoming.activeCalls();
+      if (calls == null) return;
+      final list = calls is List ? calls : (calls as Map).values.toList();
+      for (final c in list) {
+        final map = c is Map ? c : <dynamic, dynamic>{};
+        final extra = map['extra'] as Map? ?? {};
+        final callId  = extra['callId']?.toString()  ?? map['id']?.toString() ?? '';
+        final isVideo = extra['isVideo']?.toString() ?? 'false';
+        // Only handle calls that were accepted while app was killed (not already navigated)
+        if (callId.isNotEmpty && Get.context != null) {
+          AndroidCallRingtone.stop();
+          callController.handleCallAccepted({'callId': callId}, navigatorKey, isVideo);
+          break;
+        }
+      }
+    } catch (_) {}
+  });
+}
+
+// ── Navigate to call (background: immediately; killed: poll until ready) ──
+void _navigateToCallWhenReady(String callId, String isVideo) {
+  // Tell SplashController not to navigate to HomeScreen — a call accept is
+  // in progress and will handle its own navigation once the API responds.
+  if (Get.isRegistered<SplashController>()) {
+    Get.find<SplashController>().skipNavigation();
+  }
+
+  if (Get.context != null) {
+    callController.handleCallAccepted({'callId': callId}, navigatorKey, isVideo);
+    return;
+  }
+  int attempts = 0;
+  void poll() {
+    attempts++;
+    if (Get.context != null) {
+      callController.handleCallAccepted({'callId': callId}, navigatorKey, isVideo);
+    } else if (attempts < 20) {
+      Future.delayed(const Duration(milliseconds: 500), poll);
+    }
+  }
+  WidgetsBinding.instance.addPostFrameCallback((_) => poll());
+}
 
 // ✅ Helper: update bell dot + refresh notification list (safe if controller not created yet)
 void _notifyNewNotification({bool refreshList = true}) {
@@ -77,7 +197,6 @@ void setupForegroundCallListener() {
       final callerName = (data['callerName'] ?? 'Unknown').toString();
       final callId = (data['callId'] ?? '').toString();
       final userProfile = (data['contactImage'] ?? '').toString();
-      final userName = (data['contactName'] ?? '').toString();
       final isVideo = (data['isVideo'] ?? 'false').toString();
 
       // ✅ Show bell dot immediately (call appears in notification list)
@@ -95,6 +214,11 @@ void setupForegroundCallListener() {
           onAccept: () {
             // 🔕 STOP RINGTONE
             AndroidCallRingtone.stop();
+
+            // Prevent SplashController from overriding call navigation
+            if (Get.isRegistered<SplashController>()) {
+              Get.find<SplashController>().skipNavigation();
+            }
 
             // ✅ close dialog safely
             if (Get.isDialogOpen == true) {
@@ -143,14 +267,15 @@ void setupForegroundCallListener() {
       // 🔕 STOP RINGTONE
       AndroidCallRingtone.stop();
 
+      // Dismiss CallKit UI if it is still visible (caller hung up / timed out).
+      FlutterCallkitIncoming.endAllCalls();
+
       // ✅ Missed/ended call becomes a notification → show dot + refresh list
       _notifyNewNotification();
 
-      // Only auto close when NOT manually rejected
+      // Only dismiss dialog — never pop VideoCallAgoraScreen
       if (!_manuallyRejected) {
         if (Get.isDialogOpen == true) {
-          Get.back();
-        }else{
           Get.back();
         }
       }
@@ -190,19 +315,13 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final data = message.data;
   final type = (data['type'] ?? '').toString();
 
-  // Incoming call → full-screen call notification
-  if (type == 'CALL_INCOMING') {
-    await CallNotificationService.showIncomingCall(
-      callId: (data['callId'] ?? '').toString(),
-      callerName: (data['callerName'] ?? 'Unknown').toString(),
-      profileUrl: (data['contactImage'] ?? '').toString(),
-      isVideo: (data['isVideo'] ?? 'false').toString(),
-    );
-    return;
-  }
-
-  // Call lifecycle events — nothing to show
-  if (type == 'CALL_MISSED' || type == 'CALL_ENDED' || type == 'CALL_DECLINED') {
+  // Call events are handled entirely by MyFirebaseMessagingService (native Android).
+  // That service sends the callkit broadcast directly to CallkitIncomingBroadcastReceiver
+  // without needing the Flutter engine, so we skip call types here to avoid conflicts.
+  if (type == 'CALL_INCOMING' ||
+      type == 'CALL_MISSED'   ||
+      type == 'CALL_ENDED'    ||
+      type == 'CALL_DECLINED') {
     return;
   }
 

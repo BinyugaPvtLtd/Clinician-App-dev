@@ -3,125 +3,125 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+// ─── No GetX / CallingController imports here ───────────────────────────────
+// This file is loaded by the FCM background isolate (firebaseMessagingBackgroundHandler).
+// That isolate has no full Flutter engine, so Flutter plugins like agora_rtc_engine
+// will crash on load.  Keep this file lean: only dart:core + flutter_local_notifications.
+// ─────────────────────────────────────────────────────────────────────────────
 
 class CallNotificationService {
-  static final FlutterLocalNotificationsPlugin _fln = FlutterLocalNotificationsPlugin();
-
-  static const String _channelId = 'incoming_call_channel';
-  static const int _notifId = 9001;
-
+  static const String channelId   = 'incoming_call_channel';
+  static const int    notifId     = 9001;
   static const String actionAccept = 'CALL_ACCEPT';
   static const String actionReject = 'CALL_REJECT';
 
+  // ── Called once from main() in the main isolate ──────────────────────────
+  // onResponse handles Accept / Decline button taps; defined in main.dart
+  // so it can safely access CallingController and GetX.
   static Future<void> init({
-    required GlobalKey<NavigatorState> navigatorKey,
+    required void Function(NotificationResponse) onResponse,
   }) async {
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const initSettings = InitializationSettings(android: androidInit);
+    final fln = FlutterLocalNotificationsPlugin();
 
-    await _fln.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse r) async {
-        // Runs when app is in foreground/background and user taps action.
-        await _handleAction(r, navigatorKey);
-      },
+    await fln.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ),
+      onDidReceiveNotificationResponse: onResponse,
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      _channelId,
-      'Incoming Calls',
-      description: 'Incoming call notifications',
-      importance: Importance.max,
-    );
-
-    final androidPlugin =
-    _fln.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-
-    await androidPlugin?.createNotificationChannel(channel);
+    await fln
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          channelId,
+          'Incoming Calls',
+          description: 'Incoming call notifications',
+          importance: Importance.max,
+        ));
   }
 
+  // ── Called from firebaseMessagingBackgroundHandler (background isolate) ───
+  // Keep every import inside this method's runtime path lean.
   static Future<void> showIncomingCall({
     required String callId,
     required String callerName,
-    String? profileUrl, // (optional, not used by default here)
-    String isVideo = "false",
+    String? profileUrl,
+    String isVideo = 'false',
   }) async {
-    final payload = jsonEncode({
-      'type': 'CALL_INCOMING',
-      'callId': callId,
-      'callerName': callerName,
-      'profileUrl': profileUrl ?? '',
-      'isVideo': isVideo,
-    });
+    final fln = FlutterLocalNotificationsPlugin();
 
-    final androidDetails = AndroidNotificationDetails(
-      _channelId,
-      'Incoming Calls',
-      channelDescription: 'Incoming call notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-      category: AndroidNotificationCategory.call,
-      fullScreenIntent: true, // makes it “call-like”
-      ongoing: true,
-      autoCancel: false,
-      timeoutAfter: 30000,
-      sound: RawResourceAndroidNotificationSound('incommingCall.mp3'),// auto dismiss after 30s (optional)
-
-      actions: <AndroidNotificationAction>[
-        const AndroidNotificationAction(
-          actionReject,
-          'Reject',
-          showsUserInterface: true, // brings app to front
-          cancelNotification: true,
-        ),
-        const AndroidNotificationAction(
-          actionAccept,
-          'Accept',
-          showsUserInterface: true, // brings app to front
-          cancelNotification: true,
-        ),
-      ],
+    // Must call initialize() before show() — background isolate never ran init().
+    // Do NOT pass onDidReceiveBackgroundNotificationResponse here: registering
+    // a background callback from inside the background isolate itself can crash
+    // the initialization.  Both our actions have showsUserInterface:true so
+    // they always bring the app to the foreground — this callback is never used.
+    await fln.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ),
     );
 
-    await _fln.show(
-      _notifId,
-      'Incoming call',
+    await fln
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+          channelId,
+          'Incoming Calls',
+          description: 'Incoming call notifications',
+          importance: Importance.max,
+        ));
+
+    await fln.show(
+      notifId,
+      'Incoming Call',
       callerName,
-      NotificationDetails(android: androidDetails),
-      payload: payload,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channelId,
+          'Incoming Calls',
+          channelDescription: 'Incoming call notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          category: AndroidNotificationCategory.call,
+          fullScreenIntent: true,
+          ongoing: true,
+          autoCancel: false,
+          timeoutAfter: 30000,
+          actions: const <AndroidNotificationAction>[
+            AndroidNotificationAction(
+              actionReject,
+              'Decline',
+              icon: DrawableResourceAndroidBitmap('ic_call_decline'),
+              showsUserInterface: true,
+              cancelNotification: true,
+            ),
+            AndroidNotificationAction(
+              actionAccept,
+              'Accept',
+              icon: DrawableResourceAndroidBitmap('ic_call_accept'),
+              showsUserInterface: true,
+              cancelNotification: true,
+            ),
+          ],
+        ),
+      ),
+      payload: jsonEncode({
+        'type': 'CALL_INCOMING',
+        'callId': callId,
+        'callerName': callerName,
+        'isVideo': isVideo,
+      }),
     );
   }
 
-  static Future<void> dismiss() async => _fln.cancel(_notifId);
-
-  static Future<void> _handleAction(
-      NotificationResponse response,
-      GlobalKey<NavigatorState> navigatorKey,
-      ) async {
-    final payload = response.payload;
-    if (payload == null || payload.isEmpty) return;
-
-    final data = jsonDecode(payload) as Map<String, dynamic>;
-    final callId = (data['callId'] ?? '').toString();
-    final isVideo = (data['isVideo'] ?? 'false').toString();
-
-    await dismiss();
-
-    // if (response.actionId == actionAccept) {
-    //   await handleCallAccepted({"callId": callId}, navigatorKey, isVideo);
-    // } else if (response.actionId == actionReject) {
-    //   await handleCallRejected({"callId": callId});
-    // } else {
-    //   // User tapped notification body (not action)
-    //   // If you want, you can navigate to your call screen here.
-    // }
+  static Future<void> dismiss() async {
+    final fln = FlutterLocalNotificationsPlugin();
+    await fln.cancel(notifId);
   }
 }
 
-/// Required by flutter_local_notifications for background action callback
+/// Top-level — required by flutter_local_notifications for background isolate.
+/// Our actions all have showsUserInterface:true so they always bring the app to
+/// the foreground and fire onDidReceiveNotificationResponse instead of this.
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse response) {
-  // Keep empty OR log.
-  // Note: Calling network/API here is possible but requires careful isolate setup.
-}
+void notificationTapBackground(NotificationResponse response) {}

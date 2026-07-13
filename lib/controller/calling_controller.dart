@@ -208,7 +208,7 @@ class CallingController extends GetxController{
         }),
       );
 
-      if (response.statusCode != 200 || response.statusCode != 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final json = jsonDecode(response.body) as Map<String, dynamic>;
         debugPrint('calls/join response: $json');
         final channelName = json['channelName'] as String? ?? 'Test';

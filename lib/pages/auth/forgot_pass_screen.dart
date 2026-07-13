@@ -58,6 +58,7 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
                   PrimaryTextField(
                     controller: emailController,
                     hintText: 'Email ID',
+                    autovalidateMode: AutovalidateMode.disabled,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) => Validators.validateEmail(value),
                     prefixIcon: Padding(

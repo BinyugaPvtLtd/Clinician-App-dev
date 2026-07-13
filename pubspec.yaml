@@ -65,6 +65,7 @@ dependencies:
   device_info_plus: any
   firebase_core: any
   firebase_messaging: any
+  flutter_callkit_incoming: any
   permission_handler: any
   google_maps_flutter: any
   url_launcher: any

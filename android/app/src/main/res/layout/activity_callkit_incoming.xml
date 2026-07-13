@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Custom incoming call screen for Symmetry CareGiver.
+  Overrides flutter_callkit_incoming's default layout via Android resource merging.
+  All required view IDs must be preserved exactly as the plugin's Activity looks them up.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Background image / solid color — set at runtime via EXTRA_CALLKIT_BACKGROUND_COLOR -->
+    <ImageView
+        android:id="@+id/ivBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0F1D2D"
+        android:scaleType="centerCrop"
+        tools:ignore="ContentDescription" />
+
+    <!-- Subtle top gradient overlay -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="@drawable/bg_top_gradient"
+        android:alpha="0.35" />
+
+    <!-- Main content column -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:fitsSystemWindows="false">
+
+        <!-- ── TOP SECTION: app label ── -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="52dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Symmetry CareGiver"
+                android:textColor="#80FFFFFF"
+                android:textSize="13sp"
+                android:letterSpacing="0.08"
+                android:fontFamily="sans-serif-medium" />
+
+        </LinearLayout>
+
+        <!-- ── CENTRE SECTION: avatar + name — this is the ripple container the plugin needs ── -->
+        <com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout
+            android:id="@+id/llBackgroundAnimation"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            app:ripple_color="#334CAF50"
+            app:ripple_radius="76dp"
+            app:ripple_duration="2400"
+            app:ripple_amount="3"
+            app:ripple_scale="2.0">
+
+            <!-- Optional app logo (hidden by default, shown if EXTRA_CALLKIT_IS_SHOW_LOGO=true) -->
+            <ImageView
+                android:id="@+id/ivLogo"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_above="@+id/ivAvatar"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="16dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:visibility="invisible"
+                android:src="@drawable/ic_logo"
+                tools:ignore="ContentDescription" />
+
+            <!-- Caller avatar circle -->
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/ivAvatar"
+                android:layout_width="108dp"
+                android:layout_height="108dp"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_default_avatar"
+                app:civ_border_color="#664CAF50"
+                app:civ_border_width="3dp" />
+
+            <!-- Caller name + subtitle stacked below avatar -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/ivAvatar"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvNameCaller"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="26sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.01"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:paddingHorizontal="24dp"
+                    tools:text="John Doe" />
+
+                <!-- "Incoming call" label -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Incoming call"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="14sp"
+                    android:fontFamily="sans-serif" />
+
+                <!-- Phone number / call ID (shown only when EXTRA_CALLKIT_IS_SHOW_CALL_ID=true) -->
+                <TextView
+                    android:id="@+id/tvNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="13sp"
+                    android:visibility="invisible"
+                    tools:text="+1 234 567 890" />
+
+            </LinearLayout>
+
+        </com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout>
+
+        <!-- ── BOTTOM SECTION: decline / accept buttons ── -->
+        <LinearLayout
+            android:id="@+id/llAction"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:paddingBottom="48dp"
+            android:paddingTop="16dp"
+            android:gravity="center_vertical">
+
+            <!-- DECLINE column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    app:ripple_amount="3"
+                    app:ripple_radius="36dp"
+                    app:ripple_scale="2.0">
+
+                    <ImageView
+                        android:id="@+id/ivDeclineCall"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/bg_btn_decline_custom"
+                        android:padding="20dp"
+                        android:src="@drawable/ic_decline"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:id="@+id/tvDecline"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/ivDeclineCall"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:text="Decline"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="13sp" />
+
+                </com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout>
+
+            </LinearLayout>
+
+            <!-- ACCEPT column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    app:ripple_amount="3"
+                    app:ripple_radius="36dp"
+                    app:ripple_scale="2.0">
+
+                    <ImageView
+                        android:id="@+id/ivAcceptCall"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/bg_btn_accept_custom"
+                        android:padding="20dp"
+                        android:src="@drawable/ic_accept"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:id="@+id/tvAccept"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@id/ivAcceptCall"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:text="Accept"
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="13sp" />
+
+                </com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

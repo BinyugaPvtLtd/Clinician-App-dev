@@ -23,7 +23,9 @@ class ApiData{
   final Object? data;
   final int? chatId;
   final String? roleName;
+  final String? status;
   ApiData({
+    this.status,
     this.roleName,
     this.chatId,required this.success, required this.message, required this.statusCode, this.data});
 }

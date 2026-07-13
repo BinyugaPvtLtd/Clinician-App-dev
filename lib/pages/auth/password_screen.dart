@@ -83,6 +83,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                   PrimaryTextField(
                     controller: passwordController,
                     hintText: 'Password',
+                    autovalidateMode: AutovalidateMode.disabled,
                     textInputAction: TextInputAction.done,
                     keyboardType: TextInputType.visiblePassword,
                     obscureText: _obscurePassword,
@@ -136,7 +137,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                             email: widget.email,
                             password: passwordController.text);
                         if (response.success) {
-                          if (response.roleName == "Clinical") {
+                          if (response.roleName == "Clinical" && response.status == "Onboarding") {
                             await profileController.fetchRecordType();
                             await profileController.fetchClinitionLoginDetails();
                             print('Form validated successfully');
@@ -150,12 +151,14 @@ class _PasswordScreenState extends State<PasswordScreen> {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Row(
+                                  content:  Row(
                                     children: [
                                       Icon(Icons.error_outline, color: Colors.white),
                                       SizedBox(width: 8),
                                       Expanded(
-                                        child: Text("Only Clinical users are allowed to log in."),
+                                        child: Text(response.status == "Onboarding" ?
+                                         "Only Onboarded users are allowed to log in.":
+                                         "Only Clinical users are allowed to log in."),
                                       ),
                                     ],
                                   ),

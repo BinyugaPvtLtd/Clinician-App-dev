@@ -72,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   customHeight(24.h),
                   PrimaryTextField(
                     controller: emailController,
+                    autovalidateMode: AutovalidateMode.disabled,
                     hintText: 'Your Email',
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) => Validators.validateEmail(value),

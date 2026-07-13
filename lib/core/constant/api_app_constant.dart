@@ -1,6 +1,6 @@
 ///dev
 class ApiAppConstant {
-  static  String domain = 'https://demo.symmetry.care/';
+  static  String domain = 'https://prohealth-dev.symmetry.care/';
   static const String authDomain = 'https://auth.symmetry.care/';
   static  String clinicialBaseUrl = '${domain}api/';
   static const String clinicialAuthBaseUrl = '${authDomain}api/';
@@ -12,14 +12,14 @@ class ApiAppConstant {
   static String endPointByAlias(int appType,String aliasString) {
     switch (appType) {
       case clinician:
-        domain = "https://demo.symmetry.care";
-        return "https://demo.symmetry.care";
+        domain = "https://prohealth-dev.symmetry.care";
+        return "https://prohealth-dev.symmetry.care";
       case proHealth:
-        domain = "https://demo.symmetry.care";
-        return "https://demo.symmetry.care";
+        domain = "https://prohealth-dev.symmetry.care";
+        return "https://prohealth-dev.symmetry.care";
       default:
-        domain = "https://demo.symmetry.care/";
-        return "https://demo.symmetry.care/";
+        domain = "https://prohealth-dev.symmetry.care/";
+        return "https://prohealth-dev.symmetry.care/";
     }
   }
 }
