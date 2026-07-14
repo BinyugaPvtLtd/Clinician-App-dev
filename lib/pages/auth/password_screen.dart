@@ -1,10 +1,7 @@
 import 'package:clinician_app/controller/profile_controller.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
-import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
-import 'package:clinician_app/pages/auth/forgot_pass_screen.dart';
-import 'package:clinician_app/pages/auth/register_screen.dart';
 import 'package:clinician_app/pages/auth/widget/error_dailog.dart';
 import 'package:clinician_app/pages/home/home_screen.dart';
 import 'package:clinician_app/utils/validator.dart';
@@ -23,12 +20,29 @@ class PasswordScreen extends StatefulWidget {
 }
 
 class _PasswordScreenState extends State<PasswordScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  // TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   final auth = Get.put(AuthController());
   final profileController = Get.put(ProfileController());
   bool _obscurePassword = true;
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(12),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,9 +52,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),
-            child: Form(
-              key:_formKey,
-              child: Column(
+            child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -86,8 +98,6 @@ class _PasswordScreenState extends State<PasswordScreen> {
                     textInputAction: TextInputAction.done,
                     keyboardType: TextInputType.visiblePassword,
                     obscureText: _obscurePassword,
-                    validator:
-                        (value) => Validators.validatePassword(value ?? ''),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
                       child: SvgPicture.asset(AppAsset.passwordSvgIcon,width: 20,      // ← explicit size
@@ -130,55 +140,41 @@ class _PasswordScreenState extends State<PasswordScreen> {
                     ),
                   ):PrimaryButton(
                     onTap: () async{
-                      if (_formKey.currentState!.validate()) {
-                        // Form is valid
-                        final response = await auth.signInAuth(
-                            email: widget.email,
-                            password: passwordController.text);
-                        if (response.success) {
-                          if (response.roleName == "Clinical") {
-                            await profileController.fetchRecordType();
-                            await profileController.fetchClinitionLoginDetails();
-                            print('Form validated successfully');
-                            await Get.offAll(
-                                  () => HomeScreen(),
-                              transition: Transition.rightToLeftWithFade,
-                              duration: const Duration(milliseconds: 350),
-                              curve: Curves.easeOutCubic,
-                            );
-                          } else {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Row(
-                                    children: [
-                                      Icon(Icons.error_outline, color: Colors.white),
-                                      SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text("Only Clinical users are allowed to log in."),
-                                      ),
-                                    ],
-                                  ),
-                                  backgroundColor: Colors.red,
-                                  behavior: SnackBarBehavior.floating,
-                                  margin: const EdgeInsets.all(12),
-                                  duration: const Duration(seconds: 3),
-                                ),
-                              );
-                            }
-                          }
+                      if (auth.isLoading.value) return;
+                      final passwordError = Validators.validatePassword(passwordController.text);
+                      if (passwordError != null) {
+                        _showErrorSnackBar(passwordError);
+                        return;
+                      }
+                      final response = await auth.signInAuth(
+                        email: widget.email,
+                        password: passwordController.text,
+                      );
+                      if (response.success) {
+                        if (response.roleName == "Clinical" && response.userStatus == "Onboarding") {
+                          await profileController.fetchRecordType();
+                          await profileController.fetchClinitionLoginDetails();
+                          await Get.offAll(
+                            () => HomeScreen(),
+                            transition: Transition.rightToLeftWithFade,
+                            duration: const Duration(milliseconds: 350),
+                            curve: Curves.easeOutCubic,
+                          );
                         } else {
-                          print('Error');
-                          showErrorDialog(
-                              context: context,
-                              title: "Invalid credentials!",
-                              subtitle: "Unable to retrieve credentials for authorizing user.");
+                          if (mounted) {
+                            _showErrorSnackBar(
+                              response.userStatus == "Onboarding"
+                                ? "Only Onboarded users are allowed to log in."
+                                : "Only Clinical users are allowed to log in.",
+                            );
+                          }
                         }
-                        //Get.to(() => HomeScreen());
-            
                       } else {
-                        // Form is invalid
-                        print('Validation failed');
+                        showErrorDialog(
+                          context: context,
+                          title: "Invalid credentials!",
+                          subtitle: "Unable to retrieve credentials for authorizing user.",
+                        );
                       }
                     },
                     label: 'Login',
@@ -220,7 +216,6 @@ class _PasswordScreenState extends State<PasswordScreen> {
                   // ),
                   customHeight(20.h),
                 ],
-              ),
             ),
           ),
         ),

@@ -370,6 +370,7 @@ dio.InterceptorsWrapper buildAuthInterceptor(dio.Dio client) {
               companyId:    d['user']['company_id']   ?? 0,
               userID:       d['user']['userId']        ?? 0,
               email:        d['user']['email']         ?? '',
+              userStatus:   d['user']['status']        ?? ''
             );
 
             // ✅ Call ProfileController after successful token refresh

@@ -65,6 +65,10 @@ class TokenManager extends GetxService {
     return _box.read("userID") ?? 0;
   }
 
+  static String getUserStatus() {
+    return _box.read("status") ?? "";
+  }
+
   /// ---------- SETTERS ----------
 
   static Future<void> setAccessToken({
@@ -75,6 +79,7 @@ class TokenManager extends GetxService {
     required int companyId,
     required int userID,
     required String email,
+    required String userStatus,
   }) async {
     _box.write("accessToken", token);
     _box.write("refreshToken", refreshToken);
@@ -83,6 +88,7 @@ class TokenManager extends GetxService {
     _box.write("userId", userID);
     _box.write("email", email);
     _box.write("departmentId", departmentId);
+    _box.write("status", userStatus);
     _box.write("isOnBoarding", false);
   }
 

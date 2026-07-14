@@ -17,9 +17,27 @@ class ForgotPassScreen extends StatefulWidget {
 }
 
 class _ForgotPassScreenState extends State<ForgotPassScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   final auth = Get.put(AuthController());
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(12),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,9 +47,7 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),
-            child: Form(
-              key: _formKey,
-              child: Column(
+            child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -59,7 +75,6 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
                     controller: emailController,
                     hintText: 'Email ID',
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => Validators.validateEmail(value),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
                       child: SvgPicture.asset(AppAsset.emailSvgIcon,width: 20,      // ← explicit size
@@ -73,20 +88,24 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
               ):PrimaryButton(
                     label: 'Send Email',
                     onTap: () async{
+                      if (auth.isLoading.value) return;
                       FocusScope.of(context).unfocus();
-                      if (_formKey.currentState!.validate()) {
-                        // Form is valid
-                        final response = await auth.forgetPasswordAuth(
-                            email: emailController.text);
-                        print('Response: ${response.data}');
-                        if (response.success) {
-                          Get.bottomSheet(
-                          PassResetEmailSentBottomsheet(email:emailController.text,),
+                      final email = emailController.text.trim();
+                      if (email.isEmpty) {
+                        _showErrorSnackBar('Email is required');
+                        return;
+                      }
+                      final emailError = Validators.validateEmail(email);
+                      if (emailError != null) {
+                        _showErrorSnackBar(emailError);
+                        return;
+                      }
+                      final response = await auth.forgetPasswordAuth(email: email);
+                      if (response.success) {
+                        Get.bottomSheet(
+                          PassResetEmailSentBottomsheet(email: email),
                           barrierColor: Colors.white.withValues(alpha: 0.3),
                         );
-                        }
-                      } else {
-                        // Form is invalid
                       }
                     },
                   )),
@@ -117,7 +136,6 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
                   ),
                   customHeight(20.h),
                 ],
-              ),
             ),
           ),
         ),

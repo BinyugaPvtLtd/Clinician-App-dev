@@ -25,11 +25,29 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   final auth = Get.put(AuthController());
   final profileController = Get.put(ProfileController());
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(12),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,9 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             physics: BouncingScrollPhysics(),
-            child: Form(
-              key:_formKey,
-              child: Column(
+            child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -74,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: emailController,
                     hintText: 'Your Email',
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => Validators.validateEmail(value),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
                       child: SvgPicture.asset(AppAsset.emailSvgIcon,width: 20,      // ← explicit size
@@ -119,41 +134,39 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ):PrimaryButton(
                     onTap: () async{
-                      if (_formKey.currentState!.validate()) {
-                        // Form is valid
-                        final response = await auth.getCompanyList(emailController.text,);
-                        if (response.success) {
-                        // await profileController.fetchRecordType();
-                        // await profileController.fetchClinitionLoginDetails();
+                      if (auth.isLoading.value) return;
+                      final email = emailController.text.trim();
+                      if (email.isEmpty) {
+                        _showErrorSnackBar('Email is required');
+                        return;
+                      }
+                      final emailError = Validators.validateEmail(email);
+                      if (emailError != null) {
+                        _showErrorSnackBar(emailError);
+                        return;
+                      }
+                      final response = await auth.getCompanyList(email);
+                      if (response.success) {
                         if (response.companies.length == 1) {
-                          // 👈 skip screen, directly use first company alias
                           String companyAlias = response.companies.first.companyAlias;
                           print("Auto selected company: $companyAlias");
                           String endWith = await ApiAppConstant.endPointByAlias(3, "dev");
                           print("Endpoint set to: ${ApiAppConstant.domain}");
                           await Get.to(
-                                () => PasswordScreen(email: emailController.text),
+                            () => PasswordScreen(email: email),
                             transition: Transition.rightToLeft,
                             duration: const Duration(milliseconds: 400),
-                            // curve: Curves.easeInOut,
                           );
                         } else {
-                          // 👈 show company list screen when multiple companies
-                          Get.to(() => CompanyListScreen(email: emailController.text, companyList: response.companies,));
+                          Get.to(() => CompanyListScreen(email: email, companyList: response.companies));
                         }
-                          // print('Form validated successfully');
-                        }else{
-                          print('Error');
-                          showErrorDialog(
-                              context:context,
-                              title: "Invalid credentials!",
-                              subtitle:"Unable to retrieve credentials for authorizing user.");
-                        }
-                        //Get.to(() => HomeScreen());
-            
                       } else {
-                        // Form is invalid
-                        print('Validation failed');
+                        print('Error');
+                        showErrorDialog(
+                          context: context,
+                          title: "Invalid credentials!",
+                          subtitle: "Unable to retrieve credentials for authorizing user.",
+                        );
                       }
                     },
                     label: 'Login',
@@ -195,7 +208,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   // ),
                   customHeight(20.h),
                 ],
-              ),
             ),
           ),
         ),

@@ -32,7 +32,7 @@ class AuthController extends GetxController {
 
       if (res.statusCode == 200 || res.statusCode == 201) {
        // final data = res.data as Map<String, dynamic>;
-        if(res.data['user']['role'] == "Clinical"){
+        if(res.data['user']['role'] == "Clinical" && res.data['user']["status"] == "Onboarding"){
           print("accessToken ${res.data["accessToken"]}");
           String token = res.data["accessToken"] ?? "";
           String username = "${res.data['user']['firstName']} ${res.data['user']['lastName']}";
@@ -40,6 +40,7 @@ class AuthController extends GetxController {
           int companyId = res.data['user']["company_id"] ?? 0;
           int userId = res.data['user']["userId"] ?? 0;
           String refreshToken = res.data['refreshToken'] ?? "";
+          String userStatus = res.data['user']["status"] ?? "";
           String userEmail = res.data['user']["email"] ?? email;
           callController.initFCM(deviceName: 'MOBILE',);
           TokenManager.setAccessToken(
@@ -50,6 +51,7 @@ class AuthController extends GetxController {
             companyId: companyId,
             userID: userId,
             email: userEmail,
+            userStatus: userStatus
           );
         }
         return ApiData(
@@ -57,6 +59,7 @@ class AuthController extends GetxController {
             message: res.statusMessage!,
             statusCode: res.statusCode!,
             roleName: res.data['user']["role"] ?? '',
+            userStatus: res.data['user']["status"] ?? ''
         );
       }else{
         error.value = "Login failed";
@@ -132,29 +135,35 @@ class AuthController extends GetxController {
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         // final data = res.data as Map<String, dynamic>;
-        print("accessToken ${res.data["accessToken"]}");
-        String token = res.data["accessToken"] ?? "";
-        String username = "${res.data['user']['firstName']} ${res.data['user']['lastName']}";
-        int departmentId = res.data['user']["departmentId"] ?? 0;
-        int companyId = res.data['user']["company_id"] ?? 0;
-        int userId = res.data['user']["userId"] ?? 0;
-        String refreshToken = res.data['refreshToken'] ?? "";
-        String userEmail = res.data['user']["email"] ?? email;
+        if(res.data['user']['role'] == "Clinical" && res.data['user']["status"] == "Onboarding"){
+          print("accessToken ${res.data["accessToken"]}");
+          String token = res.data["accessToken"] ?? "";
+          String username = "${res.data['user']['firstName']} ${res.data['user']['lastName']}";
+          int departmentId = res.data['user']["departmentId"] ?? 0;
+          int companyId = res.data['user']["company_id"] ?? 0;
+          int userId = res.data['user']["userId"] ?? 0;
+          String userStatus = res.data['user']["status"] ?? "";
+          String refreshToken = res.data['refreshToken'] ?? "";
+          String userEmail = res.data['user']["email"] ?? email;
 
-        TokenManager.setAccessToken(
-          token: token,
-          refreshToken: refreshToken,
-          username: username,
-          departmentId: departmentId,
-          companyId: companyId,
-          userID: userId,
-          email: userEmail,
-        );
+          TokenManager.setAccessToken(
+              token: token,
+              refreshToken: refreshToken,
+              username: username,
+              departmentId: departmentId,
+              companyId: companyId,
+              userID: userId,
+              email: userEmail,
+              userStatus: userStatus
+          );
+        }
+
 
         return ApiData(
             success: true,
             message: res.statusMessage!,
-            statusCode: res.statusCode!
+            statusCode: res.statusCode!,
+            userStatus: res.data['user']["status"] ?? ""
         );
       }else{
         error.value = "Verify failed";
@@ -274,6 +283,7 @@ class AuthController extends GetxController {
         int companyId = res.data['user']["company_id"] ?? 0;
         int userId = res.data['user']["userId"] ?? 0;
         String refreshToken = res.data['refreshToken'] ?? "";
+        String userStatus = res.data['user']["status"] ?? "";
         String userEmail = res.data['user']["email"] ?? '';
         callController.initFCM(deviceName: 'MOBILE',);
         TokenManager.setAccessToken(
@@ -284,12 +294,14 @@ class AuthController extends GetxController {
           companyId: companyId,
           userID: userId,
           email: userEmail,
+          userStatus: userStatus
         );
 
         return ApiData(
             success: true,
             message: res.statusMessage!,
-            statusCode: res.statusCode!
+            statusCode: res.statusCode!,
+            userStatus: res.data['user']["status"] ?? ""
         );
       }else{
         error.value = "Login failed";
