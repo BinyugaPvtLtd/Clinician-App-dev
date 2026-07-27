@@ -149,12 +149,12 @@ class Validators {
 
   static String? validatePassword(String value) {
     String pattern =
-        r'^.*(?=.{8,})((?=.*[!@#$%^&*()\-_=+{};:,<.>]){1})(?=.*\d)((?=.*[a-z]){1}).*$';
+        r'^(?=.*\d)(?=.*[!@#$%^&*()\-_=+{}\[\];:,<.>]).{8,}$';
     RegExp regExp = RegExp(pattern);
     if (value.isEmpty) {
       return "Password is Required";
     } else if (!regExp.hasMatch(value)) {
-      return "The password must be at least 8 characters long and contain a mixture of both uppercase and lowercase letters, at least one number and one special character (e.g.,! @ # ?).";
+      return "The password must be at least 8 characters long and include at least one number and one special character.";
     } else {
       return null;
     }

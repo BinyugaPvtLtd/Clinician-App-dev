@@ -83,22 +83,22 @@ void showErrorDialog({
                 padding: EdgeInsets.fromLTRB(28.w, 20.h, 28.w, 28.h),
                 child: Column(
                   children: [
-                    Text(
-                      title,
-                      style: AppTextStyle.normal12style.copyWith(
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.defaultTxtGrey,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8.h),
+                    // Text(
+                    //   title,
+                    //   style: AppTextStyle.normal12style.copyWith(
+                    //     fontSize: 17.sp,
+                    //     fontWeight: FontWeight.w700,
+                    //     color: AppColors.defaultTxtGrey,
+                    //   ),
+                    //   textAlign: TextAlign.center,
+                    // ),
+                    // SizedBox(height: 8.h),
                     Text(
                       subtitle,
                       style: AppTextStyle.normal12style.copyWith(
                         fontSize: 12.sp,
                         color: AppColors.textGreyColor,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: FontWeight.w500,
                         height: 1.5,
                       ),
                       textAlign: TextAlign.center,

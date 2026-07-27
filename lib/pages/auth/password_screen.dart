@@ -173,7 +173,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                         showErrorDialog(
                           context: context,
                           title: "Invalid credentials!",
-                          subtitle: "Unable to retrieve credentials for authorizing user.",
+                          subtitle: response.message,
                         );
                       }
                     },
