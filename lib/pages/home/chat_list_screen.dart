@@ -70,7 +70,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 // }
             
                 if (controller.chatListItem.isEmpty) {
-                  return const Center(child: Text("No chats found"));
+                  return const Center(child: Text("No chats found!"));
                 }
             
                 return ListView.separated(

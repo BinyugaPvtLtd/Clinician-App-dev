@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:clinician_app/controller/repository/profile_repo.dart';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -355,43 +356,68 @@ class UpdateDocumentsController extends GetxController {
     required int empId,
     required File base64File,
     required String documentName,
-     String? expiryDate,
+    String? expiryDate,
   }) async {
+    // Shared helper — add once at the top of the class (or in a utils file)
+    String extractBackendMessage(dynamic data, String? fallback) {
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        return data['message'].toString();
+      } else if (data is String && data.isNotEmpty) {
+        return data;
+      }
+      return fallback ?? AppString.somethingWentWrong;
+    }
     try {
       isDocumentSaveLoading.value = true;
       error.value = '';
-      final String base64 = await FileUtils.fileToBase64(base64File!);
+
+      final String base64 = await FileUtils.fileToBase64(base64File);
       print('Expiry Date: $expiryDate');
-      final res = await _api.post(ProfileRepository.postUploadDocumentBase64(
+
+      final res = await _api.post(
+        ProfileRepository.postUploadDocumentBase64(
           docMetaId: docMetaId,
           docTypeSetupId: docTypeSetupId,
-          empId: empId), {
-        "base64": base64,
-        "expiry_date": expiryDate,
-        "documentName": documentName
-      });
+          empId: empId,
+        ),
+        {
+          "base64": base64,
+          "expiry_date": expiryDate,
+          "documentName": documentName,
+        },
+      );
 
+      print("Error message ${res.statusMessage}");
       if (res.statusCode == 200 || res.statusCode == 201) {
-        // final data = res.data as Map<String, dynamic>;
+        final backendMessage = extractBackendMessage(res.data, res.statusMessage);
         return ApiData(
-            success: true,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: true,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
-      }else{
-        error.value = res.statusMessage!;
+      } else {
+        final backendMessage = extractBackendMessage(res.data, res.statusMessage);
+        error.value = backendMessage;
         return ApiData(
-            success: false,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: false,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
       }
+    } on DioException catch (e) {
+      final backendMessage = extractBackendMessage(e.response?.data, null);
+      error.value = backendMessage;
+      return ApiData(
+        success: false,
+        message: backendMessage,
+        statusCode: e.response?.statusCode ?? 404,
+      );
     } catch (e) {
       error.value = e.toString();
       return ApiData(
-          success: false,
-          message:AppString.somethingWentWrong,
-          statusCode: 404
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 500,
       );
     } finally {
       isDocumentSaveLoading.value = false;

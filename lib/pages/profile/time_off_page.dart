@@ -31,6 +31,17 @@ class _TimeOffPageState extends State<TimeOffPage> {
   TextEditingController reasonController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // ✅ Manual validation state for the two dropdowns.
+  // We intentionally do NOT let PrimaryDropDown's internal `errorText`
+  // render (validator is a no-op below). That's because dropdown_button2's
+  // popup menu position is calculated using the field's rendered size —
+  // when the internal errorText adds height below the button, the menu
+  // opens offset by that extra height, causing it to appear far below the
+  // field instead of right under it. Showing the error as a separate Text
+  // widget keeps the dropdown's own height constant, so the menu always
+  // opens in the right place.
+  final RxnString timeOffTypeError = RxnString(null);
+  final RxnString leaveTypeError = RxnString(null);
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +86,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
               Divider(),
               customHeight(15.h),
               Obx(
-                () => Expanded(
+                    () => Expanded(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15.w),
                     child: SingleChildScrollView(
@@ -125,8 +136,8 @@ class _TimeOffPageState extends State<TimeOffPage> {
                           Text("Full Name", style: AppTextStyle.bold14style),
                           customHeight(4.h),
                           PrimaryTextField(hintText: "Enter full name",
-                          readonly: true,
-                          controller: TextEditingController(text: TokenManager.getUserName()),
+                            readonly: true,
+                            controller: TextEditingController(text: TokenManager.getUserName()),
                             validator: (value) => Validators.validateRequired(value!,'Full Name'),),
                           customHeight(18.h),
                           Text("Time off type", style: AppTextStyle.bold14style),
@@ -134,140 +145,129 @@ class _TimeOffPageState extends State<TimeOffPage> {
                           SizedBox(
                             width: double.infinity,
                             child: Obx(() {
-                              return PrimaryDropDown(
-                                validator: (value) => Validators.validateRequired(timeController.timeOfType.value,'Time off Type'),
-                                contentPadding: EdgeInsets.zero,
-                                filled: false,
-                                value: timeController.timeOfType.value,
-                                buttonStyleData: ButtonStyleData(
-                                  width: 120.w,
-                                  height: 44.h,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: AppColors.borderGrey),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                hintText:  "Select time off type",
-                                // value: addVisitController.selectedRecordName.value == ''
-                                //     ? 'Select type'
-                                //     : addVisitController.selectedRecordName.value,
-                                items: timeController.timeOfftype.map((item) {
-                                  return DropdownMenuItem<String>(
-                                    value: item.name ?? '',
-                                    child: Padding(
-                                      padding:  EdgeInsets.all(8.h),
-                                      child: Text(
-                                        item.name,
-                                        style: AppTextStyle.normal12style
-                                            .copyWith(
-                                          fontWeight: FontWeight.w400,
-                                          color: AppColors.defaultTxtGrey,
-                                        ),
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  PrimaryDropDown(
+                                    // No FormField errorText here on purpose —
+                                    // see comment above on why.
+                                    validator: (value) => null,
+                                    contentPadding: EdgeInsets.zero,
+                                    filled: false,
+                                    value: timeController.timeOfType.value,
+                                    buttonStyleData: ButtonStyleData(
+                                      width: 120.w,
+                                      height: 44.h,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: AppColors.borderGrey),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
                                     ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  for (var a in timeController.timeOfftype) {
-                                    if (a.name == value) {
-                                      timeController.timeOfType.value = value ?? '';
-                                      timeController.timeOfTypeId.value = a.id ?? 0;
-                                    }
-                                  }
-                                  //
-
-                                },
+                                    hintText:  "Select time off type",
+                                    items: timeController.timeOfftype.map((item) {
+                                      return DropdownMenuItem<String>(
+                                        value: item.name ?? '',
+                                        child: Padding(
+                                          padding:  EdgeInsets.all(8.h),
+                                          child: Text(
+                                            item.name,
+                                            style: AppTextStyle.normal12style
+                                                .copyWith(
+                                              fontWeight: FontWeight.w400,
+                                              color: AppColors.defaultTxtGrey,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      for (var a in timeController.timeOfftype) {
+                                        if (a.name == value) {
+                                          timeController.timeOfType.value = value ?? '';
+                                          timeController.timeOfTypeId.value = a.id ?? 0;
+                                        }
+                                      }
+                                      if (value != null && value.isNotEmpty) {
+                                        timeOffTypeError.value = null;
+                                      }
+                                    },
+                                  ),
+                                  if (timeOffTypeError.value != null) ...[
+                                    SizedBox(height: 6.h),
+                                    Text(
+                                      timeOffTypeError.value!,
+                                      style: AppTextStyle.normal12style.copyWith(
+                                        fontSize: 10.sp,
+                                        color: AppColors.redColor,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               );
                             }),
                           ),
-                          // SizedBox(
-                          //   width: double.infinity,
-                          //   child: PrimaryDropDown(
-                          //     value: timeController.timeOfType.value,
-                          //     buttonStyleData: ButtonStyleData(
-                          //       width: 120.w,
-                          //       height: 44.h,
-                          //
-                          //       decoration: BoxDecoration(
-                          //         border: Border.all(color: AppColors.borderGrey),
-                          //         borderRadius: BorderRadius.circular(6),
-                          //       ),
-                          //     ),
-                          //     contentPadding: EdgeInsets.zero,
-                          //     filled: false,
-                          //     items: [
-                          //       ...List.generate(2, (index) {
-                          //         var list = ['Vacation', 'Break'];
-                          //         return DropdownMenuItem(
-                          //           value: list[index],
-                          //           child: Padding(
-                          //             padding: const EdgeInsets.all(8.0),
-                          //             child: Text(
-                          //               list[index],
-                          //               style: AppTextStyle.normal12style
-                          //                   .copyWith(
-                          //                     fontWeight: FontWeight.w400,
-                          //                     color: AppColors.defaultTxtGrey,
-                          //                   ),
-                          //             ),
-                          //           ),
-                          //         );
-                          //       }),
-                          //     ],
-                          //     onChanged: (value) {
-                          //       timeController.timeOfType.value = value ?? "";
-                          //     },
-                          //   ),
-                          // ),
                           customHeight(18.h),
                           Text("Leave Type", style: AppTextStyle.bold14style),
                           customHeight(4.h),
                           SizedBox(
                             width: double.infinity,
                             child: Obx(() {
-                              return PrimaryDropDown(
-                                validator: (value) => Validators.validateRequired(timeController.leaveType.value,'Leave Type'),
-                                contentPadding: EdgeInsets.zero,
-                                filled: false,
-                                value: timeController.leaveType.value,
-                                buttonStyleData: ButtonStyleData(
-                                  width: 120.w,
-                                  height: 44.h,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: AppColors.borderGrey),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                ),
-                                hintText:  "Select leave type",
-                                // value: addVisitController.selectedRecordName.value == ''
-                                //     ? 'Select type'
-                                //     : addVisitController.selectedRecordName.value,
-                                items: timeController.leaveTypeRecord.map((item) {
-                                  return DropdownMenuItem<String>(
-                                    value: item.name ?? '',
-                                    child: Padding(
-                                      padding:  EdgeInsets.all(8.h),
-                                      child: Text(
-                                        item.name,
-                                        style: AppTextStyle.normal12style
-                                            .copyWith(
-                                          fontWeight: FontWeight.w400,
-                                          color: AppColors.defaultTxtGrey,
-                                        ),
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  PrimaryDropDown(
+                                    validator: (value) => null,
+                                    contentPadding: EdgeInsets.zero,
+                                    filled: false,
+                                    value: timeController.leaveType.value,
+                                    buttonStyleData: ButtonStyleData(
+                                      width: 120.w,
+                                      height: 44.h,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: AppColors.borderGrey),
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
                                     ),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  for (var a in timeController.leaveTypeRecord) {
-                                    if (a.name == value) {
-                                      timeController.leaveType.value = value ?? '';
-                                      timeController.leaveTypeId.value = a.id ?? 0;
-                                    }
-                                  }
-                                  //
-
-                                },
+                                    hintText:  "Select leave type",
+                                    items: timeController.leaveTypeRecord.map((item) {
+                                      return DropdownMenuItem<String>(
+                                        value: item.name ?? '',
+                                        child: Padding(
+                                          padding:  EdgeInsets.all(8.h),
+                                          child: Text(
+                                            item.name,
+                                            style: AppTextStyle.normal12style
+                                                .copyWith(
+                                              fontWeight: FontWeight.w400,
+                                              color: AppColors.defaultTxtGrey,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (value) {
+                                      for (var a in timeController.leaveTypeRecord) {
+                                        if (a.name == value) {
+                                          timeController.leaveType.value = value ?? '';
+                                          timeController.leaveTypeId.value = a.id ?? 0;
+                                        }
+                                      }
+                                      if (value != null && value.isNotEmpty) {
+                                        leaveTypeError.value = null;
+                                      }
+                                    },
+                                  ),
+                                  if (leaveTypeError.value != null) ...[
+                                    SizedBox(height: 6.h),
+                                    Text(
+                                      leaveTypeError.value!,
+                                      style: AppTextStyle.normal12style.copyWith(
+                                        fontSize: 10.sp,
+                                        color: AppColors.redColor,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               );
                             }),
                           ),
@@ -344,55 +344,55 @@ class _TimeOffPageState extends State<TimeOffPage> {
                           ],
                           if (timeController.leaveType.value == "Half day")
                             ...[
-                            customHeight(18.h),
-                            Container(
-                              height: 36.h,
-                              decoration: BoxDecoration(
-                                color: AppColors.grey.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                                child: Row(
-                                  children: [
-                                    AppRadioButton(
-                                      color: AppColors.primaryAppColor,
-                                      groupValue: timeController.recordType.value,
-                                      value: "SOC",
-                                      onChanged: (v) {
-                                        timeController.halfDayaLeave.value = true;
-                                        timeController.recordType.value = v!;
-                                      },
-                                    ),
-                                    customWidth(5.w),
-                                    Text(
-                                      "First half",
-                                      style: AppTextStyle.bold14style.copyWith(
-                                        fontWeight: FontWeight.w400,
+                              customHeight(18.h),
+                              Container(
+                                height: 36.h,
+                                decoration: BoxDecoration(
+                                  color: AppColors.grey.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                  child: Row(
+                                    children: [
+                                      AppRadioButton(
+                                        color: AppColors.primaryAppColor,
+                                        groupValue: timeController.recordType.value,
+                                        value: "SOC",
+                                        onChanged: (v) {
+                                          timeController.halfDayaLeave.value = true;
+                                          timeController.recordType.value = v!;
+                                        },
                                       ),
-                                    ),
-                                    customWidth(20.w),
-                                    AppRadioButton(
-                                      color: AppColors.primaryAppColor,
-                                      groupValue: timeController.recordType.value,
-                                      value: "Revisit",
-                                      onChanged: (v) {
-                                        timeController.halfDayaLeave.value = false;
-                                        timeController.recordType.value = v!;
-                                      },
-                                    ),
-                                    customWidth(5.w),
-                                    Text(
-                                      "Second half",
-                                      style: AppTextStyle.bold14style.copyWith(
-                                        fontWeight: FontWeight.w400,
+                                      customWidth(5.w),
+                                      Text(
+                                        "First half",
+                                        style: AppTextStyle.bold14style.copyWith(
+                                          fontWeight: FontWeight.w400,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      customWidth(20.w),
+                                      AppRadioButton(
+                                        color: AppColors.primaryAppColor,
+                                        groupValue: timeController.recordType.value,
+                                        value: "Revisit",
+                                        onChanged: (v) {
+                                          timeController.halfDayaLeave.value = false;
+                                          timeController.recordType.value = v!;
+                                        },
+                                      ),
+                                      customWidth(5.w),
+                                      Text(
+                                        "Second half",
+                                        style: AppTextStyle.bold14style.copyWith(
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
                           customHeight(18.h),
                           Text(
                             "Reason for time off (optional) ",
@@ -400,7 +400,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                           ),
                           customHeight(4.h),
                           PrimaryTextField(hintText: "Enter your reason",
-                          controller: reasonController),
+                              controller: reasonController),
                           customHeight(24.h),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -436,7 +436,21 @@ class _TimeOffPageState extends State<TimeOffPage> {
                                 ) :PrimaryOutlinedButton(
                                   text: "Submit",
                                   onPressed: () async{
-                                    if (_formKey.currentState!.validate()){
+                                    // Manual validation for the two dropdowns.
+                                    timeOffTypeError.value =
+                                    timeController.timeOfType.value.trim().isEmpty
+                                        ? 'Time off Type is required'
+                                        : null;
+                                    leaveTypeError.value =
+                                    timeController.leaveType.value.trim().isEmpty
+                                        ? 'Leave Type is required'
+                                        : null;
+
+                                    final bool isFormValid = _formKey.currentState!.validate();
+                                    final bool isDropdownValid = timeOffTypeError.value == null &&
+                                        leaveTypeError.value == null;
+
+                                    if (isFormValid && isDropdownValid){
                                       var response = await timeController.postTimeOffData(
                                           empId: widget.employeeId,
                                           timeOffTypeId: timeController.timeOfTypeId.value,
@@ -446,7 +460,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                                           reason: reasonController.text,
                                           leaveType: timeController.leaveType.value,
                                           firstHalf: timeController.halfDayaLeave.value
-                                          );
+                                      );
                                       if(response.success){
                                         Navigator.pop(context);
                                         showSucessDialog(context: context,
@@ -460,12 +474,13 @@ class _TimeOffPageState extends State<TimeOffPage> {
                                         timeController.timeOfType.value = '';
                                         pickDate.clear();
                                         lastDate.clear();
+                                        timeOffTypeError.value = null;
+                                        leaveTypeError.value = null;
                                       }else{
-
+                                        showDocErrorDialog(context: context,
+                                            message: response.message,
+                                            title: 'Error');
                                       }
-                                    }
-                                    else{
-
                                     }
                                   },
                                   fillColor: AppColors.primaryAppColor,

@@ -996,7 +996,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
             
                 if (merged.isEmpty) {
-                  return const Center(child: Text("No messages"));
+                  return const Center(child: Text("No messages!"));
                 }
             
                 return controller.isLoadingChatScreen.value

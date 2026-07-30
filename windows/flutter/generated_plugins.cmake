@@ -11,9 +11,11 @@ list(APPEND FLUTTER_PLUGIN_LIST
   iris_method_channel
   media_kit_libs_windows_audio
   mobkit_calendar
+  pdfx
   permission_handler_windows
   printing
   record_windows
+  syncfusion_pdfviewer_windows
   url_launcher_windows
 )
 

@@ -70,6 +70,22 @@ void showLogoutConfirmationDialog(BuildContext context) {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Log Out Button
+                    PrimaryButton(
+                      onTap: () {
+                        Get.back();
+                      },
+                      width: 100.w,
+                      height: 40,
+                      padding: EdgeInsets.zero,
+                      borderRadius: 6,
+                      label: "Cancel",
+                      labelStyle: AppTextStyle.normal12style.copyWith(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    customWidth(12.w),
                     PrimaryOutlinedButton(
                       width: 100.w,
                       height: 40,
@@ -128,23 +144,8 @@ void showLogoutConfirmationDialog(BuildContext context) {
 
                       },
                     ),
-                    customWidth(12.w),
                     // Cancel Button
-                    PrimaryButton(
-                      onTap: () {
-                        Get.back();
-                      },
-                      width: 100.w,
-                      height: 40,
-                      padding: EdgeInsets.zero,
-                      borderRadius: 6,
-                      label: "Cancel",
-                      labelStyle: AppTextStyle.normal12style.copyWith(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
+
                   ],
                 ),
               ],

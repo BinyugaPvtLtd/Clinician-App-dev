@@ -11,13 +11,17 @@ import 'package:intl/intl.dart';
 import '../../../controller/update_documents_controller.dart';
 import '../../../core/ui/const_sucess_popup.dart';
 import '../../../core/ui/primary_dropdown.dart';
-import '../../../utils/validator.dart';
 import '../../calender_section/widget/calender_date_pick_dialog_widget.dart';
 
 void showAddDocumentDialog(BuildContext context,int empId) {
   UpdateDocumentsController docCtrl = Get.put(UpdateDocumentsController());
   TextEditingController expDateController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  // Manual validation state for the two dropdowns — independent of
+  // Form/FormField internals, so it works regardless of how
+  // PrimaryDropDown is implemented under the hood.
+  final RxnString docDropdownError = RxnString(null);
+  final RxnString subDocDropdownError = RxnString(null);
   docCtrl.clearAll();
   showDialog(
     context: context,
@@ -44,48 +48,10 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     ),
                     SizedBox(height: 24),
 
-                    // Upload and Capture Buttons
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.center,
-                    //   children: [
-                    //   Obx(()=>docCtrl.fileName.isEmpty ? _uploadCaptureOption(
-                    //     isRedValidation:  docCtrl.fileNameValidation.value.isEmpty ? false : true,
-                    //       label2: docCtrl.fileNameValidation.value.isEmpty ? "Upload document" : docCtrl.fileNameValidation.value,
-                    //       icon: AppAsset.upload,
-                    //       label: "Upload here",
-                    //       onTap: () {
-                    //         docCtrl.pickPdf();
-                    //         // Handle file picker
-                    //       },
-                    //     ) : _uploadCaptureOption(
-                    //     isRedValidation: false,
-                    //     label2: docCtrl.fileName.value,
-                    //     icon: AppAsset.upload,
-                    //     label: "Upload here",
-                    //     onTap: () {
-                    //       docCtrl.pickPdf();
-                    //       // Handle file picker
-                    //     },
-                    //   )),
-                    //     // Padding(
-                    //     //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    //     //   child: Text("\nor"),
-                    //     // ),
-                    //     // _uploadCaptureOption(
-                    //     //   label2: "Capture document",
-                    //     //   icon: AppAsset.captured,
-                    //     //   label: "Capture here",
-                    //     //   onTap: () {
-                    //     //     // Handle camera capture
-                    //     //   },
-                    //     // ),
-                    //   ],
-                    // ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(   // ← ADD THIS
+                        Expanded(
                           child: Obx(() => docCtrl.fileName.isEmpty
                               ? _uploadCaptureOption(
                             isRedValidation: docCtrl.fileNameValidation.value.isEmpty ? false : true,
@@ -94,8 +60,13 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                                 : docCtrl.fileNameValidation.value,
                             icon: AppAsset.upload,
                             label: "Upload here",
-                            onTap: () {
-                              docCtrl.pickPdf();
+                            onTap: () async {
+                              await docCtrl.pickPdf();
+                              // ✅ Clear this dropdown/upload validation
+                              // once a document has actually been selected.
+                              if (docCtrl.fileName.value.isNotEmpty) {
+                                docCtrl.fileNameValidation.value = '';
+                              }
                             },
                           )
                               : _uploadCaptureOption(
@@ -103,64 +74,88 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                             label2: docCtrl.fileName.value,
                             icon: AppAsset.upload,
                             label: "Upload here",
-                            onTap: () {
-                              docCtrl.pickPdf();
+                            onTap: () async {
+                              await docCtrl.pickPdf();
+                              if (docCtrl.fileName.value.isNotEmpty) {
+                                docCtrl.fileNameValidation.value = '';
+                              }
                             },
                           )),
-                        ),   // ← CLOSE Expanded
+                        ),
                       ],
                     ),
                     SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: Obx(() {
-                        return PrimaryDropDown(
-                          validator: (value) => Validators.validateRequired(docCtrl.selectedMasterMetaDocName.value,'Document'),
-                          contentPadding: EdgeInsets.zero,
-                          filled: false,
-                          value: docCtrl.selectedMasterMetaDocName.value,
-                          buttonStyleData: ButtonStyleData(
-                            width: 120.w,
-                            height: 44.h,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.borderGrey),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          hintText:  "Select document",
-                          // value: addVisitController.selectedRecordName.value == ''
-                          //     ? 'Select type'
-                          //     : addVisitController.selectedRecordName.value,
-                          items: docCtrl.docMetaList.map((item) {
-                            return DropdownMenuItem<String>(
-                              value: item.documentName ?? '',
-                              child: Padding(
-                                padding:  EdgeInsets.all(8.h),
-                                child: Text(
-                                  item.documentName,
-                                  style: AppTextStyle.normal12style
-                                      .copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.defaultTxtGrey,
-                                  ),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PrimaryDropDown(
+                              // No Form validator here — error is fully
+                              // manual via docDropdownError below, so it
+                              // clears reliably the instant a value is picked.
+                              validator: (value) => null,
+                              contentPadding: EdgeInsets.zero,
+                              filled: false,
+                              value: docCtrl.selectedMasterMetaDocName.value,
+                              buttonStyleData: ButtonStyleData(
+                                width: 120.w,
+                                height: 44.h,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.borderGrey),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            for (var a in docCtrl.docMetaList) {
-                              if (a.documentName == value) {
-                                docCtrl.selectedSubDocId.value = 0;
-                                docCtrl.selectedSubDocName.value = '';
-                                docCtrl.docSubList.clear();
-                                docCtrl.selectedMasterMetaDocName.value = value ?? '';
-                                docCtrl.selectedMasterMetaDocId.value = a.employeeDocumentTypeMetaDataId ?? 0;
-                                docCtrl.fetchSubDocList(docMetaId:  a.employeeDocumentTypeMetaDataId );
-                              }
-                            }
-                            //
-
-                          },
+                              hintText: docCtrl.docMetaList.isEmpty
+                                  ? "No document found"
+                                  : "Select document",
+                              items: docCtrl.docMetaList.map((item) {
+                                return DropdownMenuItem<String>(
+                                  value: item.documentName ?? '',
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.h),
+                                    child: Text(
+                                      item.documentName,
+                                      style: AppTextStyle.normal12style
+                                          .copyWith(
+                                        fontWeight: FontWeight.w400,
+                                        color: AppColors.defaultTxtGrey,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null && value.isNotEmpty) {
+                                  for (var a in docCtrl.docMetaList) {
+                                    if (a.documentName == value) {
+                                      docCtrl.selectedSubDocId.value = 0;
+                                      docCtrl.selectedSubDocName.value = '';
+                                      docCtrl.docSubList.clear();
+                                      docCtrl.selectedMasterMetaDocName.value = value;
+                                      docCtrl.selectedMasterMetaDocId.value = a.employeeDocumentTypeMetaDataId ?? 0;
+                                      docCtrl.fetchSubDocList(docMetaId:  a.employeeDocumentTypeMetaDataId );
+                                    }
+                                  }
+                                  // ✅ Clear this field's error immediately —
+                                  // this is a plain Rx write, not dependent
+                                  // on any FormFieldState lookup.
+                                  docDropdownError.value = null;
+                                }
+                              },
+                            ),
+                            if (docDropdownError.value != null) ...[
+                              SizedBox(height: 6.h),
+                              Text(
+                                docDropdownError.value!,
+                                style: AppTextStyle.normal12style.copyWith(
+                                  fontSize: 10.sp,
+                                  color: AppColors.redColor,
+                                ),
+                              ),
+                            ],
+                          ],
                         );
                       }),
                     ),
@@ -168,50 +163,68 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     SizedBox(
                       width: double.infinity,
                       child: Obx(() {
-                        return PrimaryDropDown(
-                          validator: (value) => Validators.validateRequired(docCtrl.selectedSubDocName.value,'Sub document'),
-                          contentPadding: EdgeInsets.zero,
-                          filled: false,
-                          value: docCtrl.selectedSubDocName.value,
-                          buttonStyleData: ButtonStyleData(
-                            width: 120.w,
-                            height: 44.h,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.borderGrey),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          hintText:  "Select sub document",
-                          // value: addVisitController.selectedRecordName.value == ''
-                          //     ? 'Select type'
-                          //     : addVisitController.selectedRecordName.value,
-                          items: docCtrl.docSubList.map((item) {
-                            return DropdownMenuItem<String>(
-                              value: item.documentName ?? '',
-                              child: Padding(
-                                padding:  EdgeInsets.all(8.h),
-                                child: Text(
-                                  item.documentName,
-                                  style: AppTextStyle.normal12style
-                                      .copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.defaultTxtGrey,
-                                  ),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PrimaryDropDown(
+                              validator: (value) => null,
+                              contentPadding: EdgeInsets.zero,
+                              filled: false,
+                              value: docCtrl.selectedSubDocName.value,
+                              buttonStyleData: ButtonStyleData(
+                                width: 120.w,
+                                height: 44.h,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.borderGrey),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            for (var a in docCtrl.docSubList) {
-                              if (a.documentName == value) {
-                                docCtrl.selectedSubDocName.value = value ?? '';
-                                docCtrl.selectedSubDocId.value = a.employeeDocumentTypeSetupId ?? 0;
-                                docCtrl.isExpDateShown.value = a.expiry_type == "Issuer Expiry" ? true: false;
-                              }
-                            }
-                            //
-
-                          },
+                              hintText: docCtrl.docMetaList.isEmpty
+                                  ? "No document found"
+                                  : (docCtrl.docSubList.isEmpty
+                                  ? "No sub document found"
+                                  : "Select sub document"),
+                              items: docCtrl.docSubList.map((item) {
+                                return DropdownMenuItem<String>(
+                                  value: item.documentName ?? '',
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.h),
+                                    child: Text(
+                                      item.documentName,
+                                      style: AppTextStyle.normal12style
+                                          .copyWith(
+                                        fontWeight: FontWeight.w400,
+                                        color: AppColors.defaultTxtGrey,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                for (var a in docCtrl.docSubList) {
+                                  if (a.documentName == value) {
+                                    docCtrl.selectedSubDocName.value = value ?? '';
+                                    docCtrl.selectedSubDocId.value = a.employeeDocumentTypeSetupId ?? 0;
+                                    docCtrl.isExpDateShown.value = a.expiry_type == "Issuer Expiry" ? true: false;
+                                  }
+                                }
+                                if (value != null && value.isNotEmpty) {
+                                  // ✅ Clear this field's error immediately.
+                                  subDocDropdownError.value = null;
+                                }
+                              },
+                            ),
+                            if (subDocDropdownError.value != null) ...[
+                              SizedBox(height: 6.h),
+                              Text(
+                                subDocDropdownError.value!,
+                                style: AppTextStyle.normal12style.copyWith(
+                                  fontSize: 10.sp,
+                                  color: AppColors.redColor,
+                                ),
+                              ),
+                            ],
+                          ],
                         );
                       }),
                     ),
@@ -229,7 +242,6 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     SizedBox(height: 8),
 
                     Obx(()=> docCtrl.isExpDateShown.value ? PrimaryTextField(
-                      // validator: (value) => Validators.validateRequired(value!,'Expiry date'),
                       readonly: true,
                       controller: expDateController,
                       hintStyle: AppTextStyle.regular12style.copyWith(
@@ -242,12 +254,10 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                         await Get.dialog(CalenderDatePickDialogWidget());
 
                         if (selectedDate != null) {
-                          // show only in UI
                           expDateController.text = selectedDate;
 
-                          // convert to ISO and store separately
                           final DateTime datePicked = DateFormat("yyyy-MM-dd").parse(selectedDate);
-                          docCtrl.expiryIsoDate.value = datePicked.toUtc().toIso8601String(); // ✅ ISO (Z included)
+                          docCtrl.expiryIsoDate.value = datePicked.toUtc().toIso8601String();
                         }
                       },
                       suffixIcon: Icon(Icons.calendar_month_outlined),
@@ -273,6 +283,11 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                             buttonColor: AppColors.primaryAppColor,
                             onPressed: () {
                               docCtrl.clearAll();
+                              docCtrl.docSubList.clear();
+                              docCtrl.selectedSubDocName.value = '';
+                              docCtrl.selectedSubDocId.value = 0;
+                              docDropdownError.value = null;
+                              subDocDropdownError.value = null;
                               Get.back();
                             },
                           ),
@@ -286,8 +301,22 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                             ),
                           ): PrimaryButton(
                             onTap: () async{
-                              if (_formKey.currentState!.validate()){
-                                if(docCtrl.fileNameValidation.value.isNotEmpty){
+                              // Manual validation for the two dropdowns.
+                              docDropdownError.value =
+                              docCtrl.selectedMasterMetaDocName.value.trim().isEmpty
+                                  ? 'Document is required'
+                                  : null;
+                              subDocDropdownError.value =
+                              docCtrl.selectedSubDocName.value.trim().isEmpty
+                                  ? 'Sub document is required'
+                                  : null;
+
+                              final bool isFormValid = _formKey.currentState!.validate();
+                              final bool isDropdownValid = docDropdownError.value == null &&
+                                  subDocDropdownError.value == null;
+
+                              if (isFormValid && isDropdownValid){
+                                if(docCtrl.fileNameValidation.value.isNotEmpty || docCtrl.fileNameValidation.value == "File too large"){
                                   var uploadResponse = await docCtrl.postUploadDocumentBase64Data(
                                       docMetaId: docCtrl.selectedMasterMetaDocId.value,
                                       docTypeSetupId: docCtrl.selectedSubDocId.value,
@@ -303,29 +332,20 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                                         message: 'Document uploaded successfully',
                                         title: 'Successfully');
                                   }else{
-
+                                    Get.back();
+                                    docCtrl.clearAll();
+                                    showDocErrorDialog(context: context,
+                                        message: uploadResponse.message,
+                                        title: 'Error');
                                   }
                                 }else{
                                   docCtrl.fileNameValidation.value = 'Please upload document';
                                   print('Validation failed');
                                 }
-
-                                // if(docCtrl.fileName.value.isEmpty){
-                                //   docCtrl.fileNameValidation.value = 'Please upload document';
-                                //   //return;
-                                // }else{
-                                //
-                                //   // var response = await docCtrl.postUploadDocumentData(
-                                //   //     docMetaId: docCtrl.selectedMasterMetaDocId.value,
-                                //   //     docTypeSetupId: docCtrl.selectedSubDocId.value,
-                                //   //     empId: empId);
-                                //   // if(response.statusCode == 200 || response.statusCode == 201){
-                                //   //
-                                //   // }
-                                // }
-
                               }else{
-                                docCtrl.fileNameValidation.value = 'Please upload document';
+                                if (docCtrl.fileName.value.isEmpty) {
+                                  docCtrl.fileNameValidation.value = 'Please upload document';
+                                }
                                 print('Validation failed');
                               }
                             },
@@ -366,6 +386,8 @@ Widget _uploadCaptureOption({
       Text(
         label2,
         style: AppTextStyle.bold12style.copyWith(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w400,
           color: isRedValidation ? AppColors.redColor : AppColors.defaultTxtGrey,
         ),
         maxLines: 2,

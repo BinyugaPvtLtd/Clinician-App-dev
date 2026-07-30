@@ -195,6 +195,7 @@ class _PrimaryDropDownState extends State<PrimaryDropDown> {
         hoverColor: widget.hoverColor,
         prefixText: widget.prefixText,
         prefixStyle: widget.prefixTextStyle,
+        focusedErrorBorder: InputBorder.none,
         isDense: true,
         contentPadding:
         widget.contentPadding ??
