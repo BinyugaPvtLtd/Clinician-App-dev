@@ -14,9 +14,11 @@
 #include <iris_method_channel/iris_method_channel_plugin_c_api.h>
 #include <media_kit_libs_windows_audio/media_kit_libs_windows_audio_plugin_c_api.h>
 #include <mobkit_calendar/mobkit_calendar_plugin_c_api.h>
+#include <pdfx/pdfx_plugin.h>
 #include <permission_handler_windows/permission_handler_windows_plugin.h>
 #include <printing/printing_plugin.h>
 #include <record_windows/record_windows_plugin_c_api.h>
+#include <syncfusion_pdfviewer_windows/syncfusion_pdfviewer_windows_plugin.h>
 #include <url_launcher_windows/url_launcher_windows.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
@@ -36,12 +38,16 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("MediaKitLibsWindowsAudioPluginCApi"));
   MobkitCalendarPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("MobkitCalendarPluginCApi"));
+  PdfxPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("PdfxPlugin"));
   PermissionHandlerWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("PermissionHandlerWindowsPlugin"));
   PrintingPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("PrintingPlugin"));
   RecordWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("RecordWindowsPluginCApi"));
+  SyncfusionPdfviewerWindowsPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("SyncfusionPdfviewerWindowsPlugin"));
   UrlLauncherWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("UrlLauncherWindows"));
 }

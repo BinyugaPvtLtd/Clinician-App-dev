@@ -102,16 +102,22 @@ class _HistoryPageState extends State<HistoryPage> {
 
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(6),
-                                  color: Color(
+                                  color: historydata.status == 'approved' ? Colors.green.shade100
+                                      : historydata.status == 'rejected' ?
+                                      Colors.red.shade100 : Color(
                                     0xffce9e2f1a,
                                   ).withValues(alpha: 0.2),
                                 ),
                                 child: Center(
                                   child: Text(
-                                    historydata.status,
+                                    historydata.status.isNotEmpty
+                                        ? '${historydata.status[0].toUpperCase()}${historydata.status.substring(1).toLowerCase()}'
+                                        : historydata.status,
                                     style: AppTextStyle.normal10style.copyWith(
                                       fontWeight: FontWeight.w500,
-                                      color: AppColors.defaultTxtGrey,
+                                      color:historydata.status == 'approved' ? AppColors.greenColor
+                                          : historydata.status == 'rejected' ? AppColors.redTextColor
+                                          :AppColors.defaultTxtGrey,
                                     ),
                                   ),
                                 ),

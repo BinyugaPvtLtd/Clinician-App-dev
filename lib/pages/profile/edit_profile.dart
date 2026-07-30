@@ -72,6 +72,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           }
                           //Get.to(() => HomeScreen());
                           else {
+                            showDocErrorDialog(context: context,
+                                message: imageResponse.message,
+                                title: "Error");
                             // Form is invalid
                             print('Validation failed');
                           }
@@ -96,6 +99,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             controller.fetchRecordType();
                           //Get.to(() => HomeScreen());
                         }else{
+                          showDocErrorDialog(context: context,
+                              message: response.message,
+                              title: "Error");
                           print('Validation failed');
                         }
                       }
@@ -194,7 +200,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           isUsPhone: true,
                           validator: (value) {
                             if (value == null || value.length != 14) {
-                              return 'Enter valid US phone number';
+                              return 'Enter valid phone number';
                             }
                             return null;
                           },
