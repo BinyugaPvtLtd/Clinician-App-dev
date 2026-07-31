@@ -164,8 +164,10 @@ class _PasswordScreenState extends State<PasswordScreen> {
                           if (mounted) {
                             _showErrorSnackBar(
                               response.userStatus == "Onboarding"
-                                ? "Only Onboarded users are allowed to log in."
-                                : "Only Clinical users are allowed to log in.",
+                                  ? (response.roleName != "Clinical"
+                                  ? "Only Clinical users are allowed to log in."
+                                  : "Only Onboarded users are allowed to log in.")
+                                  : "Only Clinical users are allowed to log in.",
                             );
                           }
                         }
