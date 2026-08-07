@@ -457,6 +457,34 @@ class ApiService extends GetxService {
   Future<dio.Response> patch(String path, Map<String, dynamic> data) => dioClient.patch(path, data: data);
   Future<dio.Response> patchList(String path, List data)             => dioClient.patch(path, data: data);
   Future<dio.Response> delete(String path)                           => dioClient.delete(path);
+  Future<dio.Response> patchNoRequest({required String path, Map? data})     => dioClient.patch(path, data: data);
+  Future<dio.Response> deleteWithData({required String path, Map? data}) async {
+    String token = await TokenManager.getAccessToken();
+    var headers = {
+      'accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    var response = await dioClient.delete(
+      '${ApiAppConstant.authDomain}$path',
+      data: data,
+      options: dio.Options(
+        headers: headers,
+      ),
+    );
+    return response;
+  }
+  Future<dio.Response> postWithFormData(
+      {required String path, required FormData formData}) async {
+    var response = await dioClient.post(
+      path,
+      data: formData,
+    );
+    //  print(path);
+    // print("Prachi POST:::::::::${response}");
+    return response;
+  }
+  // Future<Response> patchList({required String path, required List data}) => dioClient.patch(path, data: data);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

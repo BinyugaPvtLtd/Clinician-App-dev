@@ -59,7 +59,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                   ),
                   customHeight(18.h),
                   Text(
-                    'Do you really want to \nreschedule it ?',
+                    'Do you really want to \nAccept visit ?',
                     textAlign: TextAlign.center,
                     style: AppTextStyle.normal10style.copyWith(
                       color: AppColors.defaultTxtGrey,

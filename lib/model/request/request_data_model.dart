@@ -24,7 +24,13 @@ class ApiData{
   final int? chatId;
   final String? roleName;
   final String? userStatus;
+  int? supervisoryNoteFormID;
+  int? nextPatientFormId;
+  String? nextFormName;
   ApiData({
+    this.nextFormName,
+    this.nextPatientFormId,
+    this.supervisoryNoteFormID,
     this.userStatus,
     this.roleName,
     this.chatId,required this.success, required this.message, required this.statusCode, this.data});
