@@ -429,7 +429,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> with RouteAware {
                                     hoverColor: Colors.transparent,
                                     onTap: isDisabled
                                         ? null
-                                        : widget.filterText == "accepted" || widget.filterText == "completed" ? (){
+                                        : widget.filterText == "accepted"  ? (){
                                             Get.dialog(StartOrMissVisitDialogWidget(visitId: weekItem.visits[index].visitId,
                                               chartNo: weekItem.chartId,patientId: weekItem.patientId,visitData: weekItem.visits[index],));
                                           } : null,
