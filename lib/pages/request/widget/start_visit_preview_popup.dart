@@ -257,11 +257,11 @@ class _RecertFormDialogState extends State<RecertFormDialog> {
 
 class DischargeVisitTypePopup extends StatefulWidget {
   final dynamic visitData;
-  final VoidCallback onNevigate;
-  const DischargeVisitTypePopup({
+  final Function(String visitType) onNavigate;
+  DischargeVisitTypePopup({
     super.key,
     required this.visitData,
-    required this.onNevigate,
+    required this.onNavigate,
   });
 
   @override
@@ -306,7 +306,7 @@ class _DischargeVisitTypePopupState extends State<DischargeVisitTypePopup> {
 
     // ── Close current dialog then trigger navigation callback ─────────────
     Navigator.pop(context);
-    widget.onNevigate();
+    widget.onNavigate(visitTypeString);
 
     // if (result.success) {
     //   // Close this popup, then trigger navigation callback

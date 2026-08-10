@@ -37,15 +37,15 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
   bool _isStartingVisit = false;
   bool _isMissingVisit = false;
 
-  Future<void> _handleStartVisit() async {
+  Future<void> _handleStartVisit({String? visitType}) async {
     setState(() => _isStartingVisit = true);
 
     final result = await FormBuilderManager().patchStartVisit(
         context: context,
         visitId: widget.visitId,
         onWay: true,
-        // visitTypeData: widget.visitType == null ? "" : widget.visitType!,
-        // isLastVisit: widget.visitData.isSecoundLastEpisodeVisit == true ? true : false
+        visitTypeData: visitType == null ? "" : visitType,
+        isLastVisit: widget.visitData.isSecondLastEpisodeVisit == true ? true : false
     );
 
     if (!mounted) return;
@@ -304,8 +304,8 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
                                             Get.dialog(
                                               DischargeVisitTypePopup(
                                                 visitData: visitData,
-                                                onNevigate: () {
-                                                  _handleStartVisit();
+                                                onNavigate: (val) {
+                                                  _handleStartVisit(visitType: val);
                                                 },
                                               ),
                                             );
@@ -317,8 +317,8 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
                                           Get.dialog(
                                             DischargeVisitTypePopup(
                                               visitData: visitData,
-                                              onNevigate: () {
-                                                _handleStartVisit();
+                                              onNavigate: (val) {
+                                                _handleStartVisit(visitType: val);
                                               },
                                             ),
                                           );

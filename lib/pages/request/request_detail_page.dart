@@ -16,6 +16,7 @@ import 'package:get/get.dart';
 import '../../controller/home_controller.dart';
 import '../../controller/profile_controller.dart';
 import '../../core/common/hex_color_decoder.dart';
+import '../../main.dart';
 import '../../services/token_manager/token_manager_service.dart';
 import '../oasis_form_builder/model/chart_patient_referral_data_model.dart';
 import '../oasis_form_builder/model/patient_form_model.dart';
@@ -34,7 +35,7 @@ class RequestDetailPage extends StatefulWidget {
   State<RequestDetailPage> createState() => _RequestDetailPageState();
 }
 
-class _RequestDetailPageState extends State<RequestDetailPage> {
+class _RequestDetailPageState extends State<RequestDetailPage> with RouteAware {
   // ProfileController controller = Get.put(ProfileController());
    HomeController homeController = Get.put(HomeController());
   @override
@@ -43,6 +44,26 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     // controller.fetchVisitDetails(visitId: widget.visitId);
     homeController.fetchPatientScheduleData(visitId: widget.visitId);
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called whenever a route pushed on top of this page is popped and this
+    // page becomes visible again — reload so the list reflects any changes
+    // made on the screen that was just closed.
+    homeController.fetchPatientScheduleData(visitId: widget.visitId);
   }
    Future<void> _onTap({
      required int patientFormId,
@@ -408,7 +429,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                                     hoverColor: Colors.transparent,
                                     onTap: isDisabled
                                         ? null
-                                        : widget.filterText == "accepted" ? (){
+                                        : widget.filterText == "accepted" || widget.filterText == "completed" ? (){
                                             Get.dialog(StartOrMissVisitDialogWidget(visitId: weekItem.visits[index].visitId,
                                               chartNo: weekItem.chartId,patientId: weekItem.patientId,visitData: weekItem.visits[index],));
                                           } : null,

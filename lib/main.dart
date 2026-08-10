@@ -60,6 +60,10 @@ bool _manuallyRejected = false;
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final callController = Get.put(CallingController());
 
+/// Lets any page mixin RouteAware and reload itself whenever it becomes
+/// visible again (e.g. after popping a screen pushed on top of it).
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 // ✅ Helper: update bell dot + refresh notification list (safe if controller not created yet)
 void _notifyNewNotification({bool refreshList = true}) {
   if (Get.isRegistered<NotificationController>()) {
@@ -313,6 +317,7 @@ class ClinicalApp extends StatelessWidget {
         return GetMaterialApp(
           title: 'Clinician App',
           navigatorKey: navigatorKey,
+          navigatorObservers: [routeObserver],
           defaultTransition: Transition.cupertino,
           transitionDuration: const Duration(milliseconds: 300),
           popGesture: true,
