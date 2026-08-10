@@ -144,7 +144,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   imageProvider = NetworkImage(controller.employeeImage.value);
                                 } else {
                                   imageProvider =
-                                  const AssetImage('assets/images/profilepic.png');
+                                  const AssetImage('assets/png/profilepic.png');
                                 }
 
                                 return CircleAvatar(

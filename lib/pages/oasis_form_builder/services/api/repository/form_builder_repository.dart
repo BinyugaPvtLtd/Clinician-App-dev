@@ -68,3 +68,25 @@ class FormBuilderRepository {
   }
 
 }
+
+class MarkMissedRepository {
+  static String _patientVisits = '/patient-visits';
+  static String pendingReviewForm = "/patient-form/assistant-pending-reviews";
+
+
+  static String markMissed({required int visitId}) {
+    return '/patient-visits/$visitId/mark-missed';
+  }
+  static String uploadVisitPhoto({required int visitId}) {
+    return '$_patientVisits/upload-visit-photo/$visitId';
+  }
+  static String patientVisitEpisodEnd({required int visitId}){
+    return "$_patientVisits/$visitId/episode-end";
+  }
+  static String recertDecisionVisit({required int visitId}){
+    return "$_patientVisits/$visitId/recert-window-decision";
+  }
+  static String getPatientFormReview({required int patientId}){
+    return "$pendingReviewForm/$patientId";
+  }
+}

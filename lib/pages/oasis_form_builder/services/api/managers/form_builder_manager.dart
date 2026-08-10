@@ -77,6 +77,7 @@ import 'package:get/get.dart';
 import '../../../../../core/constant/app_string.dart';
 import '../../../../../model/request/request_data_model.dart';
 import '../../../../../services/auth_api_services/auth_services.dart';
+import '../../../data/pending_forms_data.dart';
 import '../../../forms/evaluation/case_conference/form_data_case_conference.dart';
 import '../../../forms/evaluation/infection_identification_report/form_data_infection_identification_report.dart';
 import '../../../forms/evaluation/kaiser_notice_of_medicare_non_coverage/form_data_kaiser_notice_of_medicare_non_coverage.dart';
@@ -674,6 +675,8 @@ class FormBuilderManager {
     }
   }
 
+
+  /// New start visit needed manager files
   Future<ApiData> patchAssignPhysicianOrderForm(
       BuildContext context, {
         required int patientFormID,
@@ -705,7 +708,272 @@ class FormBuilderManager {
     }
   }
 
-  /// =============================== Till Here ================================
+  Future<ApiData> patchStartVisit({
+    required BuildContext context,
+    required int visitId,
+    required bool onWay,
+    String? visitTypeData,
+    bool? isLastVisit,
+  }) async {
+    try {
+      var response = await _api.patch(
+           "/patient-visits/$visitId",
+          isLastVisit == true ? {
+            "onWay": onWay,
+            "episodeEndType": visitTypeData
+          }:{
+            "onWay": onWay,
+          }
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("patch start visit response: ${response.data}");
+        var data = response.data;
+        int ptId = data['pt_id'] ?? 0;
+        int ptFormId = data['patient_form_id'] ?? 0;
+        bool isVisitTypeSection = data['episodeStatus']['requiresVisitTypeSelection'] ?? false;
+        bool isEpisodeEndDecision = data['isSecondLastEpisodeVisit'] ??false;
+        String lastVisitAssistant = data['lastVisitPerformedBy'] ?? '';
+        List<int> pendingFormsIds = List<int>.from(data['pendingAssistantFormIds'] ?? []);
+        print("isSecondLastEpisodeVisit: $isEpisodeEndDecision");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: true,
+          message: response.statusMessage!,
+          ptFormId: ptFormId,
+          ptId: ptId,
+          visitTypeSelection: isVisitTypeSection,
+          episodeEndDecision: isEpisodeEndDecision,
+          pendingFormsIds: pendingFormsIds,
+          lastVisitPerformedBy: lastVisitAssistant,
+        );
+      } else {
+        print("Error Start visit");
+        return ApiData(
+            statusCode: response.statusCode!,
+            success: false,
+            message: response.data['message']);
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+          statusCode: 404, success: false, message: AppString.somethingWentWrong);}
+  }
+
+  Future<ApiData> uploadVisitPhoto(
+      BuildContext context,
+      int visitId,
+      String base64,
+      ) async {
+    try {
+      var response = await _api.post(
+        MarkMissedRepository.uploadVisitPhoto(visitId: visitId),
+         {
+          "base64": base64,
+        },
+      );
+      print(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Visit photo uploaded");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: true,
+          message: response.statusMessage!,
+        );
+      } else {
+        print("Error 1");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: false,
+          message: response.data['message'],
+        );
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+        statusCode: 404,
+        success: false,
+        message: AppString.somethingWentWrong,
+      );
+    }
+  }
+
+  Future<ApiData> markVisitMissed(
+      BuildContext context,
+      int visitId, {
+        required String reason,
+        required bool isAttemptedVisit,
+        String? photoUrl,
+        required List<String> actionsTaken,
+        required String notificationDate,
+        required String notificationTime,
+        required List<String> individualsNotified,
+        required List<String> notificationMethods,
+      }) async {
+    try {
+      var response = await _api.patch(
+        MarkMissedRepository.markMissed(visitId: visitId),
+        {
+          "reason":              reason,
+          "isAttemptedVisit":    isAttemptedVisit,
+          "photoUrl":            photoUrl,
+          "actionsTaken":        actionsTaken,
+          "notificationDate":    notificationDate,
+          "notificationTime":    notificationTime,
+          "individualsNotified": individualsNotified,
+          "notificationMethods": notificationMethods,
+        },
+      );
+      print(response);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Visit marked as missed");
+        var data = response.data;
+        final missVisitPatientForm = data['patient_form_id'] ?? 0;
+        final requiredEpisodEnd = data['requiresEpisodeEndDecision'] ?? false;
+        final lastVisitId = data['lastVisitId'] ?? 0;
+        final dischardeFormPatientId = data['dischargeFormPatientFormId'] ?? 0;
+        final patientDischarged = data['patientDischarged'] ?? false;
+        return ApiData(
+          statusCode: response.statusCode!,
+          success:    true,
+          message:    response.statusMessage!,
+          missVisitFormID: missVisitPatientForm,
+          requiredEpisodEnd: requiredEpisodEnd,
+          lastVisitId: lastVisitId,
+          dischardeFormPatientId: dischardeFormPatientId,
+          patientDischarged: patientDischarged,
+        );
+      } else {
+        print("Error 1");
+        return ApiData(
+          statusCode: response.statusCode!,
+          success:    false,
+          message:    response.data['message'],
+        );
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+        statusCode: 404,
+        success:    false,
+        message:    AppString.somethingWentWrong,
+      );
+    }
+  }
+
+
+  Future<ApiData> patchEpisodeEnd({
+    required BuildContext context,
+    required int visitId,
+    required String episodeEndType
+  }) async {
+    try {
+      var response = await _api.patch(
+          MarkMissedRepository.patientVisitEpisodEnd(visitId: visitId),
+         {
+            "episodeEndType": episodeEndType,
+          }
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print("Episode changed");
+
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: true,
+          message: response.statusMessage!,
+        );
+      } else {
+        print("Error 1");
+        return ApiData(
+            statusCode: response.statusCode!,
+            success: false,
+            message: response.data['message']);
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+          statusCode: 404, success: false, message: AppString.somethingWentWrong);
+    }
+  }
+
+
+  Future<ApiData> patchRecertVisit({
+    required BuildContext context,
+    required int id,
+    required String decision,
+
+  }) async {
+    try {
+      var response = await _api.patch(
+        MarkMissedRepository.recertDecisionVisit(visitId: id),
+       {
+          "decision": decision,
+        },
+      );
+
+      print('decision: $response');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: true,
+          message: response.statusMessage!,
+        );
+      } else {
+        return ApiData(
+          statusCode: response.statusCode!,
+          success: false,
+          message: response.data['message'][0],
+        );
+      }
+    } catch (e) {
+      print("Error $e");
+      return ApiData(
+        statusCode: 404,
+        success: false,
+        message: AppString.somethingWentWrong,
+      );
+    }
+  }
+
+
+  Future<List<PendingReviewAssistanceForm>> getEmrPendingReviewForm({
+    required BuildContext context,
+    required int patientId,
+  }) async {
+    List<PendingReviewAssistanceForm> itemsData = [];
+    try {
+      final response = await _api.get(
+          MarkMissedRepository.getPatientFormReview(patientId: patientId));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        for (var item in response.data) {
+          itemsData.add(PendingReviewAssistanceForm(
+            visitId: item['visitId'] ?? 0,
+            patientFormId: item['patientFormId'] ?? 0,
+            patientId: item['patientId'] ?? 0,
+            formId: item['formId'] ?? 0,
+            formName: item['formName'] ?? '',
+            assistantEmployeeId: item['assistantEmployeeId'] ?? 0,
+            assistantName: item['assistantName'] ?? '',
+            assistantImage: item['assistantImage'] ?? '',
+            assistantEmployeeType: item['assistantEmployeeType'] ?? '',
+            assistantEmployeeTypeAbbreviation: item['assistantEmployeeTypeAbbreviation'] ?? '',
+          ));
+        }
+
+        return itemsData;
+      } else {
+        debugPrint("patient visit list error: ${response.statusCode}");
+      }
+
+      return itemsData;
+    } catch (e) {
+      debugPrint("get patient visit error: $e");
+      return itemsData;
+    }
+  }
+
+/// =============================== Till Here ================================
 }
 
 Map<int, Map> formMapper = {

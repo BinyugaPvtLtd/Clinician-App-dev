@@ -27,9 +27,31 @@ class ApiData{
   int? supervisoryNoteFormID;
   int? nextPatientFormId;
   String? nextFormName;
+  int? ptFormId;
+  int? ptId;
+  bool? visitTypeSelection;
+  bool? episodeEndDecision;
+  List<int>? pendingFormsIds;
+  String? lastVisitPerformedBy;
+  int? missVisitFormID;
+  bool? requiredEpisodEnd;
+  int? lastVisitId;
+  int? dischardeFormPatientId;
+  bool? patientDischarged;
   ApiData({
-    this.nextFormName,
+    this.missVisitFormID,
+    this.requiredEpisodEnd,
+    this.lastVisitId,
+    this.dischardeFormPatientId,
+    this.patientDischarged,
+    this.ptId,
     this.nextPatientFormId,
+    this.pendingFormsIds,
+    this.ptFormId,
+    this.episodeEndDecision,
+    this.lastVisitPerformedBy,
+    this.visitTypeSelection,
+    this.nextFormName,
     this.supervisoryNoteFormID,
     this.userStatus,
     this.roleName,

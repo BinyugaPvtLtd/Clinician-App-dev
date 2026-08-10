@@ -69,7 +69,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                       child: Text(
                         'Reason*',
                         style: AppTextStyle.normal10style.copyWith(
-                          fontSize: 8.sp,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
                           color: AppColors.defaultTxtGrey,
                         ),
@@ -98,7 +98,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                               Get.back();
                             },
                             textStyle: AppTextStyle.normal10style.copyWith(
-                              fontSize: 6.sp,
+                              fontSize: 10.sp,
                               fontWeight: FontWeight.w600,
                               color: AppColors.primaryAppColor,
                             ),
@@ -151,7 +151,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                                       padding: EdgeInsets.zero,
                                       labelStyle: AppTextStyle.normal10style
                                           .copyWith(
-                                            fontSize: 6.sp,
+                                            fontSize: 10.sp,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
                                           ),

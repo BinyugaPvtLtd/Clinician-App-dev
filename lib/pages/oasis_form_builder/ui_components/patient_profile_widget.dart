@@ -98,7 +98,7 @@ class PatientProfileWidget extends StatelessWidget {
                     fit: BoxFit.cover,
                     errorWidget: (_, __, ___) {
                       return Image.asset(
-                        'images/profilepic.png',
+                        'assets/png/profilepic.png',
                         width: 15.w,
                         height: 15.w,
                         fit: BoxFit.cover,

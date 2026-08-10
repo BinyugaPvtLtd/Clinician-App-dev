@@ -385,6 +385,24 @@ class HomeController extends GetxController {
                 employeeTypeId: v['employeeTypeId'] ?? 0,
                 employeeTypeAbbreviation: v['employeeTypeAbbreviation'] ?? '',
                 employeeTypeColor: v['employeeTypeColor'] ?? '',
+                remainingVisitsCount: v['remainingVisitsCount'] ?? 0,
+                episodeTriggerType: v['episodeTriggerType'] ?? '',
+                daysToEpisodeEnd: v['daysToEpisodeEnd'] ?? 0,
+                lastVisitPerformedBy: v['lastVisitPerformedBy'] ?? '',
+                pendingAssistantFormIds: List<int>.from(v['pendingAssistantFormIds'] ?? []),
+                lastVisitIds: List<int>.from(v['lastVisitIds'] ?? []),
+                isAttemptedVisit: v['isAttemptedVisit'] ?? false,
+                isSecondLastEpisodeVisit: v['isSecondLastEpisodeVisit'] ?? false,
+                employeeId: v['employeeId'] ?? 0,
+                visitType: v['visitType'] ?? 0,
+                isVisitCompleted: v['isVisitCompleted'] ?? false,
+                isVisitMissed: v['isVisitMissed'] ?? false,
+                onWay: v['onWay'] ?? false,
+                recordTypeId: v['recordTypeId'] ?? 0,
+                isRescheduled: v['isRescheduled'] ?? false,
+                rescheduledAt: v['rescheduledAt'] ?? '',
+                rescheduleReasonId: v['rescheduleReasonId'] ?? 0,
+                visitPhotoUrl: v['visitPhotoUrl'] ?? '',
               ),
             );
           }
@@ -392,6 +410,8 @@ class HomeController extends GetxController {
           weeksList.add(
             WeekSchedule(
               week: w['week'] ?? 0,
+              patientId: w['patientId'] ?? 0,
+              chartId: w['chartNo'] ?? 0,
               visits: visitList,
             ),
           );

@@ -80,7 +80,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                             Get.back();
                           },
                           textStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 6.sp,
+                            fontSize: 10.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primaryAppColor,
                           ),
@@ -130,7 +130,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                           },
                           padding: EdgeInsets.zero,
                           labelStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 6.sp,
+                            fontSize: 10.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),

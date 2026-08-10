@@ -1,17 +1,21 @@
 import 'package:clinician_app/core/constant/app_colors.dart';
+import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/pages/oasis_form_builder/provider/form_builder_provider.dart';
 import 'package:clinician_app/pages/oasis_form_builder/provider/question_wapper_provider.dart';
 import 'package:clinician_app/pages/oasis_form_builder/provider/sub_question_wrapper_provider.dart';
 import 'package:clinician_app/pages/oasis_form_builder/services/api/managers/form_builder_manager.dart';
+import 'package:clinician_app/pages/oasis_form_builder/services/api/managers/patient_form_manager.dart';
 import 'package:clinician_app/pages/oasis_form_builder/side_drawer/side_drawer_item.dart';
 import 'package:clinician_app/pages/oasis_form_builder/ui_components/overlays/local_notification_manager.dart';
 import 'package:clinician_app/pages/oasis_form_builder/widgets/dynamic/model/question_data_model.dart';
 import 'package:clinician_app/pages/oasis_form_builder/widgets/dynamic/presentation/dynamic_question.dart';
+import 'package:clinician_app/pages/oasis_form_builder/widgets/popup/form_submission_popup.dart';
 import 'package:clinician_app/pages/oasis_form_builder/widgets/static/presentation/static_question_box.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import '../../core/ui/const_sucess_popup.dart';
 import 'constants/app_text_style.dart';
 import 'constants/enums.dart';
 import 'constants/responsive.dart';
@@ -127,6 +131,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
         ? getForm2(context, formID: widget.formId, subFormID: widget.subFormId)
         : getForm(context, patientFormID: widget.patientFormID, subFormId: widget.subFormId);
     return Scaffold(
+      backgroundColor: Colors.white,
       key: _scaffoldKey,
       body: FutureBuilder(
           future: _formFuture,
@@ -150,174 +155,150 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     spacing: 20,
                     children: [
-                      InkWell(
+                      IntrinsicWidth(
+                        child: PrimaryButton(
+                        height: 48.h,
                         onTap: () async {
                           final outerContext = context;
                           final formProvider = Provider.of<FormBuilderProvider>(
                               outerContext, listen: false);
-                          // await showDialog(
-                          //   context: outerContext,
-                          //   builder: (context) =>
-                          //       StatefulBuilder(
-                          //         builder: (BuildContext context, void Function(void Function()) setState) {
-                          //           return
-                          //             DeletePopup(
-                          //               btnText: "Confirm",
-                          //               text: "Are you sure you want to send this form for correction?",
-                          //                 title: "Confirmation",
-                          //                 onCancel: () {
-                          //                   Navigator.pop(context);
-                          //                 },
-                          //                 onDelete: () async {
-                          //                   // Save form data before sending for correction
-                          //                   await uploadAllImages(outerContext,
-                          //                       formProvider.uploadTypeQuestions,
-                          //                       deletedImageUrls: formProvider
-                          //                           .consumeDeletedImageUrlsQueue());
-                          //                   if (!outerContext.mounted) return;
-                          //                   await FormBuilderManager().savePatientForm(
-                          //                     outerContext,
-                          //                     patientFormID: widget.patientFormID,
-                          //                     formData: {
-                          //                       "subFormDataId": widget.subFormId,
-                          //                       "data": {
-                          //                         "questions": _buildQuestionsWithComments(
-                          //                             formProvider.toJson()),
-                          //                       }
-                          //                     },
-                          //                   );
-                          //                   if (!context.mounted) return;
-                          //                   final response = await FormBuilderManager().patchPatientForm(
-                          //                       context,
-                          //                       patientFormID: widget.patientFormID,
-                          //                       formData: 'SENT_FOR_CORRECTION'
-                          //                   );
-                          //                   if (response.statusCode == 200 || response.statusCode == 201) {
-                          //                     Navigator.pop(context, true);
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddSuccessPopup(
-                          //                           message: 'Form Status Updated Successfully.',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                     // Future.delayed(const Duration(milliseconds: 600));
-                          //                     // Navigator.pop(context);
-                          //                     // pass true so parent can refresh
-                          //                   } else {
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddErrorPopup(
-                          //                           message: 'Something went wrong!',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                   }
-                          //                 }
-                          //             );
-                          //         },
-                          //       ),
-                          // );
+                          await showDialog(
+                            context: outerContext,
+                            builder: (context) =>
+                                StatefulBuilder(
+                                  builder: (BuildContext context, void Function(void Function()) setState) {
+                                    return
+                                      FormSubmissionPopup(
+                                        btnText: "Confirm",
+                                        text: "Are you sure you want to send this form for correction?",
+                                          title: "Confirmation",
+                                          onCancel: () {
+                                            Navigator.pop(context);
+                                          },
+                                          onDelete: () async {
+                                            // Save form data before sending for correction
+                                            await uploadAllImages(outerContext,
+                                                formProvider.uploadTypeQuestions,
+                                                deletedImageUrls: formProvider
+                                                    .consumeDeletedImageUrlsQueue());
+                                            if (!outerContext.mounted) return;
+                                            await FormBuilderManager().savePatientForm(
+                                              outerContext,
+                                              patientFormID: widget.patientFormID,
+                                              formData: {
+                                                "subFormDataId": widget.subFormId,
+                                                "data": {
+                                                  "questions": _buildQuestionsWithComments(
+                                                      formProvider.toJson()),
+                                                }
+                                              },
+                                            );
+                                            if (!context.mounted) return;
+                                            final response = await FormBuilderManager().patchPatientForm(
+                                                context,
+                                                patientFormID: widget.patientFormID,
+                                                formData: 'SENT_FOR_CORRECTION'
+                                            );
+                                            if (response.statusCode == 200 || response.statusCode == 201) {
+                                              Navigator.pop(context, true);
+                                              showSucessDialog(
+                                                  context: context,
+                                                  message: 'Form Status Updated Successfully.',
+                                                  title: 'Successfully');
+                                              // Future.delayed(const Duration(milliseconds: 600));
+                                              // Navigator.pop(context);
+                                              // pass true so parent can refresh
+                                            } else {
+                                              showDocErrorDialog(context: context,
+                                                  message: 'Something went wrong!',
+                                                  title: 'Error');
+                                            }
+                                          }
+                                      );
+                                  },
+                                ),
+                          );
 
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: AppColors.primaryAppColor,
-                              borderRadius: const BorderRadius.all(
-                                  Radius.circular(20))),
-                          padding: EdgeInsets.symmetric(
+                        label: "Send For Correction",
+                        buttonColor: AppColors.primaryAppColor,
+                        borderRadius: 20.r,
+                        padding: EdgeInsets.symmetric(
                               horizontal: Responsive.isMobile(context)
-                                  ? 40
-                                  : 30,
+                                  ? 40.w
+                                  : 30.w,
                               vertical: Responsive.isMobile(context)
-                                  ? 15
-                                  : 10),
-                          child: Text(
-                            "Send For Correction",
-                            style: Theme.of(context)
+                                  ? 15.h
+                                  : 10.h),
+                        labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
-                          ),
                         ),
                       ),
                       // const SizedBox(
                       //   width: 20,
                       // ),
-                      InkWell(
+                      IntrinsicWidth(
+                        child: PrimaryButton(
+                        height: 48.h,
                         onTap: () async {
-                          // await showDialog(
-                          //   context: context,
-                          //   builder: (context) =>
-                          //       StatefulBuilder(
-                          //         builder: (BuildContext context, void Function(void Function()) setState) {
-                          //           return
-                          //             DeletePopup(
-                          //                text: "Are you sure you want to approve this form?",
-                          //                 title: "Approve",
-                          //                 btnText: "Approve",
-                          //                 onCancel: () {
-                          //                   Navigator.pop(context);
-                          //                 },
-                          //                 onDelete: () async {
-                          //                   final response = await FormBuilderManager().patchPatientForm(
-                          //                       context,
-                          //                       patientFormID: widget.patientFormID,
-                          //                       formData: 'QA_APPROVED'
-                          //                   );
-                          //                   if (response.statusCode == 200 || response.statusCode == 201) {
-                          //                     Navigator.pop(context, true);
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddSuccessPopup(
-                          //                           message: 'Form Approved Successfully.',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                     // pass true so parent can refresh
-                          //                   } else {
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddErrorPopup(
-                          //                           message: 'Something went wrong!',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                   }
-                          //                 }
-                          //             );
-                          //         },
-                          //       ),
-                          // );
+                          await showDialog(
+                            context: context,
+                            builder: (context) =>
+                                StatefulBuilder(
+                                  builder: (BuildContext context, void Function(void Function()) setState) {
+                                    return
+                                      FormSubmissionPopup(
+                                         text: "Are you sure you want to approve this form?",
+                                          title: "Approve",
+                                          btnText: "Approve",
+                                          onCancel: () {
+                                            Navigator.pop(context);
+                                          },
+                                          onDelete: () async {
+                                            final response = await FormBuilderManager().patchPatientForm(
+                                                context,
+                                                patientFormID: widget.patientFormID,
+                                                formData: 'QA_APPROVED'
+                                            );
+                                            if (response.statusCode == 200 || response.statusCode == 201) {
+                                              Navigator.pop(context, true);
+                                              showSucessDialog(
+                                                  context: context,
+                                                  message: 'Form Approved Successfully.',
+                                                  title: 'Successfully');
+                                              // pass true so parent can refresh
+                                            } else {
+                                              showDocErrorDialog(context: context,
+                                                  message: 'Something went wrong!',
+                                                  title: 'Error');
+                                            }
+                                          }
+                                      );
+                                  },
+                                ),
+                          );
 
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: AppColors.primaryAppColor,
-                              borderRadius: const BorderRadius.all(
-                                  Radius.circular(20))),
-                          padding: EdgeInsets.symmetric(
+                        label: "Approve",
+                        buttonColor: AppColors.primaryAppColor,
+                        borderRadius: 20.r,
+                        padding: EdgeInsets.symmetric(
                               horizontal: Responsive.isMobile(context)
-                                  ? 40
-                                  : 30,
+                                  ? 40.w
+                                  : 30.w,
                               vertical: Responsive.isMobile(context)
-                                  ? 15
-                                  : 10),
-                          child: Text(
-                            "Approve",
-                            style: Theme.of(context)
+                                  ? 15.h
+                                  : 10.h),
+                        labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
-                          ),
                         ),
                       ),
                     ],
@@ -328,251 +309,206 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     spacing: 20,
                     children: [
-                      InkWell(
+                      IntrinsicWidth(
+                        child: PrimaryButton(
+                        height: 48.h,
                         onTap: () async {
-                          // await showDialog(
-                          //   context: context,
-                          //   builder: (context) =>
-                          //       StatefulBuilder(
-                          //         builder: (BuildContext context, void Function(void Function()) setState) {
-                          //           return
-                          //             ConfirmOasisFormPopup(
-                          //                 text: "You're about to mark this form as F2F Needed.\nDo you want to continue?",
-                          //                 title: "F2F Needed",
-                          //                 btnText: "Mark & Close",
-                          //                 onCancel: () {
-                          //                   Navigator.pop(context);
-                          //                 },
-                          //                 onDelete: () async {
-                          //                   final response = await FormBuilderManager().patchPatientForm(
-                          //                       context,
-                          //                       patientFormID: widget.patientFormID,
-                          //                       formData: 'F2F_NEEDED',
-                          //                       isFaceToFace: true
-                          //                   );
-                          //                   if (response.statusCode == 200 || response.statusCode == 201) {
-                          //                     Navigator.pop(context, true);
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddSuccessPopup(
-                          //                           message: 'F2f Added Successfully.',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                     // pass true so parent can refresh
-                          //                   } else {
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddErrorPopup(
-                          //                           message: 'Something went wrong!',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                   }
-                          //                 },
-                          //               btnText2: "Mark & Stay",
-                          //               onClickBtn2: () async{
-                          //                 final response = await FormBuilderManager().patchPatientForm(
-                          //                     context,
-                          //                     patientFormID: widget.patientFormID,
-                          //                     formData: 'F2F_NEEDED',
-                          //                   isFaceToFace: true
-                          //                 );
-                          //                 if (response.statusCode == 200 || response.statusCode == 201) {
-                          //                   Navigator.pop(context, true);
-                          //                   showDialog(
-                          //                     context: context,
-                          //                     builder: (BuildContext context) {
-                          //                       return const AddSuccessPopup(
-                          //                         message: 'F2F Added Successfully.',
-                          //                       );
-                          //                     },
-                          //                   );
-                          //                   // pass true so parent can refresh
-                          //                 } else {
-                          //                   showDialog(
-                          //                     context: context,
-                          //                     builder: (BuildContext context) {
-                          //                       return const AddErrorPopup(
-                          //                         message: 'Something went wrong!',
-                          //                       );
-                          //                     },
-                          //                   );
-                          //                 }
-                          //               },
-                          //             );
-                          //         },
-                          //       ),
-                          // );
+                          await showDialog(
+                            context: context,
+                            builder: (context) =>
+                                StatefulBuilder(
+                                  builder: (BuildContext context, void Function(void Function()) setState) {
+                                    return
+                                      ConfirmOasisFormPopup(
+                                          text: "You're about to mark this form as F2F Needed.\nDo you want to continue?",
+                                          title: "F2F Needed",
+                                          btnText: "Mark & Close",
+                                          onCancel: () {
+                                            Navigator.pop(context);
+                                          },
+                                          onDelete: () async {
+                                            final response = await FormBuilderManager().patchPatientForm(
+                                                context,
+                                                patientFormID: widget.patientFormID,
+                                                formData: 'F2F_NEEDED',
+                                                isFaceToFace: true
+                                            );
+                                            if (response.statusCode == 200 || response.statusCode == 201) {
+                                              Navigator.pop(context, true);
+                                              showSucessDialog(
+                                                  context: context,
+                                                  message: 'F2f Added Successfully.',
+                                                  title: 'Successfully');
+                                              // pass true so parent can refresh
+                                            } else {
+                                              showDocErrorDialog(context: context,
+                                                  message: 'Something went wrong!',
+                                                  title: 'Error');
+                                            }
+                                          },
+                                        btnText2: "Mark & Stay",
+                                        onClickBtn2: () async{
+                                          final response = await FormBuilderManager().patchPatientForm(
+                                              context,
+                                              patientFormID: widget.patientFormID,
+                                              formData: 'F2F_NEEDED',
+                                            isFaceToFace: true
+                                          );
+                                          if (response.statusCode == 200 || response.statusCode == 201) {
+                                            Navigator.pop(context, true);
+                                            showSucessDialog(
+                                                context: context,
+                                                message: 'F2f Added Successfully.',
+                                                title: 'Successfully');
+                                            // pass true so parent can refresh
+                                          } else {
+                                            showDocErrorDialog(context: context,
+                                                message: 'Something went wrong!',
+                                                title: 'Error');
+                                          }
+                                        },
+                                      );
+                                  },
+                                ),
+                          );
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: AppColors.primaryAppColor,
-                              borderRadius: const BorderRadius.all(
-                                  Radius.circular(20))),
-                          padding: EdgeInsets.symmetric(
+                        label: "F2F Needed",
+                        buttonColor: AppColors.primaryAppColor,
+                        borderRadius: 20.r,
+                        padding: EdgeInsets.symmetric(
                               horizontal: Responsive.isMobile(context)
-                                  ? 40
-                                  : 30,
+                                  ? 40.w
+                                  : 30.w,
                               vertical: Responsive.isMobile(context)
-                                  ? 15
-                                  : 10),
-                          child: Text(
-                            "F2F Needed",
-                            style: Theme.of(context)
+                                  ? 15.h
+                                  : 10.h),
+                        labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
-                          ),
                         ),
                       ),
 
-                      InkWell(
+                      IntrinsicWidth(
+                        child: PrimaryButton(
+                        height: 48.h,
                         onTap: () async {
-                          // await showDialog(
-                          //   context: context,
-                          //   builder: (context) =>
-                          //       StatefulBuilder(
-                          //         builder: (BuildContext context, void Function(void Function()) setState) {
-                          //           return
-                          //             DeletePopup(
-                          //                 btnText: "Confirm",
-                          //                 text: "Are you sure you want to send this form for correction?",
-                          //                 title: "Confirmation",
-                          //                 onCancel: () {
-                          //                   Navigator.pop(context);
-                          //                 },
-                          //                 onDelete: () async {
-                          //                   final response = await FormBuilderManager().patchPatientForm(
-                          //                       context,
-                          //                       patientFormID: widget.patientFormID,
-                          //                       formData: 'CODER_SENT_FOR_CORRECTION '
-                          //                   );
-                          //                   if (response.statusCode == 200 || response.statusCode == 201) {
-                          //                     Navigator.pop(context, true);
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddSuccessPopup(
-                          //                           message: 'Form Status Updated Successfully.',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                     Future.delayed(const Duration(milliseconds: 600));
-                          //                     Navigator.pop(context);
-                          //                     // pass true so parent can refresh
-                          //                   } else {
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddErrorPopup(
-                          //                           message: 'Something went wrong!',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                   }
-                          //                 }
-                          //             );
-                          //         },
-                          //       ),
-                          // );
+                          await showDialog(
+                            context: context,
+                            builder: (context) =>
+                                StatefulBuilder(
+                                  builder: (BuildContext context, void Function(void Function()) setState) {
+                                    return
+                                      FormSubmissionPopup(
+                                          btnText: "Confirm",
+                                          text: "Are you sure you want to send this form for correction?",
+                                          title: "Confirmation",
+                                          onCancel: () {
+                                            Navigator.pop(context);
+                                          },
+                                          onDelete: () async {
+                                            final response = await FormBuilderManager().patchPatientForm(
+                                                context,
+                                                patientFormID: widget.patientFormID,
+                                                formData: 'CODER_SENT_FOR_CORRECTION '
+                                            );
+                                            if (response.statusCode == 200 || response.statusCode == 201) {
+                                              Navigator.pop(context, true);
+                                              showSucessDialog(
+                                                  context: context,
+                                                  message: 'Form Status Updated Successfully.',
+                                                  title: 'Successfully');
+                                              Future.delayed(const Duration(milliseconds: 600));
+                                              Navigator.pop(context);
+                                              // pass true so parent can refresh
+                                            } else {
+                                              showDocErrorDialog(context: context,
+                                                  message: 'Something went wrong!',
+                                                  title: 'Error');
+                                            }
+                                          }
+                                      );
+                                  },
+                                ),
+                          );
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: AppColors.primaryAppColor,
-                              borderRadius: const BorderRadius.all(
-                                  Radius.circular(20))),
-                          padding: EdgeInsets.symmetric(
+                        label: "Send For Correction",
+                        buttonColor: AppColors.primaryAppColor,
+                        borderRadius: 20.r,
+                        padding: EdgeInsets.symmetric(
                               horizontal: Responsive.isMobile(context)
-                                  ? 40
-                                  : 30,
+                                  ? 40.w
+                                  : 30.w,
                               vertical: Responsive.isMobile(context)
-                                  ? 15
-                                  : 10),
-                          child: Text(
-                            "Send For Correction",
-                            style: Theme.of(context)
+                                  ? 15.h
+                                  : 10.h),
+                        labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
-                          ),
                         ),
                       ),
-                      InkWell(
+                      IntrinsicWidth(
+                        child: PrimaryButton(
+                        height: 48.h,
                         onTap: () async {
-                          // await showDialog(
-                          //   context: context,
-                          //   builder: (context) =>
-                          //       StatefulBuilder(
-                          //         builder: (BuildContext context, void Function(void Function()) setState) {
-                          //           return
-                          //             DeletePopup(
-                          //                 text: "Are you sure you want to approve this form?",
-                          //                 title: "Approve",
-                          //                 btnText: "Approve",
-                          //                 onCancel: () {
-                          //                   Navigator.pop(context);
-                          //                 },
-                          //                 onDelete: () async {
-                          //                   final response = await FormBuilderManager().patchPatientForm(
-                          //                       context,
-                          //                       patientFormID: widget.patientFormID,
-                          //                       formData: 'COMPLETED'
-                          //                   );
-                          //                   if (response.statusCode == 200 || response.statusCode == 201) {
-                          //                     Navigator.pop(context, true);
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddSuccessPopup(
-                          //                           message: 'Form Approved Successfully.',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                     // pass true so parent can refresh
-                          //                   } else {
-                          //                     showDialog(
-                          //                       context: context,
-                          //                       builder: (BuildContext context) {
-                          //                         return const AddErrorPopup(
-                          //                           message: 'Something went wrong!',
-                          //                         );
-                          //                       },
-                          //                     );
-                          //                   }
-                          //                 }
-                          //             );
-                          //         },
-                          //       ),
-                          // );
+                          await showDialog(
+                            context: context,
+                            builder: (context) =>
+                                StatefulBuilder(
+                                  builder: (BuildContext context, void Function(void Function()) setState) {
+                                    return
+                                      FormSubmissionPopup(
+                                          text: "Are you sure you want to approve this form?",
+                                          title: "Approve",
+                                          btnText: "Approve",
+                                          onCancel: () {
+                                            Navigator.pop(context);
+                                          },
+                                          onDelete: () async {
+                                            final response = await FormBuilderManager().patchPatientForm(
+                                                context,
+                                                patientFormID: widget.patientFormID,
+                                                formData: 'COMPLETED'
+                                            );
+                                            if (response.statusCode == 200 || response.statusCode == 201) {
+                                              Navigator.pop(context, true);
+                                              showSucessDialog(
+                                                  context: context,
+                                                  message: 'Form Approved Successfully.',
+                                                  title: 'Successfully');
+                                              // pass true so parent can refresh
+                                            } else {
+                                              showDocErrorDialog(context: context,
+                                                  message: 'Something went wrong!',
+                                                  title: 'Error');
+                                            }
+                                          }
+                                      );
+                                  },
+                                ),
+                          );
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: AppColors.primaryAppColor,
-                              borderRadius: const BorderRadius.all(
-                                  Radius.circular(20))),
-                          padding: EdgeInsets.symmetric(
+                        label: "Approve",
+                        buttonColor: AppColors.primaryAppColor,
+                        borderRadius: 20.r,
+                        padding: EdgeInsets.symmetric(
                               horizontal: Responsive.isMobile(context)
-                                  ? 40
-                                  : 30,
+                                  ? 40.w
+                                  : 30.w,
                               vertical: Responsive.isMobile(context)
-                                  ? 15
-                                  : 10),
-                          child: Text(
-                            "Approve",
-                            style: Theme.of(context)
+                                  ? 15.h
+                                  : 10.h),
+                        labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
-                          ),
                         ),
                       ),
 
@@ -584,377 +520,339 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                        mainAxisAlignment: MainAxisAlignment.end,
                       spacing: 20,
                       children: [
-                        InkWell(
+                        IntrinsicWidth(
+                          child: PrimaryButton(
+                            height: 40.h,
                           onTap: () async {
-                            // await showDialog(
-                            //   context: context,
-                            //   builder: (context) =>
-                            //       StatefulBuilder(
-                            //         builder: (BuildContext context, void Function(void Function()) setState) {
-                            //           return
-                            //             DeletePopup(
-                            //                 text: "Are you sure you want to Add Physician order?",
-                            //                 title: "Add Physician order",
-                            //                 btnText: "Confirm",
-                            //                 onCancel: () {
-                            //                   Navigator.pop(context);
-                            //                 },
-                            //                 onDelete: () async {
-                            //                  var responseAddOrder = await FormBuilderManager().patchAssignPhysicianOrderForm(
-                            //                       context,
-                            //                       patientFormID: widget.patientFormID,
-                            //                   );
-                            //                  if(responseAddOrder.success == true){
-                            //                    final result = await getPatientFormByPatientID(
-                            //                      context,
-                            //                      patientFormId: widget.patientFormID,
-                            //                    );
-                            //                    // Reload this form's questions
-                            //                    _reloadForm();
-                            //
-                            //                    // Notify parent (OasisFormMapper) to rebuild sidebar
-                            //                    widget.onOrderAdded?.call(widget.patientFormID);
-                            //                    Navigator.pop(context);
-                            //                  }
-                            //                 }
-                            //             );
-                            //         },
-                            //       ),
-                            // );
+                            await showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  StatefulBuilder(
+                                    builder: (BuildContext context, void Function(void Function()) setState) {
+                                      return
+                                        FormSubmissionPopup(
+                                            text: "Are you sure you want to Add Physician order?",
+                                            title: "Add Physician order",
+                                            btnText: "Confirm",
+                                            onCancel: () {
+                                              Navigator.pop(context);
+                                            },
+                                            onDelete: () async {
+                                             var responseAddOrder = await FormBuilderManager().patchAssignPhysicianOrderForm(
+                                                  context,
+                                                  patientFormID: widget.patientFormID,
+                                              );
+                                             if(responseAddOrder.success == true){
+                                               final result = await getPatientFormByPatientID(
+                                                 context,
+                                                 patientFormId: widget.patientFormID,
+                                               );
+                                               // Reload this form's questions
+                                               _reloadForm();
+
+                                               // Notify parent (OasisFormMapper) to rebuild sidebar
+                                               widget.onOrderAdded?.call(widget.patientFormID);
+                                               Navigator.pop(context);
+                                             }
+                                            }
+                                        );
+                                    },
+                                  ),
+                            );
                           },
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color: AppColors.primaryAppColor,
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(20))),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: Responsive.isMobile(context)
-                                    ? 40
-                                    : 30,
-                                vertical: Responsive.isMobile(context)
-                                    ? 15
-                                    : 10),
-                            child: Text(
-                              "Add Order",
-                              style: Theme.of(context)
+                            width: 90.w,
+                          label: "Add Order",
+                          buttonColor: AppColors.primaryAppColor,
+                            borderRadius: 6.r,
+                          padding: EdgeInsets.symmetric(vertical: 10,horizontal: 5),
+                          labelStyle: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
+                            fontSize: 12.sp,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold),
-                            ),
                           ),
                         ),
-                        InkWell(
+                        IntrinsicWidth(
+                          child: PrimaryButton(
+                            height: 40.h,
+                            width: 90.w,
                           onTap: () async {
                             final outerContext = context;
                             final formProvider = Provider.of<FormBuilderProvider>(
                                 outerContext, listen: false);
-                            // await showDialog(
-                            //   context: outerContext,
-                            //   builder: (context) =>
-                            //       StatefulBuilder(
-                            //         builder: (BuildContext context, void Function(void Function()) setState) {
-                            //           return
-                            //             DeletePopup(
-                            //                 text: widget.lastFormFillByAssist == "assistant"?
-                            //                 "Are you sure you want to approve this form?":
-                            //                 "Are you sure you want to submit this form?",
-                            //                 title: widget.lastFormFillByAssist == "assistant"?
-                            //                 "Review Form":
-                            //                 "Submit Form",
-                            //                 btnText: widget.lastFormFillByAssist == "assistant" ?
-                            //                 "Review":
-                            //                 "Submit",
-                            //                 onCancel: () {
-                            //                   Navigator.pop(context);
-                            //                 },
-                            //                 onDelete: () async {
-                            //                   // Save form data before submitting
-                            //                   // ─── Main submit logic ───────────────────────────────────────────────────────
-                            //
-                            //                   await uploadAllImages(
-                            //                     outerContext,
-                            //                     formProvider.uploadTypeQuestions,
-                            //                     deletedImageUrls: formProvider.consumeDeletedImageUrlsQueue(),
-                            //                   );
-                            //
-                            //                   if (!outerContext.mounted) return;
-                            //
-                            //                   await FormBuilderManager().savePatientForm(
-                            //                     outerContext,
-                            //                     patientFormID: widget.patientFormID,
-                            //                     formData: {
-                            //                       "subFormDataId": widget.subFormId,
-                            //                       "data": {
-                            //                         "questions": _buildQuestionsWithComments(formProvider.toJson()),
-                            //                       }
-                            //                     },
-                            //                   );
-                            //
-                            //                   if (!outerContext.mounted) return;
-                            //
-                            //                   final bool isAssistantReview = widget.lastFormFillByAssist == "assistant";
-                            //
-                            //                   final response = isAssistantReview
-                            //                       ? await FormBuilderManager().patchIsAssistantFormReview(
-                            //                     context: context,
-                            //                     visitId: widget.visitId,
-                            //                     patientFormId: widget.patientFormID,
-                            //                   )
-                            //                       : await FormBuilderManager().patchPatientForm(
-                            //                     context,
-                            //                     patientFormID: widget.patientFormID,
-                            //                     formData: widget.formStatus == "needs_correction"
-                            //                         ? "CORRECTED"
-                            //                         : "SUBMITTED_BY_CLINICIAN",
-                            //                   );
-                            //
-                            //                   if (!context.mounted) return;
-                            //
-                            //                   if (response.statusCode == 200 || response.statusCode == 201) {
-                            //                     // Close the current form screen
-                            //                     Navigator.pop(context, true);
-                            //
-                            //                     if (!context.mounted) return;
-                            //
-                            //                     if (isAssistantReview) {
-                            //                       // ── Assistant review: just show success ──
-                            //                       showDialog(
-                            //                         context: context,
-                            //                         builder: (dialogContext) => FormChangePopup(
-                            //                           title: 'Supervisory Note',
-                            //                           text: 'Do you want to fill out the Supervisory Note for this visit?',
-                            //                           btnText: "Yes",
-                            //                           onCancel: () {
-                            //                             // User dismissed — dialog closes on its own
-                            //                           },
-                            //                           onDelete: () {
-                            //                             // Close the follow-up dialog
-                            //
-                            //                             Navigator.pop(dialogContext); // ← close only the dialog, NOT the form screen
-                            //
-                            //                             // Trigger reload and navigate to next form
-                            //                             _reloadForm();
-                            //                             widget.onFormChange?.call(response.supervisoryNoteFormID!);
-                            //
-                            //                             if (!context.mounted) return;
-                            //
-                            //                             // Show success after navigation
-                            //                             showDialog(
-                            //                               context: context,
-                            //                               builder: (ctx) => AddSuccessPopup(
-                            //                                 message: 'Form Submitted Successfully.',
-                            //                               ),
-                            //                             );
-                            //                           },
-                            //                         ),
-                            //                       );
-                            //                       // showDialog(
-                            //                       //   context: context,
-                            //                       //   builder: (ctx) => AddSuccessPopup(
-                            //                       //     message: 'Form Approved Successfully',
-                            //                       //   ),
-                            //                       // );
-                            //                     } else {
-                            //                       // ── Clinician submission ──
-                            //                       final bool hasNextForm =
-                            //                           response.nextPatientFormId != null && response.nextPatientFormId != 0;
-                            //                       if (!hasNextForm) {
-                            //                         // No follow-up form — just show success
-                            //                         showDialog(
-                            //                           context: context,
-                            //                           builder: (ctx) => AddSuccessPopup(
-                            //                             message: 'Form Submitted Successfully.',
-                            //                           ),
-                            //                         );
-                            //                       } else {
-                            //                         // Determine follow-up dialog content based on form ID
-                            //                         final bool isReassessmentForm =
-                            //                             response.nextFormName == "Reassessment" ||
-                            //                             response.nextFormName == "Follow Up";
-                            //                         if(isReassessmentForm){
-                            //                           showDialog(
-                            //                             context: context,
-                            //                             builder: (dialogContext) => FormChangePopup(
-                            //                               title: response.nextFormName == "Reassessment"
-                            //                                   ? 'Reassessment'
-                            //                                   : 'Discipline Follow-Up Visit Note',
-                            //                               text: response.nextFormName == "Reassessment"
-                            //                                   ? 'Would you like to complete the Reassessment Form?'
-                            //                                   : 'Do you want to fill out the Discipline Follow-Up Visit Note (PT/OT/ST) for this visit?',
-                            //                               btnText: "Yes",
-                            //                               onCancel: () {
-                            //                                 // User dismissed — dialog closes on its own
-                            //                               },
-                            //                               onDelete: () {
-                            //                                 // Close the follow-up dialog
-                            //                                 Navigator.pop(dialogContext); // ← close only the dialog, NOT the form screen
-                            //
-                            //                                 // Trigger reload and navigate to next form
-                            //                                 _reloadForm();
-                            //                                 widget.onFormChange?.call(response.nextPatientFormId!);
-                            //
-                            //                                 if (!context.mounted) return;
-                            //
-                            //                                 // Show success after navigation
-                            //                                 showDialog(
-                            //                                   context: context,
-                            //                                   builder: (ctx) => AddSuccessPopup(
-                            //                                     message: 'Form Submitted Successfully.',
-                            //                                   ),
-                            //                                 );
-                            //                               },
-                            //                             ),
-                            //                           );
-                            //                         }
-                            //                         // else {
-                            //                         //   final visitData = await getVisitDataUsingVisitId(
-                            //                         //     context: context,
-                            //                         //     visitId: visit.visitId,
-                            //                         //   );
-                            //                         //
-                            //                         //   if (visitData.isLastEpisode == true) {
-                            //                         //     if (!mounted) return;
-                            //                         //     showDialog(
-                            //                         //       context: context,
-                            //                         //       builder: (_) => DischargeVisitTypePopup(
-                            //                         //         visitData: visitData,
-                            //                         //         onNevigate: () {
-                            //                         //           showDialog(
-                            //                         //             context: context,
-                            //                         //             builder: (_) => ViewStartVisit(
-                            //                         //               visitData: visitData,
-                            //                         //               onRefresh: () {},
-                            //                         //             ),
-                            //                         //           );
-                            //                         //         },
-                            //                         //       ),
-                            //                         //     );
-                            //                         //   } else {
-                            //                         //     // Trigger reload and navigate to next form
-                            //                         //     _reloadForm();
-                            //                         //     widget.onFormChange?.call(response.nextPatientFormId!);
-                            //                         //   }
-                            //                         // }
-                            //                       }
-                            //                     }
-                            //                   } else {
-                            //                     // ── Error response ──
-                            //                     showDialog(
-                            //                       context: context,
-                            //                       builder: (ctx) => const AddErrorPopup(
-                            //                         message: 'Something went wrong!',
-                            //                       ),
-                            //                     );
-                            //                   }
-                            //                 }
-                            //             );
-                            //         },
-                            //       ),
-                            // );
+                            await showDialog(
+                              context: outerContext,
+                              builder: (context) =>
+                                  StatefulBuilder(
+                                    builder: (BuildContext context, void Function(void Function()) setState) {
+                                      return
+                                        FormSubmissionPopup(
+                                            text: widget.lastFormFillByAssist == "assistant"?
+                                            "Are you sure you want to approve this form?":
+                                            "Are you sure you want to submit this form?",
+                                            title: widget.lastFormFillByAssist == "assistant"?
+                                            "Review Form":
+                                            "Submit Form",
+                                            btnText: widget.lastFormFillByAssist == "assistant" ?
+                                            "Review":
+                                            "Submit",
+                                            onCancel: () {
+                                              Navigator.pop(context);
+                                            },
+                                            onDelete: () async {
+                                              // Save form data before submitting
+                                              // ─── Main submit logic ───────────────────────────────────────────────────────
+
+                                              await uploadAllImages(
+                                                outerContext,
+                                                formProvider.uploadTypeQuestions,
+                                                deletedImageUrls: formProvider.consumeDeletedImageUrlsQueue(),
+                                              );
+
+                                              if (!outerContext.mounted) return;
+
+                                              await FormBuilderManager().savePatientForm(
+                                                outerContext,
+                                                patientFormID: widget.patientFormID,
+                                                formData: {
+                                                  "subFormDataId": widget.subFormId,
+                                                  "data": {
+                                                    "questions": _buildQuestionsWithComments(formProvider.toJson()),
+                                                  }
+                                                },
+                                              );
+
+                                              if (!outerContext.mounted) return;
+
+                                              final bool isAssistantReview = widget.lastFormFillByAssist == "assistant";
+
+                                              final response = isAssistantReview
+                                                  ? await FormBuilderManager().patchIsAssistantFormReview(
+                                                context: context,
+                                                visitId: widget.visitId,
+                                                patientFormId: widget.patientFormID,
+                                              )
+                                                  : await FormBuilderManager().patchPatientForm(
+                                                context,
+                                                patientFormID: widget.patientFormID,
+                                                formData: widget.formStatus == "needs_correction"
+                                                    ? "CORRECTED"
+                                                    : "SUBMITTED_BY_CLINICIAN",
+                                              );
+
+                                              if (!context.mounted) return;
+
+                                              if (response.statusCode == 200 || response.statusCode == 201) {
+                                                // Close the current form screen
+                                                Navigator.pop(context, true);
+
+                                                if (!context.mounted) return;
+
+                                                if (isAssistantReview) {
+                                                  // ── Assistant review: just show success ──
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (dialogContext) => FormChangePopup(
+                                                      title: 'Supervisory Note',
+                                                      text: 'Do you want to fill out the Supervisory Note for this visit?',
+                                                      btnText: "Yes",
+                                                      onCancel: () {
+                                                        // User dismissed — dialog closes on its own
+                                                      },
+                                                      onDelete: () {
+                                                        // Close the follow-up dialog
+
+                                                        Navigator.pop(dialogContext); // ← close only the dialog, NOT the form screen
+
+                                                        // Trigger reload and navigate to next form
+                                                        _reloadForm();
+                                                        widget.onFormChange?.call(response.supervisoryNoteFormID!);
+
+                                                        if (!context.mounted) return;
+
+                                                        // Show success after navigation
+                                                        showSucessDialog(
+                                                            context: context,
+                                                            message: 'Form Submitted Successfully.',
+                                                            title: 'Successfully');
+
+                                                      },
+                                                    ),
+                                                  );
+                                                  // showDialog(
+                                                  //   context: context,
+                                                  //   builder: (ctx) => AddSuccessPopup(
+                                                  //     message: 'Form Approved Successfully',
+                                                  //   ),
+                                                  // );
+                                                } else {
+                                                  // ── Clinician submission ──
+                                                  final bool hasNextForm =
+                                                      response.nextPatientFormId != null && response.nextPatientFormId != 0;
+                                                  if (!hasNextForm) {
+                                                    // No follow-up form — just show success
+                                                    showSucessDialog(
+                                                        context: context,
+                                                        message: 'Form Submitted Successfully.',
+                                                        title: 'Successfully');
+                                                  } else {
+                                                    // Determine follow-up dialog content based on form ID
+                                                    final bool isReassessmentForm =
+                                                        response.nextFormName == "Reassessment" ||
+                                                        response.nextFormName == "Follow Up";
+                                                    if(isReassessmentForm){
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (dialogContext) => FormChangePopup(
+                                                          title: response.nextFormName == "Reassessment"
+                                                              ? 'Reassessment'
+                                                              : 'Discipline Follow-Up Visit Note',
+                                                          text: response.nextFormName == "Reassessment"
+                                                              ? 'Would you like to complete the Reassessment Form?'
+                                                              : 'Do you want to fill out the Discipline Follow-Up Visit Note (PT/OT/ST) for this visit?',
+                                                          btnText: "Yes",
+                                                          onCancel: () {
+                                                            // User dismissed — dialog closes on its own
+                                                          },
+                                                          onDelete: () {
+                                                            // Close the follow-up dialog
+                                                            Navigator.pop(dialogContext); // ← close only the dialog, NOT the form screen
+
+                                                            // Trigger reload and navigate to next form
+                                                            _reloadForm();
+                                                            widget.onFormChange?.call(response.nextPatientFormId!);
+
+                                                            if (!context.mounted) return;
+
+                                                            // Show success after navigation
+                                                            showSucessDialog(
+                                                                context: context,
+                                                                message: 'Form Submitted Successfully.',
+                                                                title: 'Successfully');
+                                                          },
+                                                        ),
+                                                      );
+                                                    }
+                                                    // else {
+                                                    //   final visitData = await getVisitDataUsingVisitId(
+                                                    //     context: context,
+                                                    //     visitId: visit.visitId,
+                                                    //   );
+                                                    //
+                                                    //   if (visitData.isLastEpisode == true) {
+                                                    //     if (!mounted) return;
+                                                    //     showDialog(
+                                                    //       context: context,
+                                                    //       builder: (_) => DischargeVisitTypePopup(
+                                                    //         visitData: visitData,
+                                                    //         onNevigate: () {
+                                                    //           showDialog(
+                                                    //             context: context,
+                                                    //             builder: (_) => ViewStartVisit(
+                                                    //               visitData: visitData,
+                                                    //               onRefresh: () {},
+                                                    //             ),
+                                                    //           );
+                                                    //         },
+                                                    //       ),
+                                                    //     );
+                                                    //   } else {
+                                                    //     // Trigger reload and navigate to next form
+                                                    //     _reloadForm();
+                                                    //     widget.onFormChange?.call(response.nextPatientFormId!);
+                                                    //   }
+                                                    // }
+                                                  }
+                                                }
+                                              } else {
+                                                // ── Error response ──
+                                                showDocErrorDialog(context: context,
+                                                    message: 'Something went wrong!',
+                                                    title: 'Error');
+                                              }
+                                            }
+                                        );
+                                    },
+                                  ),
+                            );
                           },
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color: AppColors.primaryAppColor,
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(20))),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: Responsive.isMobile(context)
-                                    ? 40
-                                    : 30,
-                                vertical: Responsive.isMobile(context)
-                                    ? 15
-                                    : 10),
-                            child: Text(
-                              widget.lastFormFillByAssist == "assistant" ?
+                          label: widget.lastFormFillByAssist == "assistant" ?
                               "Review":
                               "Submit",
-                              style: Theme.of(context)
+                          buttonColor: AppColors.primaryAppColor,
+                            borderRadius: 6.r,
+                            padding: EdgeInsets.zero,
+                          labelStyle: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
+                            fontSize: 12.sp,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold),
-                            ),
                           ),
                         ),
                         // const SizedBox(
                         //   width: 20,
                         // ),
-                        InkWell(
+                        IntrinsicWidth(
+                          child: PrimaryButton(
+                            width: 90.w,
+                            height: 40.h,
                           onTap: () async {
-                            // await showDialog(
-                            //   context: context,
-                            //   builder: (context) =>
-                            //       StatefulBuilder(
-                            //         builder: (BuildContext context, void Function(void Function()) setState) {
-                            //           return
-                            //             DeletePopup(
-                            //                 text: "Are you sure you want to restart this visit?\nAll data will be lost",
-                            //                 title: "Restart Visit",
-                            //                 btnText: "Restart",
-                            //                 onCancel: () {
-                            //                   Navigator.pop(context);
-                            //                 },
-                            //                 onDelete: () async {
-                            //                   final response = await FormBuilderManager().patchPatientFormRestart(
-                            //                       context,
-                            //                       widget.patientFormID,
-                            //                   );
-                            //                   if (response.statusCode == 200 || response.statusCode == 201) {
-                            //                     Navigator.pop(context);
-                            //                     showDialog(
-                            //                       context: context,
-                            //                       builder: (BuildContext context) {
-                            //                         return const AddSuccessPopup(
-                            //                           message: 'Restart visit Successfully.',
-                            //                         );
-                            //                       },
-                            //                     );
-                            //                     // Reload this form's questions
-                            //                     _reloadForm();
-                            //
-                            //                     // Notify parent (OasisFormMapper) to rebuild sidebar
-                            //                     widget.onOrderAdded?.call(widget.patientFormID);
-                            //                     // pass true so parent can refresh
-                            //                   } else {
-                            //                     showDialog(
-                            //                       context: context,
-                            //                       builder: (BuildContext context) {
-                            //                         return const AddErrorPopup(
-                            //                           message: 'Something went wrong!',
-                            //                         );
-                            //                       },
-                            //                     );
-                            //                   }
-                            //                 }
-                            //             );
-                            //         },
-                            //       ),
-                            // );
+                            await showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  StatefulBuilder(
+                                    builder: (BuildContext context, void Function(void Function()) setState) {
+                                      return
+                                        FormSubmissionPopup(
+                                            text: "Are you sure you want to restart this visit?\nAll data will be lost",
+                                            title: "Restart Visit",
+                                            btnText: "Restart",
+                                            onCancel: () {
+                                              Navigator.pop(context);
+                                            },
+                                            onDelete: () async {
+                                              final response = await FormBuilderManager().patchPatientFormRestart(
+                                                  context,
+                                                  widget.patientFormID,
+                                              );
+                                              if (response.statusCode == 200 || response.statusCode == 201) {
+                                                Navigator.pop(context);
+                                                showSucessDialog(
+                                                    context: context,
+                                                    message: 'Restart visit Successfully.',
+                                                    title: 'Successfully');
+                                                // Reload this form's questions
+                                                _reloadForm();
+
+                                                // Notify parent (OasisFormMapper) to rebuild sidebar
+                                                widget.onOrderAdded?.call(widget.patientFormID);
+                                                // pass true so parent can refresh
+                                              } else {
+                                                showDocErrorDialog(context: context,
+                                                    message: 'Something went wrong!',
+                                                    title: 'Error');
+                                              }
+                                            }
+                                        );
+                                    },
+                                  ),
+                            );
                           },
-                          child: Container(
-                            decoration: BoxDecoration(
-                                color: AppColors.primaryAppColor,
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(20))),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: Responsive.isMobile(context)
-                                    ? 40
-                                    : 30,
-                                vertical: Responsive.isMobile(context)
-                                    ? 15
-                                    : 10),
-                            child: Text(
-                              "Restart",
-                              style: Theme.of(context)
+                          label: "Restart",
+                          buttonColor: AppColors.primaryAppColor,
+                            borderRadius: 6.r,
+                            padding: EdgeInsets.zero,
+                          labelStyle: Theme.of(context)
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
+                            fontSize: 12.sp,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold),
-                            ),
                           ),
                         ),
 
