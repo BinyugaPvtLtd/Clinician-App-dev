@@ -407,14 +407,24 @@ class ProfileController extends GetxController{
         return '';
       }
     }
-    // String toShortForm(String? name) {
-    //   if (name == null || name.trim().isEmpty) return '';
-    //   return name
-    //       .trim()
-    //       .split(RegExp(r'\s+'))          // split on one or more spaces
-    //       .map((word) => word[0].toUpperCase())
-    //       .join();
-    // }
+    String toShortForm(String? name) {
+      if (name == null || name.trim().isEmpty) return '';
+      return name
+          .trim()
+          .split(RegExp(r'\s+'))          // split on one or more spaces
+          .map((word) => word[0].toUpperCase())
+          .join();
+    }
+    String getDisplayName(String? name) {
+      if (name == null || name.trim().isEmpty) return '';
+
+      final words = name.trim().split(RegExp(r'\s+'));
+
+      if (words.length > 4) {
+        return toShortForm(name);
+      }
+      return name.trim();
+    }
     try {
       isEmployeeLoading.value = true;
       error.value = '';
@@ -440,7 +450,7 @@ class ProfileController extends GetxController{
                   ),
                   visitType: VisitType(
                       id: visitType['id'] ?? 0,
-                      name: visitType['name'] ?? '',
+                      name: visitType['name'] != null ? getDisplayName(visitType['name']): '',
                   ),
                   visiteDateTimeFrom: p['visiteDateTimeFrom'] != null ? formatTimeToAMPM(p['visiteDateTimeFrom']) : '',
                   visitDateTimeTo: p['visitDateTimeTo'] != null ? formatTimeToAMPM(p['visitDateTimeTo']) : '',

@@ -505,60 +505,60 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                        mainAxisAlignment: MainAxisAlignment.end,
                       spacing: 20,
                       children: [
-                        IntrinsicWidth(
-                          child: PrimaryButton(
-                            height: 30.h,
-                          onTap: () async {
-                            await showDialog(
-                              context: context,
-                              builder: (context) =>
-                                  StatefulBuilder(
-                                    builder: (BuildContext context, void Function(void Function()) setState) {
-                                      return
-                                        FormSubmissionPopup(
-                                            text: "Are you sure you want to Add Physician order?",
-                                            title: "Add Physician order",
-                                            btnText: "Confirm",
-                                            onCancel: () {
-                                              Navigator.pop(context);
-                                            },
-                                            onDelete: () async {
-                                             var responseAddOrder = await FormBuilderManager().patchAssignPhysicianOrderForm(
-                                                  context,
-                                                  patientFormID: widget.patientFormID,
-                                              );
-                                             if(responseAddOrder.success == true){
-                                               final result = await getPatientFormByPatientID(
-                                                 context,
-                                                 patientFormId: widget.patientFormID,
-                                               );
-                                               // Reload this form's questions
-                                               _reloadForm();
-
-                                               // Notify parent (OasisFormMapper) to rebuild sidebar
-                                               widget.onOrderAdded?.call(widget.patientFormID);
-                                               Navigator.pop(context);
-                                             }
-                                            }
-                                        );
-                                    },
-                                  ),
-                            );
-                          },
-                            width: 90.w,
-                          label: "Add Order",
-                          buttonColor: AppColors.primaryAppColor,
-                            borderRadius: 6.r,
-                          padding: EdgeInsets.symmetric(vertical: 10,horizontal: 5),
-                          labelStyle: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium!
-                                  .copyWith(
-                            fontSize: 13.sp,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        // IntrinsicWidth(
+                        //   child: PrimaryButton(
+                        //     height: 30.h,
+                        //   onTap: () async {
+                        //     await showDialog(
+                        //       context: context,
+                        //       builder: (context) =>
+                        //           StatefulBuilder(
+                        //             builder: (BuildContext context, void Function(void Function()) setState) {
+                        //               return
+                        //                 FormSubmissionPopup(
+                        //                     text: "Are you sure you want to Add Physician order?",
+                        //                     title: "Add Physician order",
+                        //                     btnText: "Confirm",
+                        //                     onCancel: () {
+                        //                       Navigator.pop(context);
+                        //                     },
+                        //                     onDelete: () async {
+                        //                      var responseAddOrder = await FormBuilderManager().patchAssignPhysicianOrderForm(
+                        //                           context,
+                        //                           patientFormID: widget.patientFormID,
+                        //                       );
+                        //                      if(responseAddOrder.success == true){
+                        //                        final result = await getPatientFormByPatientID(
+                        //                          context,
+                        //                          patientFormId: widget.patientFormID,
+                        //                        );
+                        //                        // Reload this form's questions
+                        //                        _reloadForm();
+                        //
+                        //                        // Notify parent (OasisFormMapper) to rebuild sidebar
+                        //                        widget.onOrderAdded?.call(widget.patientFormID);
+                        //                        Navigator.pop(context);
+                        //                      }
+                        //                     }
+                        //                 );
+                        //             },
+                        //           ),
+                        //     );
+                        //   },
+                        //     width: 90.w,
+                        //   label: "Add Order",
+                        //   buttonColor: AppColors.primaryAppColor,
+                        //     borderRadius: 6.r,
+                        //   padding: EdgeInsets.symmetric(vertical: 10,horizontal: 5),
+                        //   labelStyle: Theme.of(context)
+                        //           .textTheme
+                        //           .bodyMedium!
+                        //           .copyWith(
+                        //     fontSize: 13.sp,
+                        //           color: Colors.white,
+                        //           fontWeight: FontWeight.bold),
+                        //   ),
+                        // ),
                         IntrinsicWidth(
                           child: PrimaryButton(
                             height: 30.h,

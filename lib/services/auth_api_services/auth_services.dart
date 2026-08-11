@@ -452,6 +452,16 @@ class ApiService extends GetxService {
   }
 
   Future<dio.Response> get(String path)                              => dioClient.get(path);
+  Future<dio.Response> getWithQueryParam({
+    required String path,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? queryParameters,
+  }) =>
+      dioClient.get(
+        path,
+        queryParameters: queryParameters,
+        options: dio.Options(headers: headers),
+      );
   Future<dio.Response> post(String path, Map<String, dynamic> data)  => dioClient.post(path, data: data);
   Future<dio.Response> postList(String path, List data)              => dioClient.post(path, data: data);
   Future<dio.Response> patch(String path, Map<String, dynamic> data) => dioClient.patch(path, data: data);

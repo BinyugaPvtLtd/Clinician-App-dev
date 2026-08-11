@@ -2,6 +2,7 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/pages/calender_section/widget/calender_date_pick_dialog_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../controller/timesheet_controller.dart';
@@ -53,7 +54,20 @@ class _VisitPageState extends State<VisitPage> {
                     }
 
                   },
-                    child: Icon(Icons.calendar_month_sharp, color: AppColors.grey)),
+                    child: Container(
+                      width: 28.w,
+                      height: 28.h,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(color: AppColors.borderGrey),
+                      ),
+                      child: SvgPicture.asset(
+                        AppAsset.pickScheduleSvgIcon,
+                        width: 14.w,
+                        colorFilter: AppColors.defaultTxtGrey.getSvgColor,
+                      ),
+                    )),
 
                 // PrimaryOutlinedButton(
                 //   text: "Choose Date",

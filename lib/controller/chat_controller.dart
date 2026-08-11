@@ -31,32 +31,49 @@ class ChatDataController extends GetxController {
   final chatListItem = <ChatListItem>[].obs;
   final userId = 0.obs;
 
-  Timer? _timer;
   bool _isFirstLoad = true;
+  final searchText = ''.obs;
+  Timer? _searchDebounce;
 
-  void startChatListListening({required int clinicianId}) {
-    stopChatListListening();
-
-    fetchChatListAllData(clinicianId: clinicianId, showLoader: true);
-
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) async {
-      await fetchChatListAllData(clinicianId: clinicianId, showLoader: false);
-    });
+  void loadInitial({required int clinicianId}) {
+    fetchChatListAllData(
+      clinicianId: clinicianId,
+      showLoader: true,
+      searchTextFilter: searchText.value,
+    );
   }
 
-  void stopChatListListening() {
-    _timer?.cancel();
-    _timer = null;
+  void refreshNow({required int clinicianId}) {
+    fetchChatListAllData(
+      clinicianId: clinicianId,
+      showLoader: false,
+      searchTextFilter: searchText.value,
+    );
+  }
+
+  void debounceSearch({required int clinicianId, required String search}) {
+    searchText.value = search.trim().isEmpty ? '' : search.trim();
+
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      fetchChatListAllData(
+        clinicianId: clinicianId,
+        showLoader: false,
+        searchTextFilter: searchText.value,
+      );
+    });
   }
 
   Future<void> fetchChatListAllData({
     required int clinicianId,
     required bool showLoader,
+    required String searchTextFilter,
   }) async {
     userId.value = await TokenManager.getUserId();
     final data = await getChatListData(
       clinicianId: clinicianId,
       showLoader: showLoader,
+      searchFilter: searchTextFilter
     );
     chatListItem.assignAll(data);
   }
@@ -64,6 +81,7 @@ class ChatDataController extends GetxController {
   Future<List<ChatListItem>> getChatListData({
     required int clinicianId,
     required bool showLoader,
+    required String searchFilter
   }) async {
     List<ChatListItem> itemData = [];
 
@@ -79,7 +97,7 @@ class ChatDataController extends GetxController {
 
       try {
         final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
-        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+        return DateFormat('h.mm a').format(dateTime);
       } catch (e) {
         return '';
       }
@@ -92,8 +110,11 @@ class ChatDataController extends GetxController {
 
       error.value = '';
 
-      final res = await _api.get(
-        ChatRepository.getChatList(clinicianId: clinicianId),
+      final res = await _api.getWithQueryParam(
+       path: ChatRepository.getChatList(clinicianId: clinicianId),
+        queryParameters: {
+         "search":searchFilter
+        }
       );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
@@ -904,7 +925,7 @@ class ChatDataController extends GetxController {
 
   @override
   void onClose() {
-    stopChatListListening();
+    _searchDebounce?.cancel();
     stopChatScreenListening();
     super.onClose();
   }

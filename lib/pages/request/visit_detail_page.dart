@@ -3,21 +3,15 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/core/ui/common_divider.dart';
-import 'package:clinician_app/model/key_value_model.dart';
 import 'package:clinician_app/pages/home/widget/chat_fab_widget.dart';
-import 'package:clinician_app/pages/request/visit_doc_upload_page.dart';
 import 'package:clinician_app/pages/request/widget/accept_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/assign_assistant_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/reject_dialog_widget.dart';
-import 'package:clinician_app/pages/request/widget/request_clinitian_dialog.dart';
-import 'package:clinician_app/pages/request/widget/reschedule_dialog_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
 import '../../controller/profile_controller.dart';
 import '../../core/common/calling_class.dart';
-import '../../model/profile/visit_details_model.dart';
 
 class VisitDetailPage extends StatefulWidget {
   final int visitId;

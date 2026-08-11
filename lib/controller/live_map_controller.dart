@@ -1,7 +1,5 @@
 
 
-import 'dart:async';
-
 import 'package:clinician_app/controller/repository/live_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -72,25 +70,16 @@ class LiveMapController extends GetxController{
     potentialEarning: 0,
     activePatients: [],
   ).obs;
-  Timer? _visitTimer;
-
-  void startVisitListening() {
-    _visitTimer?.cancel();
-
-    // ✅ first time call (will show loader only once)
+  /// One-time initial load (shows the full loader).
+  void loadInitial() {
     fetchListOfVisitMap();
-    fetchClinicianDashoardDetails();
-
-    // ✅ then every 10 seconds (no loader after first time)
-    _visitTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      fetchListOfVisitMap();
-      fetchClinicianDashoardDetails();
-    });
+    fetchClinicianDashoardDetails(showLoader: true);
   }
 
-  void stopVisitListening() {
-    _visitTimer?.cancel();
-    _visitTimer = null;
+  /// Re-fetch on user interaction (e.g. returning to this screen) — no loader.
+  void refreshNow() {
+    fetchListOfVisitMap();
+    fetchClinicianDashoardDetails();
   }
   Future<void> fetchViewRoutetMap({required int clinitianId,required int patientId}) async {
     viewRouteModelData.value = await getViewRouteData(clinitianId: clinitianId, patientId: patientId);
