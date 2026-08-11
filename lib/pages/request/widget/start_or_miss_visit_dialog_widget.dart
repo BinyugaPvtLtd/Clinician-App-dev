@@ -199,7 +199,7 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
                         onTap: () {
                           Get.back();
                         },
-                        child: SvgPicture.asset(AppAsset.closeSvgIcon),
+                        child: SvgPicture.asset(AppAsset.closeSvgIcon,width: 11.w,),
                       ),
                     ],
                   ),
@@ -234,7 +234,7 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
                               )
                             : PrimaryOutlinedButton(
                                 width: 90.w,
-                                height: 40.h,
+                                height: 35.h,
                                 text: 'Miss Visit',
                                 radius: 6.r,
                                 borderWidth: 1.r,
@@ -264,7 +264,7 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
                               )
                             : PrimaryButton(
                                 width: 90.w,
-                                height: 40.h,
+                                height: 35.h,
                                 label: 'Start Visit',
                                 borderRadius: 6.r,
                                 onTap: _isMissingVisit

@@ -32,6 +32,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
           child: Material(
             type: MaterialType.transparency,
             child: Container(
+              height: 160.h,
               width: (Get.width / 1.3).w,
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
               decoration: BoxDecoration(
@@ -55,7 +56,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                         onTap: () {
                           Get.back();
                         },
-                        child: SvgPicture.asset(AppAsset.closeSvgIcon),
+                        child: SvgPicture.asset(AppAsset.closeSvgIcon, width: 11.w),
                       ),
                     ],
                   ),
@@ -63,19 +64,18 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                   Text(
                     'Do you really want to \nAccept visit ?',
                     textAlign: TextAlign.center,
-                    style: AppTextStyle.normal10style.copyWith(
-                      fontSize: 12.sp,
+                    style: AppTextStyle.normal12style.copyWith(
                       color: AppColors.defaultTxtGrey,
                     ),
                   ),
                   customHeight(13.h),
                   SizedBox(
-                    height: 20.h,
+                    height: 30.h,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         PrimaryOutlinedButton(
-                          width: 60.w,
+                          width: 80.w,
                           height: 35.h,
                           text: 'Cancel',
                           radius: 6.r,
@@ -84,7 +84,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                             Get.back();
                           },
                           textStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 12.sp,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primaryAppColor,
                           ),
@@ -104,7 +104,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                                   ),
                                 )
                                 :   PrimaryButton(
-                          width: 60.w,
+                          width: 80.w,
                           height: 35.h,
                           label: 'Save',
                           borderRadius: 6.r,
@@ -135,7 +135,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                           },
                           padding: EdgeInsets.zero,
                           labelStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 12.sp,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),

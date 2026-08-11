@@ -281,7 +281,7 @@ visitsMapModel.value = await getMapListVisit();
 
       try {
         final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
-        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+        return DateFormat('h.mm a').format(dateTime);
       } catch (e) {
         return '';
       }

@@ -61,7 +61,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                           onTap: () {
                             Get.back();
                           },
-                          child: SvgPicture.asset(AppAsset.closeSvgIcon),
+                          child: SvgPicture.asset(AppAsset.closeSvgIcon,width: 11.w),
                         ),
                       ],
                     ),
@@ -87,12 +87,12 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                     ),
                     customHeight(10.h),
                     SizedBox(
-                      height: 20.h,
+                      height: 30.h,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           PrimaryOutlinedButton(
-                            width: 60.w,
+                            width: 80.w,
                             height: 35.h,
                             text: 'Cancel',
                             radius: 6.r,
@@ -101,7 +101,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                               Get.back();
                             },
                             textStyle: AppTextStyle.normal10style.copyWith(
-                              fontSize: 12.sp,
+                              fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
                               color: AppColors.primaryAppColor,
                             ),
@@ -121,7 +121,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                                   ),
                                 )
                                     : PrimaryButton(
-                                      width: 60.w,
+                                      width: 80.w,
                                       height: 35.h,
                                       label: 'Save',
                                       borderRadius: 6.r,
@@ -155,7 +155,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                                       padding: EdgeInsets.zero,
                                       labelStyle: AppTextStyle.normal10style
                                           .copyWith(
-                                            fontSize: 12.sp,
+                                            fontSize: 13.sp,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
                                           ),

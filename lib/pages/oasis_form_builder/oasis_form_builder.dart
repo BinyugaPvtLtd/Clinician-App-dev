@@ -507,7 +507,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                       children: [
                         IntrinsicWidth(
                           child: PrimaryButton(
-                            height: 35.h,
+                            height: 30.h,
                           onTap: () async {
                             await showDialog(
                               context: context,
@@ -561,7 +561,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                         ),
                         IntrinsicWidth(
                           child: PrimaryButton(
-                            height: 35.h,
+                            height: 30.h,
                             width: 90.w,
                           onTap: () async {
                             final outerContext = context;
@@ -784,7 +784,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                         IntrinsicWidth(
                           child: PrimaryButton(
                             width: 90.w,
-                            height: 35.h,
+                            height: 30.h,
                           onTap: () async {
                             await showDialog(
                               context: context,

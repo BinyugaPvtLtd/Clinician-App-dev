@@ -42,9 +42,8 @@ class _VisitPageState extends State<VisitPage> {
                     ),
                   );}),
                 Spacer(),
-                PrimaryOutlinedButton(
-                  text: "Choose Date",
-                  onPressed: () async{
+                InkWell(
+                  onTap: () async{
                     final String? selectedDate =
                     await Get.dialog(CalenderDatePickDialogWidget());
 
@@ -54,17 +53,22 @@ class _VisitPageState extends State<VisitPage> {
                     }
 
                   },
-                  isIconStart: true,
-                  icon: Icon(Icons.calendar_month_sharp, color: AppColors.grey),
-                  textStyle: AppTextStyle.regular10style.copyWith(
-                    color: AppColors.grey,
-                  ),
-                  buttonColor: AppColors.grey,
-                  borderWidth: 1,
-                  width: 120.h,
-                  height: 28.h,
-                  radius: 6,
-                ),
+                    child: Icon(Icons.calendar_month_sharp, color: AppColors.grey)),
+
+                // PrimaryOutlinedButton(
+                //   text: "Choose Date",
+                //   onPressed:
+                //   isIconStart: true,
+                //   icon: Icon(Icons.calendar_month_sharp, color: AppColors.grey),
+                //   textStyle: AppTextStyle.regular10style.copyWith(
+                //     color: AppColors.grey,
+                //   ),
+                //   buttonColor: AppColors.grey,
+                //   borderWidth: 1,
+                //   width: 120.h,
+                //   height: 28.h,
+                //   radius: 6,
+                // ),
               ],
             ),
 

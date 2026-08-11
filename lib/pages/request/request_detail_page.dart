@@ -458,8 +458,8 @@ class _RequestDetailPageState extends State<RequestDetailPage> with RouteAware {
                                               ),
                                               customWidth(2.w),
                                               Container(
-                                                padding: EdgeInsets.symmetric(vertical: 3.h, horizontal: 3.w),
-                                                width: 18.w,
+                                                padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 3.w),
+                                                width: 21.w,
                                                 alignment: Alignment.center,
                                                 margin: EdgeInsets.only(right: 2.w),
                                                 decoration: BoxDecoration(
@@ -469,7 +469,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> with RouteAware {
                                                 child: Text(
                                                   visit.employeeTypeAbbreviation,
                                                   style: AppTextStyle.normal10style.copyWith(
-                                                    fontSize: 7.sp,
+                                                    fontSize: 9.sp,
                                                     color: Colors.white,
                                                   ),
                                                 ),

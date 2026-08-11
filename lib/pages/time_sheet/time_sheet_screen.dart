@@ -69,7 +69,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                 HomeAppbarWidget(),
                 // --------- search and dropdown ----------
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 15.w),
+                  padding: EdgeInsets.symmetric(horizontal: 11.w),
                   child: Row(
                     children: [
                       Expanded(
@@ -96,7 +96,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
             Obx(
                   () => timeSheetController.selectedTypeRecord.value != "Visit"
                       || timeSheetController.selectedTypeRecord.value != "All"
-                  ? customWidth(15.w) : Offstage()),
+                  ? customWidth(0.w) : Offstage()),
                       Obx(() {
                         final type =
                             timeSheetController.selectedTypeRecord.value;
@@ -147,7 +147,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                     controller: _tabController,
                     indicatorColor: Colors.transparent,
           
-                    labelPadding: EdgeInsets.only(right: 10.w),
+                    labelPadding: EdgeInsets.only(right: 11.w),
           
                     dividerHeight: 10,
                     dividerColor: Colors.transparent,
