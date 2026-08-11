@@ -95,6 +95,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                 ),
                               ),
                               Container(
+                                width: 100.w,
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 12.w,
                                   vertical: 2.h,
@@ -104,9 +105,10 @@ class _HistoryPageState extends State<HistoryPage> {
                                   borderRadius: BorderRadius.circular(6),
                                   color: historydata.status == 'approved' ? Colors.green.shade100
                                       : historydata.status == 'rejected' ?
-                                      Colors.red.shade100 : Color(
-                                    0xffce9e2f1a,
-                                  ).withValues(alpha: 0.2),
+                                      Colors.red.shade100 : Colors.yellowAccent.shade100
+                                  // Color(
+                                  //   0xffce9e2f1a,
+                                  // ).withValues(alpha: 0.2),
                                 ),
                                 child: Center(
                                   child: Text(

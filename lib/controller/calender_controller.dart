@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:clinician_app/controller/repository/calender_repo.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -25,9 +23,8 @@ class CalenderListController extends GetxController {
   final calController = CalendarController().obs;
 
   // ============================
-  // ✅ Continue Listening (Polling)
+  // ✅ overlap/rate protection (no periodic polling anymore)
   // ============================
-  Timer? _pollTimer;
   bool _pollInProgress = false;
   DateTime _lastPollAt = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -49,25 +46,13 @@ class CalenderListController extends GetxController {
   // ============================
   // ✅ Public APIs for screen
   // ============================
-  void startContinueListening({
+
+  /// One-time initial load (shows the full loader).
+  void loadInitial({
     required String status,
     required String empIds,
   }) {
-    stopContinueListening();
-
-    // ✅ first time should show loader
     _pollOnce(status: status, empIds: empIds, showLoader: true);
-
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      // ✅ after first fetch -> no loader
-      _pollOnce(status: status, empIds: empIds, showLoader: false);
-    });
-  }
-
-  void stopContinueListening() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
-    _pollInProgress = false;
   }
 
   void refreshNow({
@@ -175,7 +160,7 @@ class CalenderListController extends GetxController {
       if (dateTimeString == null || dateTimeString.isEmpty) return '';
       try {
         final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
-        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+        return DateFormat('h.mm a').format(dateTime);
       } catch (e) {
         return '';
       }
@@ -438,11 +423,5 @@ class CalenderListController extends GetxController {
     }
 
     return visitList;
-  }
-
-  @override
-  void onClose() {
-    stopContinueListening();
-    super.onClose();
   }
 }

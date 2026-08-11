@@ -210,9 +210,13 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                     Get.dialog(AssignAssistantDialogWidget(visitId: widget.visitId,));
                                   },
                                   radius: 6.r,
-                                  width: 150.w,
+                                  width: 155.w,
                                   borderWidth: 0.8.w,
                                   text: 'Assign to Assistant',
+                                  textStyle: AppTextStyle.normal12style.copyWith(
+                                    fontSize: 11.sp,
+                                    color: AppColors.primaryAppColor,
+                                  ),
                                   padding: EdgeInsets.symmetric(),
                                   // padding: EdgeInsets.symmetric(
                                   //   horizontal: 6.w,
@@ -221,7 +225,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                   icon: Icon(
                                     Icons.add,
                                     color: AppColors.primaryAppColor,
-                                    size: 15,
+                                    size: 18,
                                   ),
                                 ) : Offstage(),
                               ],

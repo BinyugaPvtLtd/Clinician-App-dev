@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/home_controller.dart';
 import '../../../controller/profile_controller.dart';
 import '../../../core/ui/const_sucess_popup.dart';
 
@@ -20,6 +21,7 @@ class AcceptDialogWidget extends StatefulWidget {
 
 class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
   ProfileController controller = Get.find<ProfileController>();
+  final HomeController homeController = Get.find<HomeController>();
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
@@ -62,6 +64,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                     'Do you really want to \nAccept visit ?',
                     textAlign: TextAlign.center,
                     style: AppTextStyle.normal10style.copyWith(
+                      fontSize: 12.sp,
                       color: AppColors.defaultTxtGrey,
                     ),
                   ),
@@ -72,7 +75,8 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         PrimaryOutlinedButton(
-                          width: 54.w,
+                          width: 60.w,
+                          height: 35.h,
                           text: 'Cancel',
                           radius: 6.r,
                           borderWidth: 1.r,
@@ -80,7 +84,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                             Get.back();
                           },
                           textStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 10.sp,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primaryAppColor,
                           ),
@@ -100,7 +104,8 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                                   ),
                                 )
                                 :   PrimaryButton(
-                          width: 54.w,
+                          width: 60.w,
+                          height: 35.h,
                           label: 'Save',
                           borderRadius: 6.r,
                           onTap: () async{
@@ -121,7 +126,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                                   'Visit accepted successfully',
                                   title: 'Successfully',
                                 );
-                                controller.fetchRecordType();
+                                homeController.refreshRequestList();
                                 //Get.to(() => HomeScreen());
                               } else {
                                 print('Validation failed');
@@ -130,7 +135,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                           },
                           padding: EdgeInsets.zero,
                           labelStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 10.sp,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),

@@ -141,7 +141,7 @@ class UpdateDocumentsController extends GetxController {
 
       DateTime dateTime = DateTime.parse(iosDate);
 
-      return DateFormat('dd/MM/yyyy')
+      return DateFormat('yyyy/MM/dd')
           .format(dateTime)
           .toLowerCase();
     }

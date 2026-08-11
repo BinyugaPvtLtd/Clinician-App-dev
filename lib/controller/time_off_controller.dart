@@ -212,7 +212,7 @@ class TimeController extends GetxController {
 
       DateTime dateTime = DateTime.parse(iosDate);
 
-      return DateFormat('dd/MM/yyyy/h.mma')
+      return DateFormat('yyyy/MM/dd/h.mm A')
           .format(dateTime)
           .toLowerCase();
     }

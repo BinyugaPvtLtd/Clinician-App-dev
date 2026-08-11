@@ -157,7 +157,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                     children: [
                       IntrinsicWidth(
                         child: PrimaryButton(
-                        height: 48.h,
+                        height: 35.h,
                         onTap: () async {
                           final outerContext = context;
                           final formProvider = Provider.of<FormBuilderProvider>(
@@ -223,17 +223,12 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                         label: "Send For Correction",
                         buttonColor: AppColors.primaryAppColor,
                         borderRadius: 20.r,
-                        padding: EdgeInsets.symmetric(
-                              horizontal: Responsive.isMobile(context)
-                                  ? 40.w
-                                  : 30.w,
-                              vertical: Responsive.isMobile(context)
-                                  ? 15.h
-                                  : 10.h),
+                        padding: EdgeInsets.zero,
                         labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
+                          fontSize: 13.sp,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
                         ),
@@ -243,7 +238,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                       // ),
                       IntrinsicWidth(
                         child: PrimaryButton(
-                        height: 48.h,
+                        height: 35.h,
                         onTap: () async {
                           await showDialog(
                             context: context,
@@ -286,17 +281,12 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                         label: "Approve",
                         buttonColor: AppColors.primaryAppColor,
                         borderRadius: 20.r,
-                        padding: EdgeInsets.symmetric(
-                              horizontal: Responsive.isMobile(context)
-                                  ? 40.w
-                                  : 30.w,
-                              vertical: Responsive.isMobile(context)
-                                  ? 15.h
-                                  : 10.h),
+                        padding: EdgeInsets.zero,
                         labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
+                          fontSize: 13.sp,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
                         ),
@@ -311,7 +301,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                     children: [
                       IntrinsicWidth(
                         child: PrimaryButton(
-                        height: 48.h,
+                        height: 35.h,
                         onTap: () async {
                           await showDialog(
                             context: context,
@@ -375,17 +365,12 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                         label: "F2F Needed",
                         buttonColor: AppColors.primaryAppColor,
                         borderRadius: 20.r,
-                        padding: EdgeInsets.symmetric(
-                              horizontal: Responsive.isMobile(context)
-                                  ? 40.w
-                                  : 30.w,
-                              vertical: Responsive.isMobile(context)
-                                  ? 15.h
-                                  : 10.h),
+                        padding: EdgeInsets.zero,
                         labelStyle: Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
                                 .copyWith(
+                          fontSize: 13.sp,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold),
                         ),
@@ -522,7 +507,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                       children: [
                         IntrinsicWidth(
                           child: PrimaryButton(
-                            height: 40.h,
+                            height: 35.h,
                           onTap: () async {
                             await showDialog(
                               context: context,
@@ -569,14 +554,14 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
-                            fontSize: 12.sp,
+                            fontSize: 13.sp,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold),
                           ),
                         ),
                         IntrinsicWidth(
                           child: PrimaryButton(
-                            height: 40.h,
+                            height: 35.h,
                             width: 90.w,
                           onTap: () async {
                             final outerContext = context;
@@ -788,7 +773,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
-                            fontSize: 12.sp,
+                            fontSize: 13.sp,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold),
                           ),
@@ -799,7 +784,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                         IntrinsicWidth(
                           child: PrimaryButton(
                             width: 90.w,
-                            height: 40.h,
+                            height: 35.h,
                           onTap: () async {
                             await showDialog(
                               context: context,
@@ -850,7 +835,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                                   .textTheme
                                   .bodyMedium!
                                   .copyWith(
-                            fontSize: 12.sp,
+                            fontSize: 13.sp,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold),
                           ),
