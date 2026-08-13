@@ -400,10 +400,9 @@ class ProfileController extends GetxController{
     var itemData;
     String formatTimeToAMPM(String? dateTimeString) {
       if (dateTimeString == null || dateTimeString.isEmpty) return '';
-
       try {
         final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
-        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+        return DateFormat('h.mm a').format(dateTime);
       } catch (e) {
         return '';
       }
@@ -415,6 +414,16 @@ class ProfileController extends GetxController{
           .split(RegExp(r'\s+'))          // split on one or more spaces
           .map((word) => word[0].toUpperCase())
           .join();
+    }
+    String getDisplayName(String? name) {
+      if (name == null || name.trim().isEmpty) return '';
+
+      final words = name.trim().split(RegExp(r'\s+'));
+
+      if (words.length > 4) {
+        return toShortForm(name);
+      }
+      return name.trim();
     }
     try {
       isEmployeeLoading.value = true;
@@ -441,7 +450,7 @@ class ProfileController extends GetxController{
                   ),
                   visitType: VisitType(
                       id: visitType['id'] ?? 0,
-                      name: visitType['name'] != null ? toShortForm(visitType['name']) : '',
+                      name: visitType['name'] != null ? getDisplayName(visitType['name']): '',
                   ),
                   visiteDateTimeFrom: p['visiteDateTimeFrom'] != null ? formatTimeToAMPM(p['visiteDateTimeFrom']) : '',
                   visitDateTimeTo: p['visitDateTimeTo'] != null ? formatTimeToAMPM(p['visitDateTimeTo']) : '',

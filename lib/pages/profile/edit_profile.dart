@@ -110,8 +110,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   },
                   label: "Save",
                   padding: EdgeInsets.zero,
-                  labelStyle: TextStyle(color: Colors.white, fontSize: 10.sp),
-                  height: 20.h,
+                  labelStyle: TextStyle(color: Colors.white, fontSize: 13.sp),
+                  height: 30.h,
                   width: 60.w,
                   borderRadius: 6,
                 ),
@@ -144,7 +144,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   imageProvider = NetworkImage(controller.employeeImage.value);
                                 } else {
                                   imageProvider =
-                                  const AssetImage('assets/images/profilepic.png');
+                                  const AssetImage('assets/png/profilepic.png');
                                 }
 
                                 return CircleAvatar(

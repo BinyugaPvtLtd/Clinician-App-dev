@@ -66,6 +66,7 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
       onTap:
           () {
         Get.to(() => RequestDetailPage(
+          chartNo: 1,
           visitId: widget.data.visitId,
           noteText: widget.data.visitNote,
           filterText: widget.data.visitStatus,));

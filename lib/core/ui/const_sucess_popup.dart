@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import '../../../services/token_manager/token_manager_service.dart';
 
 void showSucessDialog({required BuildContext context,
-  required String message,required String title}) {
+  required String message,required String title,VoidCallback? onNavigate}) {
   showDialog(
     context: context,
     barrierDismissible: true,

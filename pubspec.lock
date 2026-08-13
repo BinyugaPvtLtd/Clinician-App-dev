@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.3"
+  animated_custom_dropdown:
+    dependency: "direct main"
+    description:
+      name: animated_custom_dropdown
+      sha256: "95ae9edcdcc788e82de4bcf5577d0cac2c7a381bdda66186bb945991dd43478c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.0"
   archive:
     dependency: transitive
     description:
@@ -225,6 +233,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
+  custom_tooltip:
+    dependency: "direct main"
+    description:
+      name: custom_tooltip
+      sha256: "93f4e8ae744ea82c7a336624d2385567c79d108cf8108c3911cb665d0330cb46"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   dbus:
     dependency: transitive
     description:
@@ -281,6 +297,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.9"
+  elegant_notification:
+    dependency: "direct main"
+    description:
+      name: elegant_notification
+      sha256: "8e20c4f5378a639428cf3703707b67aec796ac009bdf58be559753fe9e852d26"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.1"
   emoji_picker_flutter:
     dependency: "direct main"
     description:
@@ -446,6 +470,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  flutter_html:
+    dependency: "direct main"
+    description:
+      name: flutter_html
+      sha256: "38a2fd702ffdf3243fb7441ab58aa1bc7e6922d95a50db76534de8260638558d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -522,15 +554,31 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_svg
-      sha256: c200fd79c918a40c5cd50ea0877fa13f81bdaf6f0a5d3dbcc2a13e3285d6aa1b
+      sha256: "35882981abcbfb8c15b286f0cd690ff25bac12d95eff3e25ee207f37d4c42e7f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.17"
+    version: "2.3.0"
+  flutter_svg_provider:
+    dependency: "direct main"
+    description:
+      name: flutter_svg_provider
+      sha256: cda47ab350671ba51ae4605d48f4c82fa5a2c399d22ebda367c1b407234c5048
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.7"
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_tts:
+    dependency: "direct main"
+    description:
+      name: flutter_tts
+      sha256: ce5eb209b40e95f2f4a1397116c87ab2fcdff32257d04ed7a764e75894c03775
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.5"
   flutter_vlc_player:
     dependency: "direct main"
     description:
@@ -808,6 +856,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.1"
+  list_counter:
+    dependency: transitive
+    description:
+      name: list_counter
+      sha256: c447ae3dfcd1c55f0152867090e67e219d42fe6d4f2807db4bbe8b8d69912237
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   logger:
     dependency: "direct main"
     description:
@@ -912,6 +968,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   octo_image:
     dependency: transitive
     description:
@@ -1176,6 +1240,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.14.2"
+  provider:
+    dependency: "direct main"
+    description:
+      name: provider
+      sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.5+1"
   qr:
     dependency: transitive
     description:
@@ -1328,6 +1400,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1"
+  signature:
+    dependency: "direct main"
+    description:
+      name: signature
+      sha256: e6b6a3629f5faa95055a24eba470abe3133d6fafecb5baedd1f7dbda78cdfb4c
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.4.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -1641,10 +1721,10 @@ packages:
     dependency: transitive
     description:
       name: vector_graphics
-      sha256: "44cc7104ff32563122a929e4620cf3efd584194eec6d1d913eb5ba593dbcf6de"
+      sha256: "9d0e3b9cb16542ad660daee871e726a10d13a93b7b5391677c3160e8f5e83935"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.18"
+    version: "1.2.3"
   vector_graphics_codec:
     dependency: transitive
     description:
@@ -1726,5 +1806,5 @@ packages:
     source: hosted
     version: "6.5.0"
 sdks:
-  dart: ">=3.10.0-0 <4.0.0"
-  flutter: ">=3.29.0"
+  dart: ">=3.10.0 <4.0.0"
+  flutter: ">=3.38.0"

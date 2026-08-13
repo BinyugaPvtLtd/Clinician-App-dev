@@ -12,6 +12,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 import '../../controller/calender_controller.dart';
 import '../../controller/profile_controller.dart';
+import '../../main.dart';
 import '../../model/calender/calender_model.dart';
 
 class CalenderScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class CalenderScreen extends StatefulWidget {
   State<CalenderScreen> createState() => _CalenderScreenState();
 }
 
-class _CalenderScreenState extends State<CalenderScreen> {
+class _CalenderScreenState extends State<CalenderScreen> with RouteAware {
   final CalenderListController controller = Get.put(CalenderListController());
   final ProfileController profileController = Get.put(ProfileController());
 
@@ -37,18 +38,30 @@ class _CalenderScreenState extends State<CalenderScreen> {
     // ✅ keep calendar controller in sync with current date
     controller.calController.value.displayDate = controller.currentDate.value;
 
-    // ✅ Start continue listening (poll every 2 seconds)
-    controller.startContinueListening(
+    // ✅ one-time initial load (no more continuous polling)
+    controller.loadInitial(
       status: _status,
       empIds: _empId,
     );
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
   void dispose() {
-    // ✅ stop polling to avoid memory leaks
-    controller.stopContinueListening();
+    routeObserver.unsubscribe(this);
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // A screen pushed on top of this one (e.g. VisitDetailPage) was
+    // popped — reload so the list reflects any changes made there.
+    _refreshNow();
   }
 
   DateTime? _parsePickedDate(dynamic result) {

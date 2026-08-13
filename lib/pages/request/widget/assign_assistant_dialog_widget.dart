@@ -160,6 +160,7 @@ class _AssignAssistantDialogWidgetState
                   // ),
                   customHeight(10.h),
                   PrimaryTextField(
+                    borderRadius: 3.r,
                     controller: controller.emailAssistenseController.value,
                     hintText: 'Assistant Email',
                     readonly: true,
@@ -172,9 +173,6 @@ class _AssignAssistantDialogWidgetState
                       ),
                     ),
                     filledColor: Colors.white,
-                    // style: AppTextStyle.normal12style.copyWith(
-                    //   color: AppColors.greyColor,
-                    // ),
                   ),
                   customHeight(20.h),
                   Align(

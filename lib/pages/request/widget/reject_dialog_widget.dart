@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/home_controller.dart';
 import '../../../controller/profile_controller.dart';
 import '../../../core/ui/const_sucess_popup.dart';
 import '../../../utils/validator.dart';
@@ -23,6 +24,7 @@ class RejectDialogWidget extends StatefulWidget {
 class _RejectDialogWidgetState extends State<RejectDialogWidget> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   ProfileController controller = Get.find<ProfileController>();
+  final HomeController homeController = Get.find<HomeController>();
   TextEditingController rejectResone = TextEditingController();
   @override
   Widget build(BuildContext context) {
@@ -59,7 +61,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                           onTap: () {
                             Get.back();
                           },
-                          child: SvgPicture.asset(AppAsset.closeSvgIcon),
+                          child: SvgPicture.asset(AppAsset.closeSvgIcon,width: 11.w),
                         ),
                       ],
                     ),
@@ -69,7 +71,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                       child: Text(
                         'Reason*',
                         style: AppTextStyle.normal10style.copyWith(
-                          fontSize: 8.sp,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.w600,
                           color: AppColors.defaultTxtGrey,
                         ),
@@ -85,12 +87,13 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                     ),
                     customHeight(10.h),
                     SizedBox(
-                      height: 20.h,
+                      height: 30.h,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           PrimaryOutlinedButton(
-                            width: 54.w,
+                            width: 80.w,
+                            height: 35.h,
                             text: 'Cancel',
                             radius: 6.r,
                             borderWidth: 1.r,
@@ -98,7 +101,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                               Get.back();
                             },
                             textStyle: AppTextStyle.normal10style.copyWith(
-                              fontSize: 6.sp,
+                              fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
                               color: AppColors.primaryAppColor,
                             ),
@@ -118,7 +121,8 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                                   ),
                                 )
                                     : PrimaryButton(
-                                      width: 54.w,
+                                      width: 80.w,
+                                      height: 35.h,
                                       label: 'Save',
                                       borderRadius: 6.r,
                                       onTap: () async {
@@ -139,7 +143,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                                                   'Visit rejected successfully',
                                               title: 'Successfully',
                                             );
-                                            controller.fetchRecordType();
+                                            homeController.refreshRequestList();
                                             //Get.to(() => HomeScreen());
                                           } else {
                                             print('Validation failed');
@@ -151,7 +155,7 @@ class _RejectDialogWidgetState extends State<RejectDialogWidget> {
                                       padding: EdgeInsets.zero,
                                       labelStyle: AppTextStyle.normal10style
                                           .copyWith(
-                                            fontSize: 6.sp,
+                                            fontSize: 13.sp,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.white,
                                           ),

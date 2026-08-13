@@ -11,6 +11,7 @@
 #include <emoji_picker_flutter/emoji_picker_flutter_plugin_c_api.h>
 #include <file_selector_windows/file_selector_windows.h>
 #include <firebase_core/firebase_core_plugin_c_api.h>
+#include <flutter_tts/flutter_tts_plugin.h>
 #include <iris_method_channel/iris_method_channel_plugin_c_api.h>
 #include <media_kit_libs_windows_audio/media_kit_libs_windows_audio_plugin_c_api.h>
 #include <mobkit_calendar/mobkit_calendar_plugin_c_api.h>
@@ -32,6 +33,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
   FirebaseCorePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
+  FlutterTtsPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FlutterTtsPlugin"));
   IrisMethodChannelPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("IrisMethodChannelPluginCApi"));
   MediaKitLibsWindowsAudioPluginCApiRegisterWithRegistrar(

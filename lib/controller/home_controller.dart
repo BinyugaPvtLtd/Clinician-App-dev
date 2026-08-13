@@ -53,13 +53,12 @@ class HomeController extends GetxController {
   // ✅ optional thin refresh indicator (not blocking UI)
   final RxBool isSilentRefreshing = false.obs;
 
-  // ✅ store latest params for polling/search/filter
+  // ✅ store latest params for search/filter/refresh
   int _lastClinicianId = 0;
   String _lastVisitStatus = 'pending';
   String _lastPatientName = 'all';
 
-  // ✅ polling + debounce + overlap protection
-  Timer? _pollTimer;
+  // ✅ debounce + overlap protection
   Timer? _debounceTimer;
   bool _isFetching = false;
 
@@ -92,26 +91,6 @@ class HomeController extends GetxController {
     showFirstLoader.value = true;
   }
 
-  /// ✅ start polling (default 10s — 1s is too heavy on backend + battery)
-  void startAutoRefresh({Duration interval = const Duration(seconds: 10)}) {
-    stopAutoRefresh();
-    _pollTimer = Timer.periodic(interval, (_) async {
-      if (_lastClinicianId == 0) return; // never poll with invalid id
-      await fetchListAllDetails(
-        clinicianId: _lastClinicianId,
-        visitStatus: _lastVisitStatus,
-        patientName: _lastPatientName,
-        isPollingCall: true,
-      );
-    });
-  }
-
-  /// ✅ stop polling
-  void stopAutoRefresh() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
-  }
-
   /// ✅ debounce search (call this from UI onChanged)
   void debounceSearch({
     required String patientName,
@@ -125,15 +104,23 @@ class HomeController extends GetxController {
         patientName: patientName.trim().isEmpty ? 'all' : patientName.trim(),
         isPollingCall: false,
       );
-
-      // keep polling with latest params
-      startAutoRefresh();
     });
+  }
+
+  /// ✅ re-fetch the request list using whatever clinician/filter/search
+  /// params were used last — call this after accept/reject, or when
+  /// returning to the request list screen.
+  Future<void> refreshRequestList() async {
+    await fetchListAllDetails(
+      clinicianId: _lastClinicianId,
+      visitStatus: _lastVisitStatus,
+      patientName: _lastPatientName,
+      isPollingCall: false,
+    );
   }
 
   @override
   void onClose() {
-    stopAutoRefresh();
     _debounceTimer?.cancel();
     super.onClose();
   }
@@ -239,13 +226,12 @@ class HomeController extends GetxController {
       }
     }
 
-    String formatTimeToAMPM(dynamic dateTimeString) {
-      final s = asString(dateTimeString);
-      if (s.isEmpty) return '';
+    String formatTimeToAMPM(String? dateTimeString) {
+      if (dateTimeString == null || dateTimeString.isEmpty) return '';
       try {
-        final DateTime dateTime = DateTime.parse(s).toLocal();
-        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
-      } catch (_) {
+        final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
+        return DateFormat('h.mm a').format(dateTime);
+      } catch (e) {
         return '';
       }
     }
@@ -385,6 +371,24 @@ class HomeController extends GetxController {
                 employeeTypeId: v['employeeTypeId'] ?? 0,
                 employeeTypeAbbreviation: v['employeeTypeAbbreviation'] ?? '',
                 employeeTypeColor: v['employeeTypeColor'] ?? '',
+                remainingVisitsCount: v['remainingVisitsCount'] ?? 0,
+                episodeTriggerType: v['episodeTriggerType'] ?? '',
+                daysToEpisodeEnd: v['daysToEpisodeEnd'] ?? 0,
+                lastVisitPerformedBy: v['lastVisitPerformedBy'] ?? '',
+                pendingAssistantFormIds: List<int>.from(v['pendingAssistantFormIds'] ?? []),
+                lastVisitIds: List<int>.from(v['lastVisitIds'] ?? []),
+                isAttemptedVisit: v['isAttemptedVisit'] ?? false,
+                isSecondLastEpisodeVisit: v['isSecondLastEpisodeVisit'] ?? false,
+                employeeId: v['employeeId'] ?? 0,
+                visitType: v['visitType'] ?? 0,
+                isVisitCompleted: v['isVisitCompleted'] ?? false,
+                isVisitMissed: v['isVisitMissed'] ?? false,
+                onWay: v['onWay'] ?? false,
+                recordTypeId: v['recordTypeId'] ?? 0,
+                isRescheduled: v['isRescheduled'] ?? false,
+                rescheduledAt: v['rescheduledAt'] ?? '',
+                rescheduleReasonId: v['rescheduleReasonId'] ?? 0,
+                visitPhotoUrl: v['visitPhotoUrl'] ?? '',
               ),
             );
           }
@@ -392,6 +396,8 @@ class HomeController extends GetxController {
           weeksList.add(
             WeekSchedule(
               week: w['week'] ?? 0,
+              patientId: w['patientId'] ?? 0,
+              chartId: w['chartNo'] ?? 0,
               visits: visitList,
             ),
           );
