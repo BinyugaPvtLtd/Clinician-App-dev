@@ -102,6 +102,12 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                               buttonStyleData: ButtonStyleData(
                                 width: 120.w,
                                 height: 44.h,
+                                // Zeroed out because the hint already carries
+                                // its own EdgeInsets.all(8.h) (see
+                                // primary_dropdown.dart) — adding padding here
+                                // too would double-inset the hint relative to
+                                // the selected value below.
+                                padding: EdgeInsets.zero,
                                 decoration: BoxDecoration(
                                   border: Border.all(color: AppColors.borderGrey),
                                   borderRadius: BorderRadius.circular(6),
@@ -110,17 +116,49 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                               hintText: docCtrl.docMetaList.isEmpty
                                   ? "No document found"
                                   : "Select document",
+                              // Fixed, static list (Acknowledgements,
+                              // Compensation, Health Record) — names are short
+                              // and known ahead of time, so a single-line row
+                              // is always enough here.
+                              itemHeight: 44.h,
+                              selectedItemBuilder: (context) =>
+                                  docCtrl.docMetaList.map((item) {
+                                    return Align(
+                                      alignment: Alignment.centerLeft,
+                                      // Mirrors the hint's own EdgeInsets.all(8.h)
+                                      // so the selected value lines up with
+                                      // where the placeholder text sat.
+                                      child: Padding(
+                                        padding: EdgeInsets.all(8.h),
+                                        child: Text(
+                                          item.documentName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTextStyle.normal12style
+                                              .copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            color: AppColors.defaultTxtGrey,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
                               items: docCtrl.docMetaList.map((item) {
                                 return DropdownMenuItem<String>(
                                   value: item.documentName ?? '',
                                   child: Padding(
                                     padding: EdgeInsets.all(8.h),
-                                    child: Text(
-                                      item.documentName,
-                                      style: AppTextStyle.normal12style
-                                          .copyWith(
-                                        fontWeight: FontWeight.w400,
-                                        color: AppColors.defaultTxtGrey,
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        item.documentName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyle.normal12style
+                                            .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.defaultTxtGrey,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -163,6 +201,8 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     SizedBox(
                       width: double.infinity,
                       child: Obx(() {
+                        final bool hasLongSubDocName = docCtrl.docSubList.any(
+                                (item) => item.documentName.length > 30);
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -174,6 +214,12 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                               buttonStyleData: ButtonStyleData(
                                 width: 120.w,
                                 height: 44.h,
+                                // Zeroed out because the hint already carries
+                                // its own EdgeInsets.all(8.h) (see
+                                // primary_dropdown.dart) — adding padding here
+                                // too would double-inset the hint relative to
+                                // the selected value below.
+                                padding: EdgeInsets.zero,
                                 decoration: BoxDecoration(
                                   border: Border.all(color: AppColors.borderGrey),
                                   borderRadius: BorderRadius.circular(6),
@@ -184,17 +230,48 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                                   : (docCtrl.docSubList.isEmpty
                                   ? "No sub document found"
                                   : "Select sub document"),
+                              itemHeight: hasLongSubDocName ? 60.h : 44.h,
+                              // Same reasoning as the master-document dropdown:
+                              // keep the closed button single-line even when
+                              // the open menu wraps long sub-document names.
+                              selectedItemBuilder: (context) =>
+                                  docCtrl.docSubList.map((item) {
+                                    return Align(
+                                      alignment: Alignment.centerLeft,
+                                      // Mirrors the hint's own EdgeInsets.all(8.h)
+                                      // so the selected value lines up with
+                                      // where the placeholder text sat.
+                                      child: Padding(
+                                        padding: EdgeInsets.all(8.h),
+                                        child: Text(
+                                          item.documentName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTextStyle.normal12style
+                                              .copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            color: AppColors.defaultTxtGrey,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
                               items: docCtrl.docSubList.map((item) {
                                 return DropdownMenuItem<String>(
                                   value: item.documentName ?? '',
                                   child: Padding(
-                                    padding: EdgeInsets.all(8.h),
-                                    child: Text(
-                                      item.documentName,
-                                      style: AppTextStyle.normal12style
-                                          .copyWith(
-                                        fontWeight: FontWeight.w400,
-                                        color: AppColors.defaultTxtGrey,
+                                    padding: EdgeInsets.symmetric(horizontal: 8.h,vertical: 3.h),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        item.documentName,
+                                        maxLines: hasLongSubDocName ? 2 : 1,
+                                        overflow: TextOverflow.clip,
+                                        style: AppTextStyle.normal12style
+                                            .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.defaultTxtGrey,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -329,7 +406,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                                     docCtrl.clearAll();
                                     docCtrl.fetchDocListDetails(empId: empId, approveOnly: 'no', searchText: 'all');
                                     showSucessDialog( context: context,
-                                        message: 'Document uploaded successfully',
+                                        message: 'Document uploaded successfully.',
                                         title: 'Successfully');
                                   }else{
                                     Get.back();
