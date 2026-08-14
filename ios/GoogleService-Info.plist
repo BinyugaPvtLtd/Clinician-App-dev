@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.clinician.app</string>
+	<string>care.symmetry.careGiver</string>
 	<key>PROJECT_ID</key>
 	<string>prohealth-symmetry</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1037706652640:ios:516954be2fd4b7a6b15985</string>
+	<string>1:1037706652640:ios:0cd92a79b1429a78b15985</string>
 </dict>
 </plist>
