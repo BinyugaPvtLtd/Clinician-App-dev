@@ -14,6 +14,7 @@ import 'package:gradient_borders/box_borders/gradient_box_border.dart';
 import 'package:image_stack/image_stack.dart';
 
 import '../../controller/live_map_controller.dart';
+import '../../main.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -22,7 +23,7 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with RouteAware {
   RxInt mapInx = 0.obs;
   final List<UserProgress> users = [
     UserProgress('Ralph Edwards', '\$55.00', true, true),
@@ -35,15 +36,28 @@ class _MapScreenState extends State<MapScreen> {
   final LiveMapController liveMapController = Get.put(LiveMapController());
   @override
   void initState() {
-   // liveMapController.fetchClinicianDashoardDetails();
-    // liveMapController.fetchListOfVisitMap();
-    liveMapController.startVisitListening();
+    // ✅ one-time initial load (no more continuous polling)
+    liveMapController.loadInitial();
     super.initState();
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
   @override
   void dispose() {
-    liveMapController.stopVisitListening();
+    routeObserver.unsubscribe(this);
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // A screen/dialog opened from this page (e.g. ClinicianInfoDialog,
+    // SeeRouteDialog) was closed — refresh so the map/list reflects changes.
+    liveMapController.refreshNow();
   }
   Color hexToColor(String? hex) {
     if (hex == null || hex.trim().isEmpty) return AppColors.chatRedColor;

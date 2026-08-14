@@ -279,7 +279,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
 
                             PrimaryTextField(
                               validator: (value) => Validators.validateRequired(value!,'Date'),
-                              hintText: "05/21/2025",
+                              hintText: "YYYY/MM/DD",
                               controller: pickDate,
                               onTap: () async{
                                 final String? selectedDate =
@@ -299,7 +299,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                               children: [
                                 Expanded(
                                   child: PrimaryTextField(
-                                    hintText: "05/21/2025",
+                                    hintText: "YYYY/MM/DD",
                                     validator: (value) => Validators.validateRequired(value!,'From Date'),
                                     controller: pickDate,
                                     onTap: () async{
@@ -325,7 +325,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                                 Expanded(
                                   child: PrimaryTextField(
                                     validator: (value) => Validators.validateRequired(value!,'To Date'),
-                                    hintText: "05/21/2025",
+                                    hintText: "YYYY/MM/DD",
                                     controller: lastDate,
                                     onTap: () async{
                                       final String? selectedDate =

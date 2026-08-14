@@ -15,7 +15,6 @@ import '../services/auth_api_services/auth_services.dart';
 class UpdateDocumentsController extends GetxController {
   final ApiService _api = Get.put(ApiService());
   final isDocListLoading = false.obs;
-  final isMetaDocListLoading = false.obs;
   final isSubDocListLoading = false.obs;
   final isDocumentSaveLoading = false.obs;
   final error = ''.obs;
@@ -27,7 +26,15 @@ class UpdateDocumentsController extends GetxController {
   final RxString fileNameValidation = ''.obs;
   final isExpDateShown = false.obs;
   final docSubList = <EmployeeDubDocumentDropDownModel>[].obs;
-  final docMetaList = <DocumentMetaDataModel>[].obs;
+
+  // "Select document" options are fixed, not fetched from the API. The sub
+  // document dropdown below still loads from the API, keyed off whichever
+  // id is picked here.
+  static final List<DocumentMetaDataModel> staticDocMetaList = [
+    DocumentMetaDataModel(employeeDocumentTypeMetaDataId: 5, documentName: 'Acknowledgement'),
+    DocumentMetaDataModel(employeeDocumentTypeMetaDataId: 1, documentName: 'Health Record'),
+  ];
+  final docMetaList = <DocumentMetaDataModel>[...staticDocMetaList].obs;
   final RxString expiryIsoDate = ''.obs;
 
   // ✅ selected dropdown value (use id)
@@ -37,11 +44,6 @@ class UpdateDocumentsController extends GetxController {
   // selecte master visit
   final selectedMasterMetaDocId = 0.obs;
   final selectedMasterMetaDocName = ''.obs;
-  @override
-  void onInit() {
-    fetchMetaDocList();
-    super.onInit();
-  }
 
   @override
   void onClose() {
@@ -118,11 +120,6 @@ class UpdateDocumentsController extends GetxController {
     docSubList.assignAll(list);
 
   }
-  Future<void> fetchMetaDocList() async {
-    final list = await getMetaDocumentListDropdown();
-    docMetaList.assignAll(list);
-
-  }
   Future<void> fetchDocListDetails({required int empId,
     required String approveOnly,
     required String searchText,}) async {
@@ -141,7 +138,7 @@ class UpdateDocumentsController extends GetxController {
 
       DateTime dateTime = DateTime.parse(iosDate);
 
-      return DateFormat('dd/MM/yyyy')
+      return DateFormat('yyyy/MM/dd')
           .format(dateTime)
           .toLowerCase();
     }
@@ -259,46 +256,6 @@ class UpdateDocumentsController extends GetxController {
       error.value = e.toString();
     } finally {
       isSubDocListLoading.value = false;
-    }
-
-    // ✅ GUARANTEED NON-NULL RETURN
-    return itemData;
-  }
-
-  Future<List<DocumentMetaDataModel>> getMetaDocumentListDropdown() async {
-    List<DocumentMetaDataModel> itemData = [];
-
-    String formatIOSDate(String iosDate) {
-      if (iosDate.isEmpty) return '';
-
-      DateTime dateTime = DateTime.parse(iosDate);
-
-      return DateFormat('dd/MM/yyyy')
-          .format(dateTime)
-          .toLowerCase();
-    }
-
-    try {
-      isMetaDocListLoading.value = true;
-      error.value = '';
-
-      final res = await _api.get(
-        ProfileRepository.getMetaDataDropdown(),
-      );
-
-      if (res.statusCode == 200 || res.statusCode == 201) {
-        for(var item in res.data){
-          itemData.add(DocumentMetaDataModel(
-              employeeDocumentTypeMetaDataId: item['EmployeeDocumentTypeMetaDataId'] ?? 0,
-              documentName: item['DocumentName'] ?? ''));
-        }
-      } else {
-        error.value = "Failed to list data";
-      }
-    } catch (e) {
-      error.value = e.toString();
-    } finally {
-      isMetaDocListLoading.value = false;
     }
 
     // ✅ GUARANTEED NON-NULL RETURN

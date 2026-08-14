@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:clinician_app/controller/repository/timesheet_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,9 +5,11 @@ import '../core/constant/app_string.dart';
 import '../model/request/request_data_model.dart';
 import '../model/timesheet/timesheet_model.dart';
 import '../services/auth_api_services/auth_services.dart';
+import 'profile_controller.dart';
 
 class TimeSheetController extends GetxController {
   final ApiService _api = Get.put(ApiService());
+  final ProfileController _profileController = Get.find<ProfileController>();
 
   final isLoading = false.obs;
   final isVisitSaveLoading = false.obs;
@@ -43,7 +43,6 @@ class TimeSheetController extends GetxController {
   final searchText = 'all'.obs;
   final clinitianId = 0.obs; // you can set this from profile or auth controller
   TimeOfDay _selectedTime = TimeOfDay.now();
-  Timer? _pollTimer;
   Worker? _everWorker; // <— IMPORTANT
 
   @override
@@ -55,28 +54,28 @@ class TimeSheetController extends GetxController {
     fetchPatientMaster();
 
     selectedDate.value = _todayDate();
+    clinitianId.value = _profileController.employeeIdByEmail.value.employeeId;
 
     // Save the worker so you can dispose it
     _everWorker = everAll(
-      [selectedTypeRecord, selectedDate, searchText, clinitianId],
-          (_) => fetchTimeSheetRecord(),
+      [selectedTypeRecord, selectedDate, searchText, clinitianId,
+        _profileController.employeeIdByEmail],
+          (_) {
+        clinitianId.value = _profileController.employeeIdByEmail.value.employeeId;
+        fetchTimeSheetRecord();
+      },
     );
 
     // First load (shows loader)
     fetchTimeSheetRecord();
+  }
 
-    // Polling (silent)
-    _pollTimer = Timer.periodic(
-      const Duration(seconds: 5),
-          (_) => fetchTimeSheetRecord(silent: true),
-    );
+  void refreshNow() {
+    fetchTimeSheetRecord(silent: true);
   }
 
   @override
   void onClose() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
-
     _everWorker?.dispose();
     _everWorker = null;
 

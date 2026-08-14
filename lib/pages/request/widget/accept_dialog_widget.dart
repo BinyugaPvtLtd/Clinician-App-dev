@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../controller/home_controller.dart';
 import '../../../controller/profile_controller.dart';
 import '../../../core/ui/const_sucess_popup.dart';
 
@@ -20,6 +21,7 @@ class AcceptDialogWidget extends StatefulWidget {
 
 class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
   ProfileController controller = Get.find<ProfileController>();
+  final HomeController homeController = Get.find<HomeController>();
   @override
   Widget build(BuildContext context) {
     return BackdropFilter(
@@ -30,6 +32,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
           child: Material(
             type: MaterialType.transparency,
             child: Container(
+              height: 160.h,
               width: (Get.width / 1.3).w,
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
               decoration: BoxDecoration(
@@ -53,26 +56,27 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                         onTap: () {
                           Get.back();
                         },
-                        child: SvgPicture.asset(AppAsset.closeSvgIcon),
+                        child: SvgPicture.asset(AppAsset.closeSvgIcon, width: 11.w),
                       ),
                     ],
                   ),
                   customHeight(18.h),
                   Text(
-                    'Do you really want to \nreschedule it ?',
+                    'Do you really want to \nAccept visit ?',
                     textAlign: TextAlign.center,
-                    style: AppTextStyle.normal10style.copyWith(
+                    style: AppTextStyle.normal12style.copyWith(
                       color: AppColors.defaultTxtGrey,
                     ),
                   ),
                   customHeight(13.h),
                   SizedBox(
-                    height: 20.h,
+                    height: 30.h,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         PrimaryOutlinedButton(
-                          width: 54.w,
+                          width: 80.w,
+                          height: 35.h,
                           text: 'Cancel',
                           radius: 6.r,
                           borderWidth: 1.r,
@@ -80,7 +84,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                             Get.back();
                           },
                           textStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 6.sp,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primaryAppColor,
                           ),
@@ -100,7 +104,8 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                                   ),
                                 )
                                 :   PrimaryButton(
-                          width: 54.w,
+                          width: 80.w,
+                          height: 35.h,
                           label: 'Save',
                           borderRadius: 6.r,
                           onTap: () async{
@@ -121,7 +126,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                                   'Visit accepted successfully',
                                   title: 'Successfully',
                                 );
-                                controller.fetchRecordType();
+                                homeController.refreshRequestList();
                                 //Get.to(() => HomeScreen());
                               } else {
                                 print('Validation failed');
@@ -130,7 +135,7 @@ class _AcceptDialogWidgetState extends State<AcceptDialogWidget> {
                           },
                           padding: EdgeInsets.zero,
                           labelStyle: AppTextStyle.normal10style.copyWith(
-                            fontSize: 6.sp,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),

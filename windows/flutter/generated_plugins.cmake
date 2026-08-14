@@ -8,6 +8,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   emoji_picker_flutter
   file_selector_windows
   firebase_core
+  flutter_tts
   iris_method_channel
   media_kit_libs_windows_audio
   mobkit_calendar

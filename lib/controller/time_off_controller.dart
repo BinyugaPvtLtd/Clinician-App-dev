@@ -212,9 +212,8 @@ class TimeController extends GetxController {
 
       DateTime dateTime = DateTime.parse(iosDate);
 
-      return DateFormat('dd/MM/yyyy/h.mma')
-          .format(dateTime)
-          .toLowerCase();
+      return DateFormat('yyyy/MM/dd/h.mm a')
+          .format(dateTime);
     }
     try {
       isLoading.value = true;
