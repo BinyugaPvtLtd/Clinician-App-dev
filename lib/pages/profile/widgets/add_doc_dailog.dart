@@ -2,7 +2,6 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +11,7 @@ import '../../../controller/update_documents_controller.dart';
 import '../../../core/ui/const_sucess_popup.dart';
 import '../../../core/ui/primary_dropdown.dart';
 import '../../calender_section/widget/calender_date_pick_dialog_widget.dart';
+import 'upload_capture_option.dart';
 
 void showAddDocumentDialog(BuildContext context,int empId) {
   UpdateDocumentsController docCtrl = Get.put(UpdateDocumentsController());
@@ -53,7 +53,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                       children: [
                         Expanded(
                           child: Obx(() => docCtrl.fileName.isEmpty
-                              ? _uploadCaptureOption(
+                              ? uploadCaptureOption(
                             isRedValidation: docCtrl.fileNameValidation.value.isEmpty ? false : true,
                             label2: docCtrl.fileNameValidation.value.isEmpty
                                 ? "Upload document"
@@ -69,7 +69,7 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                               }
                             },
                           )
-                              : _uploadCaptureOption(
+                              : uploadCaptureOption(
                             isRedValidation: false,
                             label2: docCtrl.fileName.value,
                             icon: AppAsset.upload,
@@ -334,7 +334,15 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                           expDateController.text = selectedDate;
 
                           final DateTime datePicked = DateFormat("yyyy-MM-dd").parse(selectedDate);
-                          docCtrl.expiryIsoDate.value = datePicked.toUtc().toIso8601String();
+                          // Build UTC midnight directly from the picked
+                          // Y/M/D — parsing gives local midnight, and
+                          // .toUtc() on that shifts the calendar day back
+                          // by one whenever the device is ahead of UTC.
+                          docCtrl.expiryIsoDate.value = DateTime.utc(
+                            datePicked.year,
+                            datePicked.month,
+                            datePicked.day,
+                          ).toIso8601String();
                         }
                       },
                       suffixIcon: Icon(Icons.calendar_month_outlined),
@@ -448,65 +456,5 @@ void showAddDocumentDialog(BuildContext context,int empId) {
         ),
       );
     },
-  );
-}
-
-Widget _uploadCaptureOption({
-  required String icon,
-  required String label,
-  required String label2,
-  required bool isRedValidation,
-  required VoidCallback onTap,
-}) {
-  return Column(
-    children: [
-      Text(
-        label2,
-        style: AppTextStyle.bold12style.copyWith(
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w400,
-          color: isRedValidation ? AppColors.redColor : AppColors.defaultTxtGrey,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-      ),
-      customHeight(12.h),
-      InkWell(
-        onTap: onTap,
-        child: DottedBorder(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-          borderType: BorderType.RRect,
-          dashPattern: [6],
-          color: Color(0xffBEBEBE),
-          radius: Radius.circular(6),
-          strokeWidth: 1.5,
-
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                height: 60.h,
-                width: 62.w,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  color: Colors.grey.withValues(alpha: 0.3),
-                ),
-                child: Center(child: Image.asset(icon, height: 40.h)),
-              ),
-              SizedBox(height: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Color(0xff008ABD),
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ],
   );
 }

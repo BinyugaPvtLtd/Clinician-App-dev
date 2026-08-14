@@ -9,6 +9,7 @@ import 'package:clinician_app/core/ui/common_appbar.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
 import 'package:clinician_app/pages/home/widget/chat_fab_widget.dart';
 import 'package:clinician_app/pages/profile/widgets/add_doc_dailog.dart';
+import 'package:clinician_app/pages/profile/widgets/edit_doc_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -334,6 +335,15 @@ class _DocumnetPageState extends State<DocumnetPage>
                                             children: [
                                               PrimaryButton(
                                                 label: "Update",
+                                                onTap: () {
+                                                  showEditDocumentDialog(
+                                                    context,
+                                                    employeeDocumentId: docItem
+                                                        .docList[index]
+                                                        .employeeDocumentId,
+                                                    empId: widget.empId,
+                                                  );
+                                                },
                                                 buttonColor:
                                                 AppColors
                                                     .primaryLightBackGColor,
