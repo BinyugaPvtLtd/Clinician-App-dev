@@ -150,9 +150,9 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                     widget.chat.senderAvatarUrl!,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) =>
-                        Image.asset(AppAsset.chatAvatarImg, fit: BoxFit.cover),
+                        Image.asset(AppAsset.profilePicImg, fit: BoxFit.cover),
                   )
-                      : Image.asset(AppAsset.chatAvatarImg, fit: BoxFit.cover),
+                      : Image.asset(AppAsset.profilePicImg, fit: BoxFit.cover),
                 ),
                 customWidth(12.w),
               ],
