@@ -156,7 +156,6 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                 ),
                 customWidth(12.w),
               ],
-
               Flexible(
                 child: Column(
                   crossAxisAlignment:
