@@ -14,12 +14,9 @@ import '../../side_drawer/side_drawer_provider.dart';
 // ─── Color Constants ───────────────────────────────────────────────────────────
 
 const Color _kPrimaryBlue = Color(0xFF1EB0D9);
-const Color _kHeaderBg = Color(0xFFEAF4F9);
 const Color _kDivider = Color(0xFFDDE6EC);
 const Color _kBodyText = Color(0xFF3D3D3D);
 const Color _kLightText = Color(0xFF6B7280);
-
-const int _kItemsPerPage = 5;
 
 // ─── Data shape ───────────────────────────────────────────────────────────────
 // Fields inferred from how this popup consumes them; wire this up to the real
@@ -65,9 +62,6 @@ class PendingReviewFormPopup extends StatefulWidget {
 }
 
 class _PendingReviewFormPopupState extends State<PendingReviewFormPopup> {
-  int currentPage = 1;
-  final int itemsPerPage = _kItemsPerPage;
-
   // Controls the initial data-fetch skeleton (hides the whole table)
   bool _isLoading = true;
 
@@ -237,14 +231,6 @@ class _PendingReviewFormPopupState extends State<PendingReviewFormPopup> {
     }
   }
 
-  // ─── Pagination helper ──────────────────────────────────────────────────────
-
-  List<PendingReviewAssistanceForm> get _pagedItems {
-    final start = (currentPage - 1) * itemsPerPage;
-    final end = (start + itemsPerPage).clamp(0, items.length);
-    return items.sublist(start, end);
-  }
-
   // ─── Build ──────────────────────────────────────────────────────────────────
 
   @override
@@ -316,109 +302,70 @@ class _PendingReviewFormPopupState extends State<PendingReviewFormPopup> {
                 ),
               ),
 
-              // ── Table — flexible so it shares space with the rest ──────────
+              // ── List — flexible so it shares space with the rest ────────────
               Flexible(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const _TableHeader(),
-                      Flexible(
-                        child: SingleChildScrollView(
-                          child: _buildTableBody(),
-                        ),
-                      ),
-                    ],
+                  padding: EdgeInsets.fromLTRB(16.w, 7.h, 16.w, 0),
+                  child: SingleChildScrollView(
+                    child: _buildTableBody(),
                   ),
                 ),
               ),
 
-              // ── Pagination — fixed above buttons ──────────────────────────
-              if (!_isLoading && _errorMessage == null && items.isNotEmpty)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 0),
-                  child: _PaginationControls(
-                    currentPage: currentPage,
-                    totalItems: items.length,
-                    itemsPerPage: itemsPerPage,
-                    onPreviousPagePressed: () {
-                      setState(() {
-                        currentPage = currentPage > 1 ? currentPage - 1 : 1;
-                      });
-                    },
-                    onPageNumberPressed: (pageNumber) {
-                      setState(() {
-                        currentPage = pageNumber;
-                      });
-                    },
-                    onNextPagePressed: () {
-                      final totalPages = (items.length / itemsPerPage).ceil();
-                      setState(() {
-                        currentPage = currentPage < totalPages
-                            ? currentPage + 1
-                            : totalPages;
-                      });
-                    },
-                  ),
-                ),
-
-              // ── Cancel / Skip & Continue — always at bottom ───────────────
-              widget.isLastEpisode == true
-                  ? SizedBox(height: 12.h)
-                  : Padding(
-                      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
-                      child: Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 12.w,
-                        runSpacing: 8.h,
-                        children: [
-                          SizedBox(
-                            width: 100.w,
-                            height: 36.h,
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.primaryAppColor,
-                                side: const BorderSide(
-                                  color: AppColors.primaryAppColor,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6.r),
-                                ),
-                              ),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(fontSize: 13.sp),
-                              ),
-                            ),
+              // ── Cancel / Skip — always at bottom, centered, equal width ────
+               widget.isLastEpisode == true ? Offstage() :
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 16.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 120.w,
+                      height: 30.h,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primaryAppColor,
+                          side: const BorderSide(
+                            color: AppColors.primaryAppColor,
                           ),
-                          SizedBox(
-                            width: 140.w,
-                            height: 36.h,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                widget.onNevigate();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryAppColor,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6.r),
-                                ),
-                              ),
-                              child: Text(
-                                'Skip & Continue',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13.sp,
-                                ),
-                              ),
-                            ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6.r),
                           ),
-                        ],
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 13.sp),
+                        ),
                       ),
                     ),
+                    SizedBox(width: 12.w),
+                    SizedBox(
+                      width: 120.w,
+                      height: 30.h,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          widget.onNevigate();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryAppColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                        ),
+                        child: Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -471,7 +418,7 @@ class _PendingReviewFormPopupState extends State<PendingReviewFormPopup> {
         height: 200.h,
         child: Center(
           child: Text(
-            'No pending forms found.',
+            'No pending forms found!',
             style: TextStyle(fontSize: 13.sp, color: _kLightText),
           ),
         ),
@@ -483,16 +430,16 @@ class _PendingReviewFormPopupState extends State<PendingReviewFormPopup> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: EdgeInsets.zero,
-      itemCount: _pagedItems.length,
+      itemCount: items.length,
       separatorBuilder: (_, __) => Divider(
         height: 1,
         thickness: 1,
         color: _kDivider,
       ),
       itemBuilder: (context, index) {
-        final item = _pagedItems[index];
+        final item = items[index];
         final isBeingReviewed = _reviewingFormId == item.patientFormId;
-        return _TableRow(
+        return _FormCard(
           item: item,
           isBeingReviewed: isBeingReviewed,
           onReviewPressed: () => _onReviewPressed(item, item.visitId),
@@ -502,69 +449,15 @@ class _PendingReviewFormPopupState extends State<PendingReviewFormPopup> {
   }
 }
 
-// ─── Table Header ─────────────────────────────────────────────────────────────
+// ─── Form Card ────────────────────────────────────────────────────────────────
 
-class _TableHeader extends StatelessWidget {
-  const _TableHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 16.w),
-      decoration: BoxDecoration(
-        color: _kHeaderBg,
-        borderRadius: BorderRadius.circular(3.r),
-      ),
-      child: Row(
-        children: [
-          _HeaderCell(label: 'Form Name', flex: 4),
-          _HeaderCell(label: 'Assistant Name', flex: 4, center: true),
-          _HeaderCell(label: 'Action', flex: 2, center: true),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeaderCell extends StatelessWidget {
-  final String label;
-  final int flex;
-  final bool center;
-
-  const _HeaderCell({
-    required this.label,
-    required this.flex,
-    this.center = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        label,
-        textAlign: center ? TextAlign.center : TextAlign.left,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 13.sp,
-          fontWeight: FontWeight.w600,
-          color: _kBodyText,
-          letterSpacing: 0.1,
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Table Row ────────────────────────────────────────────────────────────────
-
-class _TableRow extends StatelessWidget {
+class _FormCard extends StatelessWidget {
   final PendingReviewAssistanceForm item;
   final VoidCallback onReviewPressed;
   // When true, the Review button shows a mini spinner instead of text
   final bool isBeingReviewed;
 
-  const _TableRow({
+  const _FormCard({
     required this.item,
     required this.onReviewPressed,
     this.isBeingReviewed = false,
@@ -574,32 +467,35 @@ class _TableRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
-      child: Row(
+      padding: EdgeInsets.symmetric(vertical: 16.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Form Name
-          Expanded(
-            flex: 4,
-            child: Text(
-              item.formName,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13.sp, color: _kBodyText),
+          Text(
+            'Form name',
+            style: TextStyle(fontSize: 13.sp, color: _kLightText),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            item.formName,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w700,
+              color: _kBodyText,
             ),
           ),
-          // Assistant Name
-          Expanded(
-            flex: 3,
-            child: _ClinicianCell(item: item),
-          ),
-          // Action
-          Expanded(
-            flex: 2,
-            child: Center(
-              child: _ReviewButton(
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(child: _ClinicianCell(item: item)),
+              SizedBox(width: 12.w),
+              _ReviewButton(
                 onPressed: onReviewPressed,
                 isLoading: isBeingReviewed,
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -620,7 +516,6 @@ class _ClinicianCell extends StatelessWidget {
     final badgeColor = _badgeColorForType(abbreviation);
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
@@ -722,73 +617,3 @@ class _ReviewButton extends StatelessWidget {
   }
 }
 
-// ─── Pagination Controls ──────────────────────────────────────────────────────
-// Minimal inline replacement for the missing PaginationControlsWidget.
-
-class _PaginationControls extends StatelessWidget {
-  final int currentPage;
-  final int totalItems;
-  final int itemsPerPage;
-  final VoidCallback onPreviousPagePressed;
-  final ValueChanged<int> onPageNumberPressed;
-  final VoidCallback onNextPagePressed;
-
-  const _PaginationControls({
-    required this.currentPage,
-    required this.totalItems,
-    required this.itemsPerPage,
-    required this.onPreviousPagePressed,
-    required this.onPageNumberPressed,
-    required this.onNextPagePressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final totalPages = (totalItems / itemsPerPage).ceil().clamp(1, 999);
-
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 4.w,
-      runSpacing: 4.h,
-      children: [
-        IconButton(
-          onPressed: currentPage > 1 ? onPreviousPagePressed : null,
-          icon: Icon(Icons.chevron_left, size: 18.sp),
-          padding: EdgeInsets.zero,
-          constraints: BoxConstraints(minWidth: 28.w, minHeight: 28.h),
-        ),
-        for (var page = 1; page <= totalPages; page++)
-          InkWell(
-            onTap: () => onPageNumberPressed(page),
-            child: Container(
-              width: 26.w,
-              height: 26.h,
-              alignment: Alignment.center,
-              margin: EdgeInsets.symmetric(horizontal: 2.w),
-              decoration: BoxDecoration(
-                color: page == currentPage
-                    ? AppColors.primaryAppColor
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(6.r),
-              ),
-              child: Text(
-                '$page',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: page == currentPage ? Colors.white : _kBodyText,
-                ),
-              ),
-            ),
-          ),
-        IconButton(
-          onPressed: currentPage < totalPages ? onNextPagePressed : null,
-          icon: Icon(Icons.chevron_right, size: 18.sp),
-          padding: EdgeInsets.zero,
-          constraints: BoxConstraints(minWidth: 28.w, minHeight: 28.h),
-        ),
-      ],
-    );
-  }
-}

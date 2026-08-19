@@ -17,7 +17,8 @@ class VisitDetailPage extends StatefulWidget {
   final int visitId;
   final int employeeTypeId;
   final String visitStatus;
-  const VisitDetailPage({super.key, required this.visitId, required this.employeeTypeId, required this.visitStatus});
+  final bool isSecondLastEpisodeVisit;
+  const VisitDetailPage({super.key, required this.visitId, required this.employeeTypeId, required this.visitStatus, required this.isSecondLastEpisodeVisit});
 
   @override
   State<VisitDetailPage> createState() => _VisitDetailPageState();
@@ -198,7 +199,8 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                   );
                                 }),
                                 Spacer(),
-                                controller.visitDetailModel.value!.isAssistantUser == false ? PrimaryOutlinedButton(
+                                controller.visitDetailModel.value!.isAssistantUser == false ?
+                                widget.isSecondLastEpisodeVisit == false ? PrimaryOutlinedButton(
                                   height: 35.h,
                                   onPressed: () {
                                     Get.dialog(AssignAssistantDialogWidget(visitId: widget.visitId,));
@@ -221,7 +223,7 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                     color: AppColors.primaryAppColor,
                                     size: 18,
                                   ),
-                                ) : Offstage(),
+                                ) : Offstage() : Offstage(),
                               ],
                             ),
                             customHeight(10.h),

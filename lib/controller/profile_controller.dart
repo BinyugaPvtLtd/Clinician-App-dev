@@ -411,19 +411,26 @@ class ProfileController extends GetxController{
       if (name == null || name.trim().isEmpty) return '';
       return name
           .trim()
-          .split(RegExp(r'\s+'))          // split on one or more spaces
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
           .map((word) => word[0].toUpperCase())
           .join();
     }
+
     String getDisplayName(String? name) {
       if (name == null || name.trim().isEmpty) return '';
 
-      final words = name.trim().split(RegExp(r'\s+'));
+      final words = name
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .toList();
 
-      if (words.length > 4) {
-        return toShortForm(name);
+      if (words.length == 1) {
+        return words.first;          // e.g. "SOC" -> "SOC"
       }
-      return name.trim();
+
+      return toShortForm(name);      // e.g. "Physical Therapy Notes" -> "PTN"
     }
     try {
       isEmployeeLoading.value = true;
@@ -457,6 +464,7 @@ class ProfileController extends GetxController{
                   isVisitCompleted: p['isVisitCompleted'] ?? false,
                   isVisitMissed: p['isVisitMissed'] ?? false,
                   isVisitAccepted: p['isVisitAccepted'] ?? false,
+                  isSecondLastEpisodeVisit: p["isSecondLastEpisodeVisit"] ?? false,
                   visitCharge: double.parse(
                     (((p['visit_charge'] as num?)?.toDouble() ?? 0.0)
                         .toStringAsFixed(2)),

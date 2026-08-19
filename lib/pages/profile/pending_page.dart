@@ -251,6 +251,7 @@ class _PendingVisitsState extends State<PendingVisits> {
                         onTap: () {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             Get.to(() => VisitDetailPage(
+                              isSecondLastEpisodeVisit: visitsItem.isSecondLastEpisodeVisit,
                               visitId: visitsItem.visitId,
                               employeeTypeId: visitsItem.employeeTypeId,
                               visitStatus: visitsItem.isVisitAccepted == true ? 'accepted': 'pending',

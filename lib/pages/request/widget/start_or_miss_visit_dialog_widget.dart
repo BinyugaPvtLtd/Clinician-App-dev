@@ -38,34 +38,23 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
   bool _isMissingVisit = false;
 
   Future<void> _handleStartVisit({String? visitType}) async {
-    setState(() => _isStartingVisit = true);
+    // This callback can fire after a follow-up popup (e.g. DischargeVisitTypePopup)
+    // has already replaced this dialog, so `this` may be disposed by now — guard
+    // any use of setState/context on this State, but still complete the visit-start
+    // flow using the app's global GetX context.
+    if (mounted) setState(() => _isStartingVisit = true);
+    print('visitType: $visitType');
+    print('secondlats ${widget.visitData.isSecondLastEpisodeVisit}');
 
     final result = await FormBuilderManager().patchStartVisit(
-        context: context,
+        context: Get.context!,
         visitId: widget.visitId,
         onWay: true,
         visitTypeData: visitType == null ? "" : visitType,
         isLastVisit: widget.visitData.isSecondLastEpisodeVisit == true ? true : false
     );
 
-    if (!mounted) return;
-
     if (result.success) {
-      // if(result.episodeEndDecision == true){
-      //   showDialog(
-      //     context: context,
-      //     builder: (_) => DischargeVisitTypePopup(
-      //         visitData: widget.visitData,
-      //       onNevigate:()=> _onTap(
-      //       patientFormId: result.ptFormId!,
-      //       ptId: result.ptId!,
-      //       chartNo: widget.visitData.patient.ptChartNo,
-      //     ),),
-      //   );
-      //
-      // }else{
-      //
-      // }
       _onTap(
         patientFormId: result.ptFormId!,
         ptId: result.ptId!,
@@ -73,8 +62,8 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
       );
 
     } else {
-      setState(() => _isStartingVisit = false);
-      showDocErrorDialog(context: context,
+      if (mounted) setState(() => _isStartingVisit = false);
+      showDocErrorDialog(context: Get.context!,
           message: result.message,
           title: 'Error');
     }
@@ -97,25 +86,26 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
   }) async {
     try {
       final result = await getPatientFormByPatientID(
-        context,
+        Get.context!,
         patientFormId: patientFormId,
       );
       // String userRole = await TokenManager.getUserStatus();
 
-      if (!mounted) return;
-
       // ✅ Guard: bail out if result or critical data is null
       if (result == null) {
-        setState(() => _isStartingVisit = false);
+        if (mounted) setState(() => _isStartingVisit = false);
         debugPrint('_onTap: result is null — aborting navigation');
         // _showErrorSnackbar('Could not load patient form. Please try again.');
         return;
       }
 
       print('patinet DOB ${result.referralData.patientDob }');
-      Navigator.pop(context);
+      // Only pop this dialog if it's still the one open (direct-start path).
+      // When a follow-up popup (DischargeVisitTypePopup/RecertFormDialog) was
+      // shown instead, it already popped itself before invoking this callback.
+      if (mounted) Navigator.pop(context);
       Navigator.push(
-        context,
+        Get.context!,
         MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider<SideDrawerProvider>(
             create: (_) => SideDrawerProvider(),
@@ -301,6 +291,7 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
                                               ),
                                             );
                                           } else {
+                                            Get.back();
                                             Get.dialog(
                                               DischargeVisitTypePopup(
                                                 visitData: visitData,
@@ -314,6 +305,7 @@ class _StartOrMissVisitDialogWidgetState extends State<StartOrMissVisitDialogWid
                                                 .isSecondLastEpisodeVisit ||
                                             visitData.episodeTriggerType ==
                                                 "POSITION") {
+                                          Get.back();
                                           Get.dialog(
                                             DischargeVisitTypePopup(
                                               visitData: visitData,

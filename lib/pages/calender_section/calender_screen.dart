@@ -330,6 +330,7 @@ class _CalenderScreenState extends State<CalenderScreen> with RouteAware {
                                         visitId: visitListData.visitId,
                                             employeeTypeId: items[index].employeeTypeId,
                                             visitStatus: 'accepted',
+                                            isSecondLastEpisodeVisit: visitListData.isSecondLastEpisodeVisit,
 
                                       ),
                                     );
