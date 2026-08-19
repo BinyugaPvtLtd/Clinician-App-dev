@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/ui/const_sucess_popup.dart';
 import '../../../../../services/auth_api_services/auth_services.dart';
 import '../../../data/patient_form_data.dart';
 import '../repository/form_builder_repository.dart';
@@ -23,7 +24,7 @@ Future<PatientByPtIdFormModel> getPatientFormByPatientID(BuildContext context,
     final response = await Api.get(
        FormBuilderRepository.getPatientFormByPatientFormID(
             patientFormID: patientFormId));
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       final data = response.data;
 
       final assignedTo = data['assigned_to'];
@@ -125,9 +126,17 @@ Future<PatientByPtIdFormModel> getPatientFormByPatientID(BuildContext context,
       );
 
     } else {
+      Get.back();
+      showDocErrorDialog(context: Get.context!,
+          message: response.data['message'][0] ?? 'Something went wrong',
+          title: 'Error');
     }
     return itemData;
   } catch (e) {
+    Get.back();
+    showDocErrorDialog(context: Get.context!,
+        message: 'Something went wrong!',
+        title: 'Error');
     return itemData;
   }
 }

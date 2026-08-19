@@ -150,9 +150,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (response.companies.length == 1) {
                           String companyAlias = response.companies.first.companyAlias;
                           print("Auto selected company: $companyAlias");
-                          String endWith = await ApiAppConstant.endPointByAlias(3, "dev");
+                          String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
                           print("Endpoint set to: ${ApiAppConstant.domain}");
-                          await Get.to(
+                           Get.to(
                             () => PasswordScreen(email: email),
                             transition: Transition.rightToLeft,
                             duration: const Duration(milliseconds: 400),

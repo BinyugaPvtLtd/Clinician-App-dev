@@ -37,8 +37,10 @@ class LiveMapController extends GetxController{
       visitType: '',
       timeRange: '',
       visitCount: '',
-      distance: null,
+      distanceKm: '',
       visitCharge: 0,
+      timeToReach: '',
+      distanceInMiles: '',
     ),
     patient: PatientDash(
       name: '',
@@ -197,7 +199,9 @@ visitsMapModel.value = await getMapListVisit();
           visitType: visitData['visitType'] ?? '',
           timeRange: visitData['timeRange'] ?? '',
           visitCount: visitData['visitCount'] ?? '',
-          distance: visitData['distance'], // can be null
+            distanceKm: visitData['distanceKm'] ?? '',
+          distanceInMiles: visitData['distanceMiles'] ?? '',
+          timeToReach: visitData['timeToReach'] ?? '',
           visitCharge: double.parse(((visitData['visit_charge'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(2)),
         );
 
@@ -247,8 +251,10 @@ visitsMapModel.value = await getMapListVisit();
         visitType: '',
         timeRange: '',
         visitCount: '',
-        distance: null,
+        distanceKm: '',
         visitCharge: 0,
+        timeToReach: '',
+        distanceInMiles: '',
       ),
       patient: PatientDash(
         name: '',

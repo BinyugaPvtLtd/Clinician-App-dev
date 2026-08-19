@@ -1,10 +1,10 @@
 plugins {
     // ✅ Update Kotlin Gradle plugin (fixes Kotlin metadata 2.2.0 vs 1.8.0 issue)
-    id("org.jetbrains.kotlin.android") version "2.2.0" apply false
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 
     // ✅ Recommended: keep AGP declared here too (version depends on your project / Flutter template)
     // If you already declare AGP elsewhere, you can remove this line.
-    id("com.android.application") version "8.7.0" apply false
+    id("com.android.application") version "8.11.1" apply false
     // Firebase / Google Services
     id("com.google.gms.google-services") version "4.4.4" apply false
 

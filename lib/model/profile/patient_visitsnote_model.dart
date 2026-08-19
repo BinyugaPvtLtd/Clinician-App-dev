@@ -23,8 +23,10 @@ class PatientVisitItems{
   final bool isVisitCompleted;
   final bool isVisitMissed;
   final bool isVisitAccepted;
+  final bool isSecondLastEpisodeVisit;
   final double visitCharge;
   PatientVisitItems({
+    required this.isSecondLastEpisodeVisit,
     required this.isVisitAccepted,
     required this.employeeTypeId,
     required this.visitCharge,

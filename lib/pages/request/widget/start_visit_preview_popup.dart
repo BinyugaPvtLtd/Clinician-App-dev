@@ -421,15 +421,13 @@ class _DischargeVisitTypePopupState extends State<DischargeVisitTypePopup> {
                         ),
                       ),
                       SizedBox(height: 24.h),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 12.w,
-                        runSpacing: 10.h,
+                      Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           // ── Resumption of Care ──────────────────────
                           SizedBox(
-                            width: 130.w,
-                            height: 40.h,
+                            width: 100.w,
+                            height: 30.h,
                             child: _isLoadingResumption
                                 ? const Center(
                                     child: SizedBox(
@@ -467,8 +465,8 @@ class _DischargeVisitTypePopupState extends State<DischargeVisitTypePopup> {
 
                           // ── Discharge ────────────────────────────────
                           SizedBox(
-                            width: 130.w,
-                            height: 40.h,
+                            width: 100.w,
+                            height: 30.h,
                             child: _isLoadingDischarge
                                 ? Center(
                                     child: SizedBox(

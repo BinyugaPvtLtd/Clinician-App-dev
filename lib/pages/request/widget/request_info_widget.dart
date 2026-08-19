@@ -15,7 +15,8 @@ import 'package:get/route_manager.dart';
 import '../../../model/request/requestList_model.dart';
 
 class RequestInfoWidget extends StatefulWidget {
-  const RequestInfoWidget({super.key, required this.data});
+  const RequestInfoWidget({super.key, required this.data, required this.filterStatus});
+  final String filterStatus;
   final PatientVisitModel data;
 
   @override
@@ -64,13 +65,13 @@ class _RequestInfoWidgetState extends State<RequestInfoWidget> {
 
     return InkWell(
       onTap:
-          () {
+      widget.filterStatus != "pending" ? () {
         Get.to(() => RequestDetailPage(
           chartNo: 1,
           visitId: widget.data.visitId,
           noteText: widget.data.visitNote,
           filterText: widget.data.visitStatus,));
-      },
+      } : null,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 3.5.h),
         decoration: BoxDecoration(

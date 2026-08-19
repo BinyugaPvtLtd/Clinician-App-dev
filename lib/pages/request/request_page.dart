@@ -186,7 +186,9 @@ class _RequestPageState extends State<RequestPage> with RouteAware {
                   physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.symmetric(horizontal: 10.w),
                   itemBuilder: (context, index) {
-                    return RequestInfoWidget(data: items[index]);
+                    return RequestInfoWidget(
+                      filterStatus: homeController.statusVal.value.toLowerCase(),
+                        data: items[index]);
                   },
                 ),
               );

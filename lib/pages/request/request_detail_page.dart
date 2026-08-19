@@ -414,9 +414,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> with RouteAware {
                               return Padding(
                                 padding:  EdgeInsets.symmetric(vertical: 3.h),
                                 child: Container(
-                                  padding: isDisabled
-                                      ? EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h)
-                                      : null,
+                                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
                                   decoration: isDisabled
                                       ? BoxDecoration(
                                           color: statusColor!.withValues(alpha: 0.12),

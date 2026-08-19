@@ -16,10 +16,12 @@ class VisitsListData {
   final String timeFrom;
   final String timeTo;
   final bool inZone;
+  final bool isSecondLastEpisodeVisit;
   final double distance;
   final double visitCharge;
 
   VisitsListData({
+    required this.isSecondLastEpisodeVisit,
     required this.employeeTypeId,
     required this.distance,
     required this.visitCharge,

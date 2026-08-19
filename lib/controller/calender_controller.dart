@@ -169,19 +169,26 @@ class CalenderListController extends GetxController {
       if (name == null || name.trim().isEmpty) return '';
       return name
           .trim()
-          .split(RegExp(r'\s+'))          // split on one or more spaces
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
           .map((word) => word[0].toUpperCase())
           .join();
     }
+
     String getDisplayName(String? name) {
       if (name == null || name.trim().isEmpty) return '';
 
-      final words = name.trim().split(RegExp(r'\s+'));
+      final words = name
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .toList();
 
-      if (words.length > 4) {
-        return toShortForm(name);
+      if (words.length == 1) {
+        return words.first;          // e.g. "SOC" -> "SOC"
       }
-      return name.trim();
+
+      return toShortForm(name);      // e.g. "Physical Therapy Notes" -> "PTN"
     }
 
     try {
@@ -217,6 +224,7 @@ class CalenderListController extends GetxController {
                 v['timeTo'] != null ? formatTimeToAMPM(v['timeTo']) : '',
                 inZone: v['inZone'] ?? false,
                 distance: v['distance'] ?? 0.0,
+                isSecondLastEpisodeVisit: v["isSecondLastEpisodeVisit"] ?? false,
                 visitCharge: double.parse(
                   (((v['visit_charge'] as num?)?.toDouble() ?? 0.0)
                       .toStringAsFixed(2)),
