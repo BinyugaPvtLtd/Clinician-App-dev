@@ -28,7 +28,7 @@
 
 ///demo
 class ApiAppConstant {
-  static  String domain = 'https://demo.symmetry.care/';
+  static  String domain = 'https://prohealth-dev.symmetry.care/';
   static const String authDomain = 'https://auth.symmetry.care/';
   // `domain` can change at runtime (endPointByAlias), so this must recompute
   // on every access instead of freezing the value seen at class-load time.
@@ -42,14 +42,14 @@ class ApiAppConstant {
   static String endPointByAlias(int appType,String aliasString) {
     switch (appType) {
       case clinician:
-        domain = "https://demo.symmetry.care";
-        return "https://demo.symmetry.care";
+        domain = "https://prohealth-dev.symmetry.care";
+        return "https://prohealth-dev.symmetry.care";
       case proHealth:
-        domain = "https://demo.symmetry.care";
-        return "https://demo.symmetry.care";
+        domain = "https://prohealth-dev.symmetry.care";
+        return "https://prohealth-dev.symmetry.care";
       default:
-        domain = "https://demo.symmetry.care/api/";
-        return "https://demo.symmetry.care/api/";
+        domain = "https://prohealth-dev.symmetry.care/api/";
+        return "https://prohealth-dev.symmetry.care/api/";
     }
   }
 }
