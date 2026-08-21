@@ -9,11 +9,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 
-import 'package:dio/dio.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../../../controller/chat_controller.dart';
+import '../../../controller/repository/chat_repo.dart';
 
 class ChatElementWidget extends StatefulWidget {
   const ChatElementWidget({
@@ -30,6 +32,8 @@ class ChatElementWidget extends StatefulWidget {
 }
 
 class _ChatElementWidgetState extends State<ChatElementWidget> {
+  final ChatDataController controller = Get.find<ChatDataController>();
+
   String _formatTime(DateTime dt) => DateFormat('h:mm a').format(dt.toLocal());
 
   bool _isImage(String url) {
@@ -48,23 +52,44 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
     }
   }
 
+  // GetX's Get.snackbar resolves its overlay via a private Overlay-context
+  // hack that can throw "No Overlay widget found" (and can leave a broken
+  // SnackbarController registered, later crashing Get.back() with a
+  // LateInitializationError). ScaffoldMessenger.of(context) uses the
+  // ScaffoldMessenger that GetMaterialApp/MaterialApp always provides, so it
+  // doesn't share either failure mode.
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   // ===========================
   // ✅ DOWNLOAD + OPEN PDF
   // ===========================
   Future<void> _downloadAndOpenPdf(String url) async {
     try {
-      Get.snackbar("Downloading", "PDF downloading...",backgroundColor: Colors.white);
+      _showMessage("PDF downloading...");
+
+      final fileData = await controller.getEmployeeDocumentByFileName(
+        fileUrl: url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
+      );
+
+      if (fileData == null) {
+        _showMessage("PDF download failed");
+        return;
+      }
 
       final dir = await getTemporaryDirectory();
-      final fileName = _fileName(url);
-      final savePath = "${dir.path}/$fileName";
-
-      await Dio().download(url, savePath);
+      final savePath = "${dir.path}/${fileData.fileName}";
+      await File(savePath).writeAsBytes(fileData.bytes, flush: true);
 
       // ✅ open after download
       await OpenFile.open(savePath);
     } catch (e) {
-      Get.snackbar("Failed", "PDF open failed: $e");
+      _showMessage("PDF open failed: $e");
     }
   }
 
@@ -76,33 +101,37 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
       // permissions
       if (Platform.isAndroid) {
         // Android 13+ uses READ_MEDIA_IMAGES
-        final p1 = await Permission.photos.request(); // iOS
-        final p2 = await Permission.storage.request(); // older android
-        final p3 = await Permission.photos.request(); // android 13+ fallback
+        await Permission.photos.request(); // iOS
+        await Permission.storage.request(); // older android
+        await Permission.photos.request(); // android 13+ fallback
         // we won't strictly block; but check some permission granted
       }
 
-      Get.snackbar("Downloading", "Saving image to gallery...");
+      _showMessage("Saving image to gallery...");
 
-      final resp = await Dio().get<List<int>>(
-        url,
-        options: Options(responseType: ResponseType.bytes),
+      final fileData = await controller.getEmployeeDocumentByFileName(
+        fileUrl: url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
       );
 
-      final bytes = Uint8List.fromList(resp.data ?? []);
+      if (fileData == null) {
+        _showMessage("Image save failed");
+        return;
+      }
+
       final result = await ImageGallerySaverPlus.saveImage(
-        bytes,
+        Uint8List.fromList(fileData.bytes),
         quality: 90,
         name: "chat_${DateTime.now().millisecondsSinceEpoch}",
       );
 
       if (result['isSuccess'] == true) {
-        Get.snackbar("Saved", "Image saved to Gallery ✅");
+        _showMessage("Image saved to Gallery ✅");
       } else {
-        Get.snackbar("Failed", "Image save failed");
+        _showMessage("Image save failed");
       }
     } catch (e) {
-      Get.snackbar("Failed", "Image download failed: $e");
+      _showMessage("Image download failed: $e");
     }
   }
 
@@ -110,7 +139,11 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
   // ✅ Full screen preview (no download inside)
   // ===========================
   void _openImages(List<String> images, int initialIndex) {
-    Get.to(() => ImagePreviewScreen(imageUrls: images, initialIndex: initialIndex));
+    Get.to(() => ImagePreviewScreen(
+      imageUrls: images,
+      initialIndex: initialIndex,
+      isGroup: widget.isGroup,
+    ));
   }
 
   @override
@@ -354,16 +387,19 @@ class ImagePreviewScreen extends StatefulWidget {
     super.key,
     required this.imageUrls,
     this.initialIndex = 0,
+    required this.isGroup,
   });
 
   final List<String> imageUrls;
   final int initialIndex;
+  final bool isGroup;
 
   @override
   State<ImagePreviewScreen> createState() => _ImagePreviewScreenState();
 }
 
 class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
+  final ChatDataController controller = Get.find<ChatDataController>();
   late final PageController _page;
   int _currentIndex = 0;
   bool _isDownloading = false;
@@ -399,6 +435,16 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
     return storage.isGranted;
   }
 
+  // See _ChatElementWidgetState._showMessage: avoids GetX's Get.snackbar
+  // overlay-resolution bug (throws right after navigation, and can leave a
+  // broken SnackbarController that later crashes Get.back()).
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   Future<void> _downloadCurrentImage() async {
     if (_isDownloading) return;
     setState(() => _isDownloading = true);
@@ -406,35 +452,38 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
     try {
       final ok = await _requestGalleryPermission();
       if (!ok) {
-        // Get.snackbar("Permission denied", "Gallery permission is required to save image.");
+        _showMessage("Gallery permission is required to save image.");
         return;
       }
 
       final url = widget.imageUrls[_currentIndex];
 
-      Get.snackbar("Downloading", "Saving image to gallery...",backgroundColor: Colors.white);
+      _showMessage("Saving image to gallery...");
 
-      final resp = await Dio().get<List<int>>(
-        url,
-        options: Options(responseType: ResponseType.bytes),
+      final fileData = await controller.getEmployeeDocumentByFileName(
+        fileUrl: url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
       );
 
-      final bytes = Uint8List.fromList(resp.data ?? []);
+      if (fileData == null) {
+        _showMessage("Image save failed");
+        return;
+      }
 
       final result = await ImageGallerySaverPlus.saveImage(
-        bytes,
+        Uint8List.fromList(fileData.bytes),
         quality: 90,
         name: "chat_${DateTime.now().millisecondsSinceEpoch}",
       );
 
       final success = result['isSuccess'] == true;
       if (success) {
-        Get.snackbar("Saved", "Image saved to Gallery ✅",backgroundColor: Colors.white);
+        _showMessage("Image saved to Gallery ✅");
       } else {
-        Get.snackbar("Failed", "Image save failed");
+        _showMessage("Image save failed");
       }
     } catch (e) {
-      Get.snackbar("Failed", "Download failed: $e");
+      _showMessage("Download failed: $e");
     } finally {
       setState(() => _isDownloading = false);
     }

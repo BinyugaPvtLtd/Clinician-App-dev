@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:clinician_app/controller/repository/chat_repo.dart';
 import 'package:clinician_app/services/token_manager/token_manager_service.dart';
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -920,6 +921,34 @@ class ChatDataController extends GetxController {
         success: false,
         message: "Something Went Wrong",
       );
+    }
+  }
+  Future<DownloadFileData?> getEmployeeDocumentByFileName(
+      {
+        required String apiPath,
+        required String fileUrl,
+      }
+      ) async {
+    try {
+      final fileName = fileUrl.split('/').last;
+      final response = await _api.getBytes(
+        path: "$apiPath/$fileName",
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return DownloadFileData(
+          fileName: fileName,
+          bytes: response.data,
+        );
+      } else {
+        print('Api Error');
+        return null;
+      }
+    } on DioException catch (e) {
+      print("Error ${e.response?.data['message'] ?? e.message}");
+      return null;
+    } catch (e) {
+      print("Error $e");
+      return null;
     }
   }
 

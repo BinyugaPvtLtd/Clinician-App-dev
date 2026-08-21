@@ -477,6 +477,10 @@ class ApiService extends GetxService {
   Future<dio.Response> patchList(String path, List data)             => _client.patch(path, data: data);
   Future<dio.Response> delete(String path)                           => _client.delete(path);
   Future<dio.Response> patchNoRequest({required String path, Map? data})     => _client.patch(path, data: data);
+  Future<dio.Response> getBytes({required String path}) => _client.get(
+    path,
+    options: dio.Options(responseType: dio.ResponseType.bytes),
+  );
   Future<dio.Response> deleteWithData({required String path, Map? data}) async {
     String token = await TokenManager.getAccessToken();
     var headers = {
