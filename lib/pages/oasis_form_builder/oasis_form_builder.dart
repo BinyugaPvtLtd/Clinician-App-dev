@@ -397,7 +397,7 @@ class _OasisFormBuilderState extends State<OasisFormBuilder> {
                                             final response = await FormBuilderManager().patchPatientForm(
                                                 context,
                                                 patientFormID: widget.patientFormID,
-                                                formData: 'CODER_SENT_FOR_CORRECTION '
+                                                formData: 'CODER_SENT_FOR_CORRECTION'
                                             );
                                             if (response.statusCode == 200 || response.statusCode == 201) {
                                               Navigator.pop(context, true);

@@ -7,6 +7,7 @@ import 'package:clinician_app/pages/auth/forgot_pass_screen.dart';
 import 'package:clinician_app/pages/auth/password_screen.dart';
 import 'package:clinician_app/pages/auth/register_screen.dart';
 import 'package:clinician_app/pages/auth/widget/error_dailog.dart';
+import 'package:clinician_app/pages/auth/widget/pass_reset_email_sent_bottomsheet.dart';
 import 'package:clinician_app/pages/home/home_screen.dart';
 import 'package:clinician_app/utils/validator.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -21,8 +22,9 @@ import '../../model/request/request_data_model.dart';
 
 class CompanyListScreen extends StatefulWidget {
   final String email;
+  final bool isForgotPasswordScreen;
   final List<Company> companyList;
-  const CompanyListScreen({super.key, required this.email, required this.companyList});
+  const CompanyListScreen({super.key, required this.email, required this.companyList, required this.isForgotPasswordScreen});
 
   @override
   State<CompanyListScreen> createState() => _CompanyListScreenState();
@@ -157,7 +159,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       color: AppColors.primaryAppColor,
                     ),
                   ):PrimaryButton(
-                    onTap: () async{
+                    onTap: widget.isForgotPasswordScreen == false ? () async{
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
                         print("Auto selected company: $selectedCompanyAlias");
@@ -166,6 +168,22 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                         await Get.offAll(() => PasswordScreen(email: widget.email));
                         //Get.to(() => HomeScreen());
             
+                      } else {
+                        // Form is invalid
+                        print('Validation failed');
+                      }
+                    }:() async{
+                      if (_formKey.currentState!.validate()) {
+                        // Form is valid
+                        print("Auto selected company: $selectedCompanyAlias");
+                        String endWith = await ApiAppConstant.endPointByAlias(3, selectedCompanyAlias);
+                        print("Endpoint set to: ${ApiAppConstant.domain}");
+                        await Get.bottomSheet(
+                          PassResetEmailSentBottomsheet(email: widget.email),
+                          barrierColor: Colors.white.withValues(alpha: 0.3),
+                        );
+                        //Get.to(() => HomeScreen());
+
                       } else {
                         // Form is invalid
                         print('Validation failed');
