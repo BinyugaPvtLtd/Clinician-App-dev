@@ -48,8 +48,8 @@ class ApiAppConstant {
         domain = "https://prohealth-dev.symmetry.care";
         return "https://prohealth-dev.symmetry.care";
       default:
-        domain = "https://prohealth-dev.symmetry.care/api/";
-        return "https://prohealth-dev.symmetry.care/api/";
+        domain = "https://prohealth-dev.symmetry.care/";
+        return "https://prohealth-dev.symmetry.care/";
     }
   }
 }

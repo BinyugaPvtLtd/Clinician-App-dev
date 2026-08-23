@@ -482,7 +482,13 @@ class UpdateDocumentsController extends GetxController {
     required String fileUrl,
   }) async {
     try {
-      final fileName = fileUrl.split('/').last;
+      // Signed URLs (e.g. "...file.pdf?token=...") carry query params —
+      // split on '/' alone would leave "file.pdf?token=..." as the
+      // filename, breaking both the API path and the saved file's extension.
+      final uri = Uri.tryParse(fileUrl);
+      final fileName = (uri != null && uri.pathSegments.isNotEmpty)
+          ? uri.pathSegments.last
+          : fileUrl.split('/').last;
       final response = await _api.getBytes(
         path: "${ProfileRepository.employeeDocumentsDownload}/$fileName",
       );

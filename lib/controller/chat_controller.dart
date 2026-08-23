@@ -930,7 +930,13 @@ class ChatDataController extends GetxController {
       }
       ) async {
     try {
-      final fileName = fileUrl.split('/').last;
+      // Signed URLs (e.g. "...photo.jpg?token=...") carry query params —
+      // split on '/' alone would leave "photo.jpg?token=..." as the
+      // filename, breaking both the API path and the saved file's extension.
+      final uri = Uri.tryParse(fileUrl);
+      final fileName = (uri != null && uri.pathSegments.isNotEmpty)
+          ? uri.pathSegments.last
+          : fileUrl.split('/').last;
       final response = await _api.getBytes(
         path: "$apiPath/$fileName",
       );

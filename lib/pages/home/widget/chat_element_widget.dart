@@ -36,12 +36,53 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
 
   String _formatTime(DateTime dt) => DateFormat('h:mm a').format(dt.toLocal());
 
+  // Attachment URLs are often signed (e.g. "...photo.jpg?token=..."), so the
+  // extension has to be read off the URI's path — checking the raw string
+  // with endsWith() silently fails on the query string and the attachment
+  // renders as nothing at all (no image, no PDF row, no error).
+  String _urlPath(String url) => (Uri.tryParse(url)?.path ?? url).toLowerCase();
+
   bool _isImage(String url) {
-    final lower = url.toLowerCase();
+    final path = _urlPath(url);
+    return path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png');
+  }
+
+  bool _isPdf(String url) => _urlPath(url).endsWith('.pdf');
+
+  bool _isImageName(String name) {
+    final lower = name.toLowerCase();
     return lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png');
   }
 
-  bool _isPdf(String url) => url.toLowerCase().endsWith('.pdf');
+  bool _isPdfName(String name) => name.toLowerCase().endsWith('.pdf');
+
+  Widget _pdfRow(String name, VoidCallback? onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 6.h),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.picture_as_pdf,
+              size: 26,
+              color: widget.chat.isSender ? Colors.white : Colors.black,
+            ),
+            SizedBox(width: 8.w),
+            Flexible(
+              child: Text(
+                name,
+                style: AppTextStyle.normal10style.copyWith(
+                  color: widget.chat.isSender ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   String _fileName(String url) {
     try {
@@ -159,6 +200,19 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
     final imageUrls = widget.chat.attachments.where(_isImage).toList();
     final pdfUrls = widget.chat.attachments.where(_isPdf).toList();
 
+    // Attachments still uploading locally (no URL yet) — shown immediately
+    // so a just-sent image/PDF isn't invisible until the next chat poll.
+    final localImages = <Uint8List>[];
+    final localPdfNames = <String>[];
+    for (var i = 0; i < widget.chat.localAttachmentNames.length; i++) {
+      final name = widget.chat.localAttachmentNames[i];
+      if (_isImageName(name)) {
+        localImages.add(widget.chat.localAttachmentBytes[i]);
+      } else if (_isPdfName(name)) {
+        localPdfNames.add(name);
+      }
+    }
+
     return Container(
       alignment: widget.chat.isSender ? Alignment.centerRight : Alignment.centerLeft,
       margin: EdgeInsets.symmetric(vertical: 10.h),
@@ -182,6 +236,10 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                       ? Image.network(
                     widget.chat.senderAvatarUrl!,
                     fit: BoxFit.cover,
+                    // The message list rebuilds every 3s (chat polling);
+                    // without this the avatar drops to a blank frame each
+                    // time this item's Element is reused, reading as a blink.
+                    gaplessPlayback: true,
                     errorBuilder: (_, __, ___) =>
                         Image.asset(AppAsset.profilePicImg, fit: BoxFit.cover),
                   )
@@ -233,7 +291,7 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                             : CrossAxisAlignment.start,
                         children: [
                           // ✅ IMAGES (WhatsApp style preview)
-                          if (imageUrls.isNotEmpty)
+                          if (imageUrls.isNotEmpty || localImages.isNotEmpty)
                             ClipRRect(
                               borderRadius: BorderRadius.only(
                                 topLeft: widget.chat.isSender
@@ -244,86 +302,78 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                                     : Radius.circular(6.r),
                               ),
                               child: Column(
-                                children: List.generate(imageUrls.length, (i) {
-                                  final url = imageUrls[i];
-                                  return InkWell(
-                                    onTap: () => _openImages(imageUrls, i),
-                                    child: Stack(
-                                      children: [
-                                        Container(
-                                          width: double.infinity,
-                                          height: 180.h,
-                                          color: Colors.white,
-                                          child: Image.network(
-                                            url,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => const Center(
-                                              child: Icon(Icons.broken_image, size: 40),
+                                children: [
+                                  // still-uploading local previews (no tap — nothing to open yet)
+                                  ...List.generate(localImages.length, (i) {
+                                    return Container(
+                                      width: double.infinity,
+                                      height: 180.h,
+                                      color: Colors.white,
+                                      child: Image.memory(
+                                        localImages[i],
+                                        fit: BoxFit.cover,
+                                        gaplessPlayback: true,
+                                      ),
+                                    );
+                                  }),
+                                  ...List.generate(imageUrls.length, (i) {
+                                    final url = imageUrls[i];
+                                    return InkWell(
+                                      onTap: () => _openImages(imageUrls, i),
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            width: double.infinity,
+                                            height: 180.h,
+                                            color: Colors.white,
+                                            child: Image.network(
+                                              url,
+                                              fit: BoxFit.cover,
+                                              gaplessPlayback: true,
+                                              errorBuilder: (_, __, ___) => const Center(
+                                                child: Icon(Icons.broken_image, size: 40),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        // Positioned(
-                                        //   right: 8,
-                                        //   top: 8,
-                                        //   child: Container(
-                                        //     padding: const EdgeInsets.all(6),
-                                        //     decoration: BoxDecoration(
-                                        //       color: Colors.black.withValues(alpha: 0.4),
-                                        //       shape: BoxShape.circle,
-                                        //     ),
-                                        //     child: const Icon(
-                                        //       Icons.download,
-                                        //       color: Colors.white,
-                                        //       size: 18,
-                                        //     ),
-                                        //   ),
-                                        // ),
-                                      ],
-                                    ),
-                                  );
-                                }),
+                                          // Positioned(
+                                          //   right: 8,
+                                          //   top: 8,
+                                          //   child: Container(
+                                          //     padding: const EdgeInsets.all(6),
+                                          //     decoration: BoxDecoration(
+                                          //       color: Colors.black.withValues(alpha: 0.4),
+                                          //       shape: BoxShape.circle,
+                                          //     ),
+                                          //     child: const Icon(
+                                          //       Icons.download,
+                                          //       color: Colors.white,
+                                          //       size: 18,
+                                          //     ),
+                                          //   ),
+                                          // ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
                               ),
                             ),
 
                           // ✅ PDF (ONLY icon + filename row)
-                          if (pdfUrls.isNotEmpty)
+                          if (pdfUrls.isNotEmpty || localPdfNames.isNotEmpty)
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                               child: Column(
                                 crossAxisAlignment: widget.chat.isSender
                                     ? CrossAxisAlignment.end
                                     : CrossAxisAlignment.start,
-                                children: pdfUrls.map((url) {
-                                  return InkWell(
-                                    onTap: () => _downloadAndOpenPdf(url),
-                                    child: Padding(
-                                      padding: EdgeInsets.only(bottom: 6.h),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.picture_as_pdf,
-                                            size: 26,
-                                            color: widget.chat.isSender
-                                                ? Colors.white
-                                                : Colors.black,
-                                          ),
-                                          SizedBox(width: 8.w),
-                                          Flexible(
-                                            child: Text(
-                                              _fileName(url),
-                                              style: AppTextStyle.normal10style.copyWith(
-                                                color: widget.chat.isSender
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                                children: [
+                                  // still-uploading local PDFs — nothing to open yet
+                                  ...localPdfNames.map((name) => _pdfRow(name, null)),
+                                  ...pdfUrls.map(
+                                    (url) => _pdfRow(_fileName(url), () => _downloadAndOpenPdf(url)),
+                                  ),
+                                ],
                               ),
                             ),
 

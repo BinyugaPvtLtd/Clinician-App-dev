@@ -366,7 +366,10 @@ class _ClinitianInfoScreenState extends State<ClinitianInfoScreen> with SingleTi
                               final isPdf = url.toLowerCase().contains(".pdf");
 
                               return InkWell(
-                                onTap: () => _openPreviewPopup(context, url),
+                                splashColor: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                onTap: () {},//=> _openPreviewPopup(context, url),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
                                   child: isPdf
