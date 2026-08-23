@@ -3,17 +3,17 @@ import 'dart:ui';
 import 'dart:io';
 import 'package:clinician_app/core/constant/app_colors.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../controller/chat_controller.dart';
+import '../../../controller/repository/chat_repo.dart';
 import '../../../core/ui/common_appbar.dart';
 import '../../../core/ui/common_divider.dart';
 import '../../../model/chatScreen/group_info_model.dart';
+import 'chat_element_widget.dart';
 
 
 class GroupInfoScreen extends StatefulWidget {
@@ -60,13 +60,63 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> with SingleTickerProv
     return u != null && (u.scheme == 'http' || u.scheme == 'https');
   }
 
+  // Attachment URLs are often signed (e.g. "...photo.jpg?token=..."), so the
+  // extension has to be read off the URI's path — checking the raw string
+  // with endsWith() silently fails on the query string and the image never
+  // renders (falls back to the placeholder icon).
+  String _urlPath(String url) => (Uri.tryParse(url)?.path ?? url).toLowerCase();
+
   bool _looksLikeImageUrl(String url) {
-    final lower = url.toLowerCase();
-    return lower.endsWith('.png') ||
-        lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.webp') ||
-        lower.endsWith('.gif');
+    final path = _urlPath(url);
+    return path.endsWith('.png') ||
+        path.endsWith('.jpg') ||
+        path.endsWith('.jpeg') ||
+        path.endsWith('.webp') ||
+        path.endsWith('.gif');
+  }
+
+  bool _looksLikePdfUrl(String url) => _urlPath(url).endsWith('.pdf');
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  // Same secure download used in the chat bubbles: fetches the file through
+  // the authenticated API (not a plain http.get on the raw URL) before
+  // opening it, so this behaves identically to tapping a PDF in the chat.
+  Future<void> _downloadAndOpenPdf(String url) async {
+    try {
+      _showMessage("PDF downloading...");
+
+      final fileData = await chatController.getEmployeeDocumentByFileName(
+        fileUrl: url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: true),
+      );
+
+      if (fileData == null) {
+        _showMessage("PDF download failed");
+        return;
+      }
+
+      final dir = await getTemporaryDirectory();
+      final savePath = "${dir.path}/${fileData.fileName}";
+      await File(savePath).writeAsBytes(fileData.bytes, flush: true);
+
+      await OpenFile.open(savePath);
+    } catch (e) {
+      _showMessage("PDF open failed: $e");
+    }
+  }
+
+  void _openImages(List<String> images, int initialIndex) {
+    Get.to(() => ImagePreviewScreen(
+      imageUrls: images,
+      initialIndex: initialIndex,
+      isGroup: true,
+    ));
   }
 
   Widget _netImageOrIcon({
@@ -104,136 +154,6 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> with SingleTickerProv
   }
 
   // -------------------------------------------------------------
-
-  void _openPreviewPopup(BuildContext context, String url) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final isPdf = url.toLowerCase().endsWith(".pdf");
-
-        return Dialog(
-          insetPadding: const EdgeInsets.all(20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Stack(
-            children: [
-              Container(
-                padding: EdgeInsets.only(
-                  left: 10,
-                  right: 10,
-                  bottom: 10,
-                  top: isPdf ? 40 : 10,
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: isPdf ? _buildPdfViewer(url) : _buildImageViewer(url),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                right: 10,
-                top: 10,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Icon(Icons.close, size: 28, color: Colors.black),
-                ),
-              )
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildImageViewer(String url) {
-    return Center(
-      child: _netImageOrIcon(
-        url: url,
-        width: 800,
-        height: 800,
-        fit: BoxFit.contain,
-        iconSize: 80,
-      ),
-    );
-  }
-
-
-  Widget _buildPdfViewer(String url) {
-    // On mobile platforms we download the PDF to a temporary file and open
-    // it with the native PDF viewer using `open_file`.
-    // On web (or unsupported platforms) we fall back to a simple message.
-
-    // if (kIsWeb) {
-    //   // Web: can't use native open; show a simple link that opens in a new tab.
-    //   return Center(
-    //     child: ElevatedButton.icon(
-    //       icon: const Icon(Icons.open_in_new),
-    //       label: const Text('Open PDF'),
-    //       onPressed: () async {
-    //         // Use a JS/HTML link to open in new tab - easiest fallback.
-    //         // We use window.open from dart:html only on web; this file avoids
-    //         // importing dart:html directly to remain mobile-friendly. If you
-    //         // need the web behavior improved, we can add a web-only import.
-    //         // For now, open the url using OpenFile (may not work on web).
-    //         await _openPdfUrlWeb(url);
-    //       },
-    //     ),
-    //   );
-    // }
-
-    // Mobile / desktop: return a widget with a button that downloads and opens the PDF.
-    return Center(
-      child: ElevatedButton.icon(
-        icon: const Icon(Icons.picture_as_pdf),
-        label: const Text('Open PDF'),
-        onPressed: () async {
-          try {
-            final path = await _downloadToTempFile(url);
-            if (path != null) await OpenFile.open(path);
-          } catch (e) {
-            // ignore errors; show a snackbar if context available
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to open PDF: $e')),
-              );
-            }
-          }
-        },
-      ),
-    );
-  }
-
-  // Download a remote URL to a temporary file and return its path.
-  Future<String?> _downloadToTempFile(String url) async {
-    try {
-      final uri = Uri.parse(url);
-      final resp = await http.get(uri);
-      if (resp.statusCode != 200) throw Exception('HTTP ${resp.statusCode}');
-
-      final bytes = resp.bodyBytes;
-      final dir = await getTemporaryDirectory();
-      final fileName = 'pdf_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(bytes);
-      return file.path;
-    } catch (e) {
-      debugPrint('PDF download failed: $e');
-      return null;
-    }
-  }
-
-  // Minimal web opener: attempts to open the url in a new tab.
-  // We avoid importing 'dart:html' at top-level to keep file mobile-safe.
-  Future<void> _openPdfUrlWeb(String url) async {
-    // Try to use OpenFile as best-effort; on web you may want to add a
-    // small web-only helper using `dart:html`.
-    try {
-      await OpenFile.open(url);
-    } catch (_) {
-      // No-op: web will fallback to letting the browser handle the URL.
-    }
-  }
 
   @override
   void dispose() {
@@ -361,13 +281,28 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> with SingleTickerProv
                             itemBuilder: (context, index) {
                               final item = groupInfo.mediaLinksAndDocs[index];
                               final url = item.mediaUrl;
-                              final isPdf = url.toLowerCase().contains(".pdf");
+                              final isPdf = _looksLikePdfUrl(url);
+
+                              // Same behaviour as the chat bubbles: tapping a
+                              // PDF downloads+opens it, tapping an image opens
+                              // the shared fullscreen preview (with its own
+                              // save-to-gallery action).
+                              final imageUrls = groupInfo.mediaLinksAndDocs
+                                  .map((m) => m.mediaUrl)
+                                  .where(_looksLikeImageUrl)
+                                  .toList();
 
                               return InkWell(
                                 splashColor: Colors.transparent,
                                 hoverColor: Colors.transparent,
                                 highlightColor: Colors.transparent,
-                                onTap: () {},//=> _openPreviewPopup(context, url),
+                                onTap: () {
+                                  if (isPdf) {
+                                    _downloadAndOpenPdf(url);
+                                  } else {
+                                    _openImages(imageUrls, imageUrls.indexOf(url));
+                                  }
+                                },
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
                                   child: isPdf

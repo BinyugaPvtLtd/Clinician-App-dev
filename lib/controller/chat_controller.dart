@@ -288,6 +288,10 @@ class ChatDataController extends GetxController {
             final sender = m["sender"] ?? {};
 
             List<String> attachments = parseAttachments(m["attached_multimedia_url"]);
+            // Backend can send voice_note_url either as a plain URL string or
+            // as a JSON array (same shape as attached_multimedia_url) — parse
+            // it the same way instead of passing the raw field through, or
+            // media_kit gets a literal "[\"url\"]" string and fails to open it.
             List<String> voiceNote = parseAttachments(m['voice_note_url']);
 
             messages.add(
@@ -303,7 +307,7 @@ class ChatDataController extends GetxController {
                 seenByClinicians: List<int>.from(m["seen_by_clinicians"] ?? []),
                 attachedMultimediaUrls: attachments,
                 stickerMultimediaUrl: m["sticker_multimedia_url"] ?? "",
-                voiceNoteUrl: m['voice_note_url'] ?? '',
+                voiceNoteUrl: voiceNote.isNotEmpty ? voiceNote.first : '',
                 sentAsSms: m["sent_as_sms"] ?? false,
                 sender: Sender(
                   userId: sender["userId"] ?? 0,
@@ -391,11 +395,13 @@ class ChatDataController extends GetxController {
         if (data["messages"] != null) {
           for (var m in data["messages"]) {
             final sender = m["sender"] ?? {};
+            // Same fix as the group chat parser above: voice_note_url can
+            // arrive as a JSON array, so use the parsed URL, not the raw field.
             List<String> voiceNoteUrls = parseAttachedMultimediaUrl(m['voice_note_url']);
 
             messages.add(
               EmpMessage(
-                voiceNoteUrl: m['voice_note_url'] ?? '',
+                voiceNoteUrl: voiceNoteUrls.isNotEmpty ? voiceNoteUrls.first : '',
                 textContent: m["text_content"] ?? "",
                 dateCreated: m["date_created"] ?? "",
                 dateModified: m["date_modified"],
