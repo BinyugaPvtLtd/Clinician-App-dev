@@ -68,15 +68,6 @@ class _ClinitianInfoScreenState extends State<ClinitianInfoScreen> with SingleTi
   // renders (falls back to the placeholder icon).
   String _urlPath(String url) => (Uri.tryParse(url)?.path ?? url).toLowerCase();
 
-  bool _looksLikeImageUrl(String url) {
-    final path = _urlPath(url);
-    return path.endsWith('.png') ||
-        path.endsWith('.jpg') ||
-        path.endsWith('.jpeg') ||
-        path.endsWith('.webp') ||
-        path.endsWith('.gif');
-  }
-
   bool _looksLikePdfUrl(String url) => _urlPath(url).endsWith('.pdf');
 
   void _showMessage(String message) {
@@ -128,7 +119,11 @@ class _ClinitianInfoScreenState extends State<ClinitianInfoScreen> with SingleTi
     BoxFit fit = BoxFit.cover,
     double iconSize = 30,
   }) {
-    final ok = _isValidHttpUrl(url) && _looksLikeImageUrl(url);
+    // Media URLs are signed and often carry no recognizable file extension
+    // (e.g. a token-only path), so gating on the extension kept real images
+    // stuck on the placeholder icon. Any valid http(s) URL is attempted —
+    // Image.network's errorBuilder below still catches genuine failures.
+    final ok = _isValidHttpUrl(url);
 
     if (!ok) {
       return Container(
@@ -287,9 +282,11 @@ class _ClinitianInfoScreenState extends State<ClinitianInfoScreen> with SingleTi
                               // Same behaviour as the chat bubbles: tapping a
                               // PDF downloads+opens it, tapping an image opens
                               // the shared fullscreen preview (with its own
-                              // save-to-gallery action).
+                              // save-to-gallery action). Everything that
+                              // isn't a PDF here is an image, so treat it as
+                              // one rather than re-checking the extension.
                               final imageUrls = groupInfo.media
-                                  .where(_looksLikeImageUrl)
+                                  .where((u) => !_looksLikePdfUrl(u))
                                   .toList();
 
                               return InkWell(
@@ -307,12 +304,13 @@ class _ClinitianInfoScreenState extends State<ClinitianInfoScreen> with SingleTi
                                   borderRadius: BorderRadius.circular(10),
                                   child: isPdf
                                       ? Icon(Icons.description, size: 40, color: AppColors.primaryAppColor)
-                                      : _netImageOrIcon(
+                                      : SecureNetworkImage(
                                     url: url,
+                                    isGroup: false,
                                     width: 40,
                                     height: 40,
                                     fit: BoxFit.cover,
-                                    iconSize: 20,
+                                    placeholderIconSize: 20,
                                   ),
                                 ),
                               );

@@ -573,19 +573,131 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
             child: InteractiveViewer(
               minScale: 1,
               maxScale: 5,
-              child: Image.network(
-                url,
+              child: SecureNetworkImage(
+                url: url,
+                isGroup: widget.isGroup,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.broken_image,
-                  color: Colors.white,
-                  size: 40,
-                ),
+                brokenIconColor: Colors.white,
+                placeholderIconSize: 40,
               ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+// ===========================
+// Network image that falls back to the authenticated document-download API
+// when a plain, unauthenticated GET can't load it. Some attachment URLs
+// (e.g. the ones surfaced by the group/employee "Media, links and doc"
+// summary endpoints) require the app's auth token to fetch, unlike the
+// pre-signed URLs used elsewhere in chat — so a bare Image.network on them
+// errors with a 403. Fetching that way first and only then falling back
+// used to flash the broken-image placeholder before the real image
+// appeared, so the authenticated fetch now runs first and a plain
+// Image.network is only the last-resort fallback if that fails.
+// ===========================
+class SecureNetworkImage extends StatefulWidget {
+  const SecureNetworkImage({
+    super.key,
+    required this.url,
+    required this.isGroup,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
+    this.placeholderIconSize = 24,
+    this.brokenIconColor,
+  });
+
+  final String url;
+  final bool isGroup;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
+  final double placeholderIconSize;
+  final Color? brokenIconColor;
+
+  @override
+  State<SecureNetworkImage> createState() => _SecureNetworkImageState();
+}
+
+class _SecureNetworkImageState extends State<SecureNetworkImage> {
+  final ChatDataController _controller = Get.find<ChatDataController>();
+
+  Uint8List? _bytes;
+  bool _secureFailed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSecureBytes();
+  }
+
+  @override
+  void didUpdateWidget(covariant SecureNetworkImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _bytes = null;
+      _secureFailed = false;
+      _loadSecureBytes();
+    }
+  }
+
+  Widget _placeholder({bool loading = false}) => Container(
+    width: widget.width,
+    height: widget.height,
+    color: loading ? Colors.grey[200] : null,
+    alignment: Alignment.center,
+    child: loading
+        ? null
+        : Icon(
+      Icons.broken_image,
+      color: widget.brokenIconColor ?? Colors.grey[400],
+      size: widget.placeholderIconSize,
+    ),
+  );
+
+  Future<void> _loadSecureBytes() async {
+    try {
+      final fileData = await _controller.getEmployeeDocumentByFileName(
+        fileUrl: widget.url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
+      );
+      if (!mounted) return;
+      if (fileData != null) {
+        setState(() => _bytes = Uint8List.fromList(fileData.bytes));
+      } else {
+        setState(() => _secureFailed = true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _secureFailed = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_bytes != null) {
+      return Image.memory(
+        _bytes!,
+        width: widget.width,
+        height: widget.height,
+        fit: widget.fit,
+        gaplessPlayback: true,
+      );
+    }
+
+    if (!_secureFailed) return _placeholder(loading: true);
+
+    // Authenticated fetch failed — last-resort attempt at the raw URL, in
+    // case it turns out to be a plain, publicly reachable one after all.
+    return Image.network(
+      widget.url,
+      width: widget.width,
+      height: widget.height,
+      fit: widget.fit,
+      errorBuilder: (_, __, ___) => _placeholder(),
     );
   }
 }

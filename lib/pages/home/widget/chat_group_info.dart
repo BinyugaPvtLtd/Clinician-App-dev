@@ -66,16 +66,18 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> with SingleTickerProv
   // renders (falls back to the placeholder icon).
   String _urlPath(String url) => (Uri.tryParse(url)?.path ?? url).toLowerCase();
 
-  bool _looksLikeImageUrl(String url) {
-    final path = _urlPath(url);
-    return path.endsWith('.png') ||
-        path.endsWith('.jpg') ||
-        path.endsWith('.jpeg') ||
-        path.endsWith('.webp') ||
-        path.endsWith('.gif');
-  }
-
   bool _looksLikePdfUrl(String url) => _urlPath(url).endsWith('.pdf');
+
+  // The backend already tags each item with a mediaType (e.g. "image",
+  // "pdf"); trust that over guessing from the URL, which is often signed and
+  // carries no recognizable extension. Fall back to the extension only when
+  // mediaType is missing/ambiguous.
+  bool _isPdfItem(MediaLinksData item) {
+    final type = item.mediaType.toLowerCase();
+    if (type.contains('pdf') || type.contains('doc')) return true;
+    if (type.contains('image') || type.contains('photo') || type.contains('img')) return false;
+    return _looksLikePdfUrl(item.mediaUrl);
+  }
 
   void _showMessage(String message) {
     if (!mounted) return;
@@ -126,7 +128,11 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> with SingleTickerProv
     BoxFit fit = BoxFit.cover,
     double iconSize = 30,
   }) {
-    final ok = _isValidHttpUrl(url) && _looksLikeImageUrl(url);
+    // Media URLs are signed and often carry no recognizable file extension
+    // (e.g. a token-only path), so gating on the extension kept real images
+    // stuck on the placeholder icon. Any valid http(s) URL is attempted —
+    // Image.network's errorBuilder below still catches genuine failures.
+    final ok = _isValidHttpUrl(url);
 
     if (!ok) {
       return Container(
@@ -281,15 +287,17 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> with SingleTickerProv
                             itemBuilder: (context, index) {
                               final item = groupInfo.mediaLinksAndDocs[index];
                               final url = item.mediaUrl;
-                              final isPdf = _looksLikePdfUrl(url);
+                              final isPdf = _isPdfItem(item);
 
                               // Same behaviour as the chat bubbles: tapping a
                               // PDF downloads+opens it, tapping an image opens
                               // the shared fullscreen preview (with its own
-                              // save-to-gallery action).
+                              // save-to-gallery action). Everything that
+                              // isn't a PDF here is an image, so treat it as
+                              // one rather than re-checking the extension.
                               final imageUrls = groupInfo.mediaLinksAndDocs
+                                  .where((m) => !_isPdfItem(m))
                                   .map((m) => m.mediaUrl)
-                                  .where(_looksLikeImageUrl)
                                   .toList();
 
                               return InkWell(
@@ -307,12 +315,13 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> with SingleTickerProv
                                   borderRadius: BorderRadius.circular(10),
                                   child: isPdf
                                       ? Icon(Icons.description, size: 40, color: AppColors.primaryAppColor)
-                                      : _netImageOrIcon(
+                                      : SecureNetworkImage(
                                     url: url,
+                                    isGroup: true,
                                     width: 40,
                                     height: 40,
                                     fit: BoxFit.cover,
-                                    iconSize: 20,
+                                    placeholderIconSize: 20,
                                   ),
                                 ),
                               );
