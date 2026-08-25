@@ -29,6 +29,7 @@ class ProfileRepository{
   static String metaDataDocument = 'employee-document-type-setup/essential-docs';
   static String employeeDocuments = '/employee-documents';
   static String employeeDocumentWithBase64 = '/employee-documents/withBase64';
+  static String employeeDocumentsDownload = '/employee-documents/documents';
 
 
 

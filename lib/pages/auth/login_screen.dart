@@ -150,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (response.companies.length == 1) {
                           String companyAlias = response.companies.first.companyAlias;
                           print("Auto selected company: $companyAlias");
-                          String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
+                          String endWith = await ApiAppConstant.endPointByAlias(3, companyAlias);
                           print("Endpoint set to: ${ApiAppConstant.domain}");
                            Get.to(
                             () => PasswordScreen(email: email),
@@ -158,7 +158,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             duration: const Duration(milliseconds: 400),
                           );
                         } else {
-                          Get.to(() => CompanyListScreen(email: email, companyList: response.companies));
+                          Get.to(() => CompanyListScreen(
+                            isForgotPasswordScreen: false,
+                              email: email,
+                              companyList: response.companies));
                         }
                       } else {
                         print('Error');

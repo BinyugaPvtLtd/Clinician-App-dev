@@ -1,5 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member
 
+import 'dart:io';
+
 import 'package:clinician_app/controller/home_controller.dart';
 import 'package:clinician_app/controller/visit_controller.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
@@ -13,7 +15,8 @@ import 'package:clinician_app/pages/profile/widgets/edit_doc_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../controller/update_documents_controller.dart';
 
@@ -44,31 +47,47 @@ class _DocumnetPageState extends State<DocumnetPage>
     super.initState();
   }
 
-  /// Opens / downloads the tapped document.
-  /// [url] should be the full download / file URL coming from your API model
-  /// (e.g. docItem.docList[index].documentUrl / fileUrl / docPath — rename
-  /// to match your actual model field).
+  // GetX's Get.snackbar resolves its overlay via a private Overlay-context
+  // hack that can throw "No Overlay widget found" right after a page push
+  // (e.g. tapping a row immediately after the Cupertino transition lands).
+  // ScaffoldMessenger.of(context) uses the ScaffoldMessenger that
+  // GetMaterialApp/MaterialApp always provides, so it doesn't share that
+  // failure mode.
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  /// Downloads the tapped document through the authenticated API and opens
+  /// it. [url] should be the full document URL coming from the API model
+  /// (docItem.docList[index].documentUrl) — only its filename is used.
   Future<void> _downloadDocument(String? url) async {
     if (url == null || url.trim().isEmpty) {
-      Get.snackbar("Error", "Document URL not found");
-      return;
-    }
-
-    final uri = Uri.tryParse(url.trim());
-    if (uri == null) {
-      Get.snackbar("Error", "Invalid document URL");
+      _showMessage("Document URL not found");
       return;
     }
 
     try {
-      final canLaunch = await canLaunchUrl(uri);
-      if (canLaunch) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        Get.snackbar("Error", "Unable to open document");
+      _showMessage("Document downloading...");
+
+      final fileData = await updateController.getEmployeeDocumentByFileName(
+        fileUrl: url.trim(),
+      );
+
+      if (fileData == null) {
+        _showMessage("Unable to open document");
+        return;
       }
+
+      final dir = await getTemporaryDirectory();
+      final savePath = "${dir.path}/${fileData.fileName}";
+      await File(savePath).writeAsBytes(fileData.bytes, flush: true);
+
+      await OpenFile.open(savePath);
     } catch (e) {
-      Get.snackbar("Error", "Something went wrong while opening the document");
+      _showMessage("Something went wrong while opening the document");
     }
   }
 

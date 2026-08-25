@@ -68,3 +68,13 @@ class AbbrChipModel {
 
   AbbrChipModel({required this.abbr, required this.color});
 }
+
+class DownloadFileData {
+  final String fileName;
+  final List<int> bytes;
+
+  DownloadFileData({
+    required this.fileName,
+    required this.bytes,
+  });
+}
