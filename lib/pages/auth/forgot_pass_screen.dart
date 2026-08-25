@@ -10,6 +10,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../controller/auth_controller.dart';
+import '../../services/token_manager/token_manager_service.dart';
 import 'company_list_screen.dart';
 
 class ForgotPassScreen extends StatefulWidget {
@@ -121,7 +122,8 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
                   if (companyResponse.companies.length == 1) {
                     // Single company -> auto-select alias and set domain
                     final companyAlias = companyResponse.companies.first.companyAlias;
-                    ApiAppConstant.endPointByAlias(3, companyAlias);
+                    await TokenManager.setCompanyAlias(companyAlias: "demo");
+                    ApiAppConstant.endPointByAlias(3, "demo");
                     print("Endpoint set to: ${ApiAppConstant.domain}");
 
                     // Step 2: now call forget password against the correct domain

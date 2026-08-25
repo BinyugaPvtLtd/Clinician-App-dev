@@ -9,6 +9,7 @@ import 'package:clinician_app/pages/auth/register_screen.dart';
 import 'package:clinician_app/pages/auth/widget/error_dailog.dart';
 import 'package:clinician_app/pages/auth/widget/pass_reset_email_sent_bottomsheet.dart';
 import 'package:clinician_app/pages/home/home_screen.dart';
+import 'package:clinician_app/services/token_manager/token_manager_service.dart';
 import 'package:clinician_app/utils/validator.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
@@ -163,6 +164,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
                         print("Auto selected company: $selectedCompanyAlias");
+                        await TokenManager.setCompanyAlias(companyAlias: selectedCompanyAlias);
+
                         String endWith = await ApiAppConstant.endPointByAlias(3, selectedCompanyAlias);
                         print("Endpoint set to: ${ApiAppConstant.domain}");
                         await Get.offAll(() => PasswordScreen(email: widget.email));
@@ -176,7 +179,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
                         print("Auto selected company: $selectedCompanyAlias");
-                        String endWith = await ApiAppConstant.endPointByAlias(3, selectedCompanyAlias);
+                        await TokenManager.setCompanyAlias(companyAlias: "demo");
+                        String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
                         print("Endpoint set to: ${ApiAppConstant.domain}");
                         await Get.bottomSheet(
                           PassResetEmailSentBottomsheet(email: widget.email),

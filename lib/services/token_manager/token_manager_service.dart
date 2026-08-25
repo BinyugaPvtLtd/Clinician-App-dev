@@ -69,7 +69,17 @@ class TokenManager extends GetxService {
     return _box.read("status") ?? "";
   }
 
+  static String getCompanyAlias() {
+    return _box.read('companyAlias') ?? '';
+  }
+
   /// ---------- SETTERS ----------
+  static Future<void> setCompanyAlias({
+    required String companyAlias,
+}) async{
+    _box.write("companyAlias", companyAlias);
+
+  }
 
   static Future<void> setAccessToken({
     required String token,

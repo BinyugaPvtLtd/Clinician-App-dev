@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 
 import '../../controller/auth_controller.dart';
 import '../../core/constant/api_app_constant.dart';
+import '../../services/token_manager/token_manager_service.dart';
 import 'company_list_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -149,8 +150,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (response.success) {
                         if (response.companies.length == 1) {
                           String companyAlias = response.companies.first.companyAlias;
+                          await TokenManager.setCompanyAlias(companyAlias: "demo");
                           print("Auto selected company: $companyAlias");
-                          String endWith = await ApiAppConstant.endPointByAlias(3, companyAlias);
+                          String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
                           print("Endpoint set to: ${ApiAppConstant.domain}");
                            Get.to(
                             () => PasswordScreen(email: email),
