@@ -56,27 +56,16 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                   customHeight(10.h),
                   Image.asset(AppAsset.loginPageImg, height: 243.h),
                   customHeight(46.h),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Password',
-                      style: AppTextStyle.normal14style.copyWith(
-                        color: AppColors.defaultTxtGrey,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  customHeight(3.h),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Enter your password to login',
-                      style: AppTextStyle.normal12style.copyWith(
-                        color: AppColors.defaultTxtGrey,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    ),
-                  ),
+                  // Align(
+                  //   alignment: Alignment.centerLeft,
+                  //   child: Text(
+                  //     'Select the company',
+                  //     style: AppTextStyle.normal12style.copyWith(
+                  //       color: AppColors.defaultTxtGrey,
+                  //       fontWeight: FontWeight.w300,
+                  //     ),
+                  //   ),
+                  // ),
                   // customHeight(24.h),
                   // PrimaryTextField(
                   //   controller: emailController,
@@ -179,8 +168,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
                         print("Auto selected company: $selectedCompanyAlias");
-                        await TokenManager.setCompanyAlias(companyAlias: "demo");
-                        String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
+                        await TokenManager.setCompanyAlias(companyAlias:selectedCompanyAlias);
+                        String endWith = await ApiAppConstant.endPointByAlias(3, selectedCompanyAlias);
                         print("Endpoint set to: ${ApiAppConstant.domain}");
                         await Get.bottomSheet(
                           PassResetEmailSentBottomsheet(email: widget.email),
