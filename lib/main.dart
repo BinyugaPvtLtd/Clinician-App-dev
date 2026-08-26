@@ -11,7 +11,7 @@ import 'package:clinician_app/services/chat_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:media_kit/media_kit.dart';
@@ -21,13 +21,6 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // .env is optional in the repo (gitignored) — missing locally shouldn't
-  // crash the app on launch, ApiAppConstant's hardcoded values cover that.
-  try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint("No .env file found, falling back to built-in defaults: $e");
-  }
   await ScreenUtil.ensureScreenSize();
   await GetStorage.init();
 
