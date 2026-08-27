@@ -153,9 +153,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
                         print("Auto selected company: $selectedCompanyAlias");
-                        await TokenManager.setCompanyAlias(companyAlias: selectedCompanyAlias);
+                        await TokenManager.setCompanyAlias(companyAlias: "demo");
 
-                        String endWith = await ApiAppConstant.endPointByAlias(3, selectedCompanyAlias);
+                        String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
                         print("Endpoint set to: ${ApiAppConstant.domain}");
                         await Get.offAll(() => PasswordScreen(email: widget.email));
                         //Get.to(() => HomeScreen());
@@ -168,8 +168,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       if (_formKey.currentState!.validate()) {
                         // Form is valid
                         print("Auto selected company: $selectedCompanyAlias");
-                        await TokenManager.setCompanyAlias(companyAlias:selectedCompanyAlias);
-                        String endWith = await ApiAppConstant.endPointByAlias(3, selectedCompanyAlias);
+                        await TokenManager.setCompanyAlias(companyAlias:"demo");
+                        String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
                         print("Endpoint set to: ${ApiAppConstant.domain}");
                         await Get.bottomSheet(
                           PassResetEmailSentBottomsheet(email: widget.email),
