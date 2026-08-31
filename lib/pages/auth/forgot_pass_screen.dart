@@ -121,9 +121,9 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
 
                   if (companyResponse.companies.length == 1) {
                     // Single company -> auto-select alias and set domain
-                    final companyAlias = "demo";
-                    await TokenManager.setCompanyAlias(companyAlias: "demo");
-                    ApiAppConstant.endPointByAlias(3, "demo");
+                    final companyAlias = "prohealth-dev";
+                    await TokenManager.setCompanyAlias(companyAlias: "prohealth-dev");
+                    ApiAppConstant.endPointByAlias(3, "prohealth-dev");
                     print("Endpoint set to: ${ApiAppConstant.domain}");
 
                     // Step 2: now call forget password against the correct domain

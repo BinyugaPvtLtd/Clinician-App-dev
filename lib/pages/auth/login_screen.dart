@@ -149,10 +149,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       final response = await auth.getCompanyList(email);
                       if (response.success) {
                         if (response.companies.length == 1) {
-                          String companyAlias = "demo";
-                          await TokenManager.setCompanyAlias(companyAlias: "demo");
+                          String companyAlias = "prohealth-dev";
+                          await TokenManager.setCompanyAlias(companyAlias: "prohealth-dev");
                           print("Auto selected company: $companyAlias");
-                          String endWith = await ApiAppConstant.endPointByAlias(3, "demo");
+                          String endWith = await ApiAppConstant.endPointByAlias(3, "prohealth-dev");
                           print("Endpoint set to: ${ApiAppConstant.domain}");
                            Get.to(
                             () => PasswordScreen(email: email),
