@@ -56,27 +56,27 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                   customHeight(10.h),
                   Image.asset(AppAsset.loginPageImg, height: 243.h),
                   customHeight(46.h),
-                  // Align(
-                  //   alignment: Alignment.centerLeft,
-                  //   child: Text(
-                  //     'Select the company',
-                  //     style: AppTextStyle.normal12style.copyWith(
-                  //       color: AppColors.defaultTxtGrey,
-                  //       fontWeight: FontWeight.w300,
-                  //     ),
-                  //   ),
-                  // ),
-                  // customHeight(24.h),
-                  // PrimaryTextField(
-                  //   controller: emailController,
-                  //   hintText: 'Your Email',
-                  //   keyboardType: TextInputType.emailAddress,
-                  //   validator: (value) => Validators.validateEmail(value),
-                  //   prefixIcon: Padding(
-                  //     padding: EdgeInsets.symmetric(horizontal: 15.w),
-                  //     child: SvgPicture.asset(AppAsset.emailSvgIcon),
-                  //   ),
-                  // ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Select Company',
+                      style: AppTextStyle.normal14style.copyWith(
+                        color: AppColors.defaultTxtGrey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  customHeight(3.h),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Choose your company to continue',
+                      style: AppTextStyle.normal12style.copyWith(
+                        color: AppColors.defaultTxtGrey,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
                   customHeight(20.h),
                   PrimaryDropDown(
                     validator: (value) => Validators.validateRequired(selectedCompanyAlias,'Document'),
@@ -112,6 +112,10 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                       );
                     }).toList(),
                     onChanged: (value) {
+                      setState(() {
+                        selectedCompanyAlias = value!;
+                      });
+
                       // for (var a in docCtrl.docMetaList) {
                       //   if (a.documentName == value) {
                       //     docCtrl.selectedSubDocId.value = 0;
@@ -126,22 +130,6 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
             
                     },
                   ),
-                  // customHeight(10.h),
-                  // Align(
-                  //   alignment: Alignment.centerRight,
-                  //   child: InkWell(
-                  //     onTap: () {
-                  //       Get.to(() => ForgotPassScreen());
-                  //     },
-                  //     child: Text(
-                  //       'Forgot password?',
-                  //       style: AppTextStyle.normal10style.copyWith(
-                  //         fontWeight: FontWeight.w500,
-                  //         color: AppColors.primaryAppColor,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
                   customHeight(64.h),
                   Obx(() => auth.isLoading.value ? Padding(
                     padding:  EdgeInsets.symmetric(vertical:12.h ),
