@@ -404,6 +404,7 @@ class _ChatScreenState extends State<ChatScreen> {
         time: dt,
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: msg.sender.imgUrl.isEmpty ? null : msg.sender.imgUrl,
+        messageId: 'group-${msg.ptChatId}',
         attachments: attachments,
         voiceNotes: msg.voiceNoteUrl!,
       );
@@ -434,6 +435,7 @@ class _ChatScreenState extends State<ChatScreen> {
         time: dt,
         senderName: senderName.isEmpty ? null : senderName,
         senderAvatarUrl: (m.sender.imgUrl.isEmpty) ? null : m.sender.imgUrl,
+        messageId: 'emp-${m.empChatId}',
         attachments: attachments,
         voiceNotes:  m.voiceNoteUrl,
       );
@@ -480,8 +482,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final tempId = '${DateTime.now().microsecondsSinceEpoch}';
 
-    // ✅ optimistic only if text exists (prevents empty bubbles)
-    if (text.isNotEmpty) {
+    // capture attachments before clearing the UI, so the optimistic bubble
+    // below can show them immediately (as local bytes) instead of waiting
+    // for the next 3-second poll to echo back a real URL.
+    final filesToSend = List<Uint8List>.from(selectedFiles);
+    final namesToSend = List<String>.from(selectedFileNames);
+
+    // ✅ optimistic bubble whenever there's text and/or attachments
+    if (text.isNotEmpty || filesToSend.isNotEmpty) {
       _pendingLocal.insert(
         0,
         ChatModel(
@@ -490,14 +498,12 @@ class _ChatScreenState extends State<ChatScreen> {
           time: DateTime.now(),
           localTempId: tempId,
           attachments: const [],
+          localAttachmentBytes: filesToSend,
+          localAttachmentNames: namesToSend,
           voiceNotes: '',
         ),
       );
     }
-
-    // capture attachments, then clear UI to prevent re-send duplicates
-    final filesToSend = List<Uint8List>.from(selectedFiles);
-    final namesToSend = List<String>.from(selectedFileNames);
 
     sendMessageController.clear();
     setState(() {
@@ -607,6 +613,12 @@ class _ChatScreenState extends State<ChatScreen> {
                             ? Image.network(
                           widget.avatarUrl,
                           fit: BoxFit.cover,
+                          // Every setState in this screen (voice-recording
+                          // timer ticks, emoji toggle, send, etc.) rebuilds
+                          // this header and recreates this Image widget;
+                          // without gaplessPlayback it drops back to a blank
+                          // frame each time, reading as the avatar blinking.
+                          gaplessPlayback: true,
                           errorBuilder: (_, __, ___) => Image.asset(
                             AppAsset.profilePicImg,
                             fit: BoxFit.cover,
@@ -1017,6 +1029,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     final voiceNoteUrl = element.voiceNotes;
             
                     return Column(
+                      key: ValueKey(element.key),
                       crossAxisAlignment: element.isSender
                           ? CrossAxisAlignment.end
                           : CrossAxisAlignment.start,
@@ -1334,8 +1347,20 @@ class ChatModel {
   final String? senderAvatarUrl;
   final String? localTempId;
 
+  /// Stable id from the server (pt_chat_id / emp_chat_id) — lets the list
+  /// keep a message's widget identity across the 3-second poll rebuilds
+  /// instead of reusing elements positionally (which is what caused avatars
+  /// to blink/reload as the same Element got fed a different message).
+  final String? messageId;
+
   final List<String> attachments;
   final String voiceNotes;
+
+  /// Attachments picked locally but not uploaded yet — shown immediately in
+  /// the optimistic bubble so a sent image/PDF doesn't sit invisible until
+  /// the next poll echoes it back with a real URL.
+  final List<Uint8List> localAttachmentBytes;
+  final List<String> localAttachmentNames;
 
   ChatModel({
     required this.msg,
@@ -1344,7 +1369,12 @@ class ChatModel {
     this.senderName,
     this.senderAvatarUrl,
     this.localTempId,
+    this.messageId,
     this.attachments = const [],
+    this.localAttachmentBytes = const [],
+    this.localAttachmentNames = const [],
     required this.voiceNotes,
   });
+
+  String get key => messageId ?? localTempId ?? '$isSender-$msg-${time.microsecondsSinceEpoch}';
 }

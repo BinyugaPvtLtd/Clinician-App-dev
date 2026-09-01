@@ -198,8 +198,8 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                               ),
                             ),
                           ),
-                          Text(
-                            '30- 40 mins',
+                          Text(" ",
+                            //'30- 40 mins',
                             style: AppTextStyle.normal12style.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.textGreyColor,

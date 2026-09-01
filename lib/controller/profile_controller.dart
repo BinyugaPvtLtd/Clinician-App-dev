@@ -61,11 +61,11 @@ class ProfileController extends GetxController{
   final phoneController     = TextEditingController().obs;
   final emailAssistenseController  = TextEditingController().obs;
   final RxString employeeImage = ''.obs;
-  @override
-  void onInit() {
-    super.onInit();
-    fetchRecordType();
-  }
+  // @override
+  // void onInit() {
+  //   super.onInit();
+  //   fetchRecordType();
+  // }
 
 
 

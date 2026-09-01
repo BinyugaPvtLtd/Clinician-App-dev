@@ -9,11 +9,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 
-import 'package:dio/dio.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../../../controller/chat_controller.dart';
+import '../../../controller/repository/chat_repo.dart';
 
 class ChatElementWidget extends StatefulWidget {
   const ChatElementWidget({
@@ -30,14 +32,57 @@ class ChatElementWidget extends StatefulWidget {
 }
 
 class _ChatElementWidgetState extends State<ChatElementWidget> {
+  final ChatDataController controller = Get.find<ChatDataController>();
+
   String _formatTime(DateTime dt) => DateFormat('h:mm a').format(dt.toLocal());
 
+  // Attachment URLs are often signed (e.g. "...photo.jpg?token=..."), so the
+  // extension has to be read off the URI's path — checking the raw string
+  // with endsWith() silently fails on the query string and the attachment
+  // renders as nothing at all (no image, no PDF row, no error).
+  String _urlPath(String url) => (Uri.tryParse(url)?.path ?? url).toLowerCase();
+
   bool _isImage(String url) {
-    final lower = url.toLowerCase();
+    final path = _urlPath(url);
+    return path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png');
+  }
+
+  bool _isPdf(String url) => _urlPath(url).endsWith('.pdf');
+
+  bool _isImageName(String name) {
+    final lower = name.toLowerCase();
     return lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png');
   }
 
-  bool _isPdf(String url) => url.toLowerCase().endsWith('.pdf');
+  bool _isPdfName(String name) => name.toLowerCase().endsWith('.pdf');
+
+  Widget _pdfRow(String name, VoidCallback? onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 6.h),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.picture_as_pdf,
+              size: 26,
+              color: widget.chat.isSender ? Colors.white : Colors.black,
+            ),
+            SizedBox(width: 8.w),
+            Flexible(
+              child: Text(
+                name,
+                style: AppTextStyle.normal10style.copyWith(
+                  color: widget.chat.isSender ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   String _fileName(String url) {
     try {
@@ -48,23 +93,44 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
     }
   }
 
+  // GetX's Get.snackbar resolves its overlay via a private Overlay-context
+  // hack that can throw "No Overlay widget found" (and can leave a broken
+  // SnackbarController registered, later crashing Get.back() with a
+  // LateInitializationError). ScaffoldMessenger.of(context) uses the
+  // ScaffoldMessenger that GetMaterialApp/MaterialApp always provides, so it
+  // doesn't share either failure mode.
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   // ===========================
   // ✅ DOWNLOAD + OPEN PDF
   // ===========================
   Future<void> _downloadAndOpenPdf(String url) async {
     try {
-      Get.snackbar("Downloading", "PDF downloading...",backgroundColor: Colors.white);
+      _showMessage("PDF downloading...");
+
+      final fileData = await controller.getEmployeeDocumentByFileName(
+        fileUrl: url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
+      );
+
+      if (fileData == null) {
+        _showMessage("PDF download failed");
+        return;
+      }
 
       final dir = await getTemporaryDirectory();
-      final fileName = _fileName(url);
-      final savePath = "${dir.path}/$fileName";
-
-      await Dio().download(url, savePath);
+      final savePath = "${dir.path}/${fileData.fileName}";
+      await File(savePath).writeAsBytes(fileData.bytes, flush: true);
 
       // ✅ open after download
       await OpenFile.open(savePath);
     } catch (e) {
-      Get.snackbar("Failed", "PDF open failed: $e");
+      _showMessage("PDF open failed: $e");
     }
   }
 
@@ -76,33 +142,37 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
       // permissions
       if (Platform.isAndroid) {
         // Android 13+ uses READ_MEDIA_IMAGES
-        final p1 = await Permission.photos.request(); // iOS
-        final p2 = await Permission.storage.request(); // older android
-        final p3 = await Permission.photos.request(); // android 13+ fallback
+        await Permission.photos.request(); // iOS
+        await Permission.storage.request(); // older android
+        await Permission.photos.request(); // android 13+ fallback
         // we won't strictly block; but check some permission granted
       }
 
-      Get.snackbar("Downloading", "Saving image to gallery...");
+      _showMessage("Saving image to gallery...");
 
-      final resp = await Dio().get<List<int>>(
-        url,
-        options: Options(responseType: ResponseType.bytes),
+      final fileData = await controller.getEmployeeDocumentByFileName(
+        fileUrl: url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
       );
 
-      final bytes = Uint8List.fromList(resp.data ?? []);
+      if (fileData == null) {
+        _showMessage("Image save failed");
+        return;
+      }
+
       final result = await ImageGallerySaverPlus.saveImage(
-        bytes,
+        Uint8List.fromList(fileData.bytes),
         quality: 90,
         name: "chat_${DateTime.now().millisecondsSinceEpoch}",
       );
 
       if (result['isSuccess'] == true) {
-        Get.snackbar("Saved", "Image saved to Gallery ✅");
+        _showMessage("Image saved to Gallery ✅");
       } else {
-        Get.snackbar("Failed", "Image save failed");
+        _showMessage("Image save failed");
       }
     } catch (e) {
-      Get.snackbar("Failed", "Image download failed: $e");
+      _showMessage("Image download failed: $e");
     }
   }
 
@@ -110,7 +180,11 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
   // ✅ Full screen preview (no download inside)
   // ===========================
   void _openImages(List<String> images, int initialIndex) {
-    Get.to(() => ImagePreviewScreen(imageUrls: images, initialIndex: initialIndex));
+    Get.to(() => ImagePreviewScreen(
+      imageUrls: images,
+      initialIndex: initialIndex,
+      isGroup: widget.isGroup,
+    ));
   }
 
   @override
@@ -125,6 +199,19 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
 
     final imageUrls = widget.chat.attachments.where(_isImage).toList();
     final pdfUrls = widget.chat.attachments.where(_isPdf).toList();
+
+    // Attachments still uploading locally (no URL yet) — shown immediately
+    // so a just-sent image/PDF isn't invisible until the next chat poll.
+    final localImages = <Uint8List>[];
+    final localPdfNames = <String>[];
+    for (var i = 0; i < widget.chat.localAttachmentNames.length; i++) {
+      final name = widget.chat.localAttachmentNames[i];
+      if (_isImageName(name)) {
+        localImages.add(widget.chat.localAttachmentBytes[i]);
+      } else if (_isPdfName(name)) {
+        localPdfNames.add(name);
+      }
+    }
 
     return Container(
       alignment: widget.chat.isSender ? Alignment.centerRight : Alignment.centerLeft,
@@ -149,6 +236,10 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                       ? Image.network(
                     widget.chat.senderAvatarUrl!,
                     fit: BoxFit.cover,
+                    // The message list rebuilds every 3s (chat polling);
+                    // without this the avatar drops to a blank frame each
+                    // time this item's Element is reused, reading as a blink.
+                    gaplessPlayback: true,
                     errorBuilder: (_, __, ___) =>
                         Image.asset(AppAsset.profilePicImg, fit: BoxFit.cover),
                   )
@@ -200,7 +291,7 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                             : CrossAxisAlignment.start,
                         children: [
                           // ✅ IMAGES (WhatsApp style preview)
-                          if (imageUrls.isNotEmpty)
+                          if (imageUrls.isNotEmpty || localImages.isNotEmpty)
                             ClipRRect(
                               borderRadius: BorderRadius.only(
                                 topLeft: widget.chat.isSender
@@ -211,86 +302,78 @@ class _ChatElementWidgetState extends State<ChatElementWidget> {
                                     : Radius.circular(6.r),
                               ),
                               child: Column(
-                                children: List.generate(imageUrls.length, (i) {
-                                  final url = imageUrls[i];
-                                  return InkWell(
-                                    onTap: () => _openImages(imageUrls, i),
-                                    child: Stack(
-                                      children: [
-                                        Container(
-                                          width: double.infinity,
-                                          height: 180.h,
-                                          color: Colors.white,
-                                          child: Image.network(
-                                            url,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => const Center(
-                                              child: Icon(Icons.broken_image, size: 40),
+                                children: [
+                                  // still-uploading local previews (no tap — nothing to open yet)
+                                  ...List.generate(localImages.length, (i) {
+                                    return Container(
+                                      width: double.infinity,
+                                      height: 180.h,
+                                      color: Colors.white,
+                                      child: Image.memory(
+                                        localImages[i],
+                                        fit: BoxFit.cover,
+                                        gaplessPlayback: true,
+                                      ),
+                                    );
+                                  }),
+                                  ...List.generate(imageUrls.length, (i) {
+                                    final url = imageUrls[i];
+                                    return InkWell(
+                                      onTap: () => _openImages(imageUrls, i),
+                                      child: Stack(
+                                        children: [
+                                          Container(
+                                            width: double.infinity,
+                                            height: 180.h,
+                                            color: Colors.white,
+                                            child: Image.network(
+                                              url,
+                                              fit: BoxFit.cover,
+                                              gaplessPlayback: true,
+                                              errorBuilder: (_, __, ___) => const Center(
+                                                child: Icon(Icons.broken_image, size: 40),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        // Positioned(
-                                        //   right: 8,
-                                        //   top: 8,
-                                        //   child: Container(
-                                        //     padding: const EdgeInsets.all(6),
-                                        //     decoration: BoxDecoration(
-                                        //       color: Colors.black.withValues(alpha: 0.4),
-                                        //       shape: BoxShape.circle,
-                                        //     ),
-                                        //     child: const Icon(
-                                        //       Icons.download,
-                                        //       color: Colors.white,
-                                        //       size: 18,
-                                        //     ),
-                                        //   ),
-                                        // ),
-                                      ],
-                                    ),
-                                  );
-                                }),
+                                          // Positioned(
+                                          //   right: 8,
+                                          //   top: 8,
+                                          //   child: Container(
+                                          //     padding: const EdgeInsets.all(6),
+                                          //     decoration: BoxDecoration(
+                                          //       color: Colors.black.withValues(alpha: 0.4),
+                                          //       shape: BoxShape.circle,
+                                          //     ),
+                                          //     child: const Icon(
+                                          //       Icons.download,
+                                          //       color: Colors.white,
+                                          //       size: 18,
+                                          //     ),
+                                          //   ),
+                                          // ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
                               ),
                             ),
 
                           // ✅ PDF (ONLY icon + filename row)
-                          if (pdfUrls.isNotEmpty)
+                          if (pdfUrls.isNotEmpty || localPdfNames.isNotEmpty)
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
                               child: Column(
                                 crossAxisAlignment: widget.chat.isSender
                                     ? CrossAxisAlignment.end
                                     : CrossAxisAlignment.start,
-                                children: pdfUrls.map((url) {
-                                  return InkWell(
-                                    onTap: () => _downloadAndOpenPdf(url),
-                                    child: Padding(
-                                      padding: EdgeInsets.only(bottom: 6.h),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.picture_as_pdf,
-                                            size: 26,
-                                            color: widget.chat.isSender
-                                                ? Colors.white
-                                                : Colors.black,
-                                          ),
-                                          SizedBox(width: 8.w),
-                                          Flexible(
-                                            child: Text(
-                                              _fileName(url),
-                                              style: AppTextStyle.normal10style.copyWith(
-                                                color: widget.chat.isSender
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                                children: [
+                                  // still-uploading local PDFs — nothing to open yet
+                                  ...localPdfNames.map((name) => _pdfRow(name, null)),
+                                  ...pdfUrls.map(
+                                    (url) => _pdfRow(_fileName(url), () => _downloadAndOpenPdf(url)),
+                                  ),
+                                ],
                               ),
                             ),
 
@@ -354,16 +437,19 @@ class ImagePreviewScreen extends StatefulWidget {
     super.key,
     required this.imageUrls,
     this.initialIndex = 0,
+    required this.isGroup,
   });
 
   final List<String> imageUrls;
   final int initialIndex;
+  final bool isGroup;
 
   @override
   State<ImagePreviewScreen> createState() => _ImagePreviewScreenState();
 }
 
 class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
+  final ChatDataController controller = Get.find<ChatDataController>();
   late final PageController _page;
   int _currentIndex = 0;
   bool _isDownloading = false;
@@ -399,6 +485,16 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
     return storage.isGranted;
   }
 
+  // See _ChatElementWidgetState._showMessage: avoids GetX's Get.snackbar
+  // overlay-resolution bug (throws right after navigation, and can leave a
+  // broken SnackbarController that later crashes Get.back()).
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   Future<void> _downloadCurrentImage() async {
     if (_isDownloading) return;
     setState(() => _isDownloading = true);
@@ -406,35 +502,38 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
     try {
       final ok = await _requestGalleryPermission();
       if (!ok) {
-        // Get.snackbar("Permission denied", "Gallery permission is required to save image.");
+        _showMessage("Gallery permission is required to save image.");
         return;
       }
 
       final url = widget.imageUrls[_currentIndex];
 
-      Get.snackbar("Downloading", "Saving image to gallery...",backgroundColor: Colors.white);
+      _showMessage("Saving image to gallery...");
 
-      final resp = await Dio().get<List<int>>(
-        url,
-        options: Options(responseType: ResponseType.bytes),
+      final fileData = await controller.getEmployeeDocumentByFileName(
+        fileUrl: url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
       );
 
-      final bytes = Uint8List.fromList(resp.data ?? []);
+      if (fileData == null) {
+        _showMessage("Image save failed");
+        return;
+      }
 
       final result = await ImageGallerySaverPlus.saveImage(
-        bytes,
+        Uint8List.fromList(fileData.bytes),
         quality: 90,
         name: "chat_${DateTime.now().millisecondsSinceEpoch}",
       );
 
       final success = result['isSuccess'] == true;
       if (success) {
-        Get.snackbar("Saved", "Image saved to Gallery ✅",backgroundColor: Colors.white);
+        _showMessage("Image saved to Gallery ✅");
       } else {
-        Get.snackbar("Failed", "Image save failed");
+        _showMessage("Image save failed");
       }
     } catch (e) {
-      Get.snackbar("Failed", "Download failed: $e");
+      _showMessage("Download failed: $e");
     } finally {
       setState(() => _isDownloading = false);
     }
@@ -474,19 +573,131 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
             child: InteractiveViewer(
               minScale: 1,
               maxScale: 5,
-              child: Image.network(
-                url,
+              child: SecureNetworkImage(
+                url: url,
+                isGroup: widget.isGroup,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.broken_image,
-                  color: Colors.white,
-                  size: 40,
-                ),
+                brokenIconColor: Colors.white,
+                placeholderIconSize: 40,
               ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+// ===========================
+// Network image that falls back to the authenticated document-download API
+// when a plain, unauthenticated GET can't load it. Some attachment URLs
+// (e.g. the ones surfaced by the group/employee "Media, links and doc"
+// summary endpoints) require the app's auth token to fetch, unlike the
+// pre-signed URLs used elsewhere in chat — so a bare Image.network on them
+// errors with a 403. Fetching that way first and only then falling back
+// used to flash the broken-image placeholder before the real image
+// appeared, so the authenticated fetch now runs first and a plain
+// Image.network is only the last-resort fallback if that fails.
+// ===========================
+class SecureNetworkImage extends StatefulWidget {
+  const SecureNetworkImage({
+    super.key,
+    required this.url,
+    required this.isGroup,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
+    this.placeholderIconSize = 24,
+    this.brokenIconColor,
+  });
+
+  final String url;
+  final bool isGroup;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
+  final double placeholderIconSize;
+  final Color? brokenIconColor;
+
+  @override
+  State<SecureNetworkImage> createState() => _SecureNetworkImageState();
+}
+
+class _SecureNetworkImageState extends State<SecureNetworkImage> {
+  final ChatDataController _controller = Get.find<ChatDataController>();
+
+  Uint8List? _bytes;
+  bool _secureFailed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSecureBytes();
+  }
+
+  @override
+  void didUpdateWidget(covariant SecureNetworkImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.url != widget.url) {
+      _bytes = null;
+      _secureFailed = false;
+      _loadSecureBytes();
+    }
+  }
+
+  Widget _placeholder({bool loading = false}) => Container(
+    width: widget.width,
+    height: widget.height,
+    color: loading ? Colors.grey[200] : null,
+    alignment: Alignment.center,
+    child: loading
+        ? null
+        : Icon(
+      Icons.broken_image,
+      color: widget.brokenIconColor ?? Colors.grey[400],
+      size: widget.placeholderIconSize,
+    ),
+  );
+
+  Future<void> _loadSecureBytes() async {
+    try {
+      final fileData = await _controller.getEmployeeDocumentByFileName(
+        fileUrl: widget.url,
+        apiPath: ChatRepository.getChatImagesBasePath(isGroup: widget.isGroup),
+      );
+      if (!mounted) return;
+      if (fileData != null) {
+        setState(() => _bytes = Uint8List.fromList(fileData.bytes));
+      } else {
+        setState(() => _secureFailed = true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _secureFailed = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_bytes != null) {
+      return Image.memory(
+        _bytes!,
+        width: widget.width,
+        height: widget.height,
+        fit: widget.fit,
+        gaplessPlayback: true,
+      );
+    }
+
+    if (!_secureFailed) return _placeholder(loading: true);
+
+    // Authenticated fetch failed — last-resort attempt at the raw URL, in
+    // case it turns out to be a plain, publicly reachable one after all.
+    return Image.network(
+      widget.url,
+      width: widget.width,
+      height: widget.height,
+      fit: widget.fit,
+      errorBuilder: (_, __, ___) => _placeholder(),
     );
   }
 }

@@ -26,15 +26,14 @@
 
 
 
+
 ///demo
 class ApiAppConstant {
   static  String domain = 'https://demo.symmetry.care/';
-  static const String authDomain = 'https://auth-dev.symmetry.care/';
-  // `domain` can change at runtime (endPointByAlias), so this must recompute
-  // on every access instead of freezing the value seen at class-load time.
+  static  String authDomain = 'https://auth-dev.symmetry.care/';
   static  String get clinicialBaseUrl => '${domain}api/';
-  static const String clinicialAuthBaseUrl = '${authDomain}api/';
-  static const googleApiKey = "AIzaSyCw6mXOPCtbKn5i0bWcAcnfXCkb0y5G7Lg";
+  static  String get clinicialAuthBaseUrl => '${authDomain}api/';
+  static  String googleApiKey = "AIzaSyCw6mXOPCtbKn5i0bWcAcnfXCkb0y5G7Lg";
 
   static const int proHealth = 2;
   static const int clinician = 1;

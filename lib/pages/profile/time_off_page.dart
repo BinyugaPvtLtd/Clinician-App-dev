@@ -424,8 +424,7 @@ class _TimeOffPageState extends State<TimeOffPage> {
                               ),
                               customWidth(10.w),
                               Expanded(
-                                child:Obx(() => timeController.isTimeOffSaveLoading.value ? Padding(
-                                  padding:  EdgeInsets.symmetric(horizontal: 69.h, ),
+                                child:Obx(() => timeController.isTimeOffSaveLoading.value ? Center(
                                   child: SizedBox(
                                     height: 25.h,
                                     width: 25.w,

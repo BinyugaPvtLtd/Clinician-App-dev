@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../core/common/base64_conversation.dart';
 import '../core/constant/app_string.dart';
+import '../model/chatScreen/chatList_model.dart';
 import '../model/profile/update_documents_model.dart';
 import '../model/request/request_data_model.dart';
 import '../services/auth_api_services/auth_services.dart';
@@ -472,6 +473,41 @@ class UpdateDocumentsController extends GetxController {
       );
     } finally {
       isDocumentSaveLoading.value = false;
+    }
+  }
+
+  /// Downloads an employee document by filename (derived from its URL)
+  /// through the authenticated API instead of hitting the raw file URL.
+  Future<DownloadFileData?> getEmployeeDocumentByFileName({
+    required String fileUrl,
+  }) async {
+    try {
+      // Signed URLs (e.g. "...file.pdf?token=...") carry query params —
+      // split on '/' alone would leave "file.pdf?token=..." as the
+      // filename, breaking both the API path and the saved file's extension.
+      final uri = Uri.tryParse(fileUrl);
+      final fileName = (uri != null && uri.pathSegments.isNotEmpty)
+          ? uri.pathSegments.last
+          : fileUrl.split('/').last;
+      final response = await _api.getBytes(
+        path: "${ProfileRepository.employeeDocumentsDownload}/$fileName",
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return DownloadFileData(
+          fileName: fileName,
+          bytes: response.data,
+        );
+      } else {
+        print('Api Error');
+        return null;
+      }
+    } on DioException catch (e) {
+      print("Error ${e.response?.data['message'] ?? e.message}");
+      return null;
+    } catch (e) {
+      print("Error $e");
+      return null;
     }
   }
 

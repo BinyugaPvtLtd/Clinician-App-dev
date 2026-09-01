@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:clinician_app/controller/repository/chat_repo.dart';
 import 'package:clinician_app/services/token_manager/token_manager_service.dart';
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
@@ -287,6 +288,10 @@ class ChatDataController extends GetxController {
             final sender = m["sender"] ?? {};
 
             List<String> attachments = parseAttachments(m["attached_multimedia_url"]);
+            // Backend can send voice_note_url either as a plain URL string or
+            // as a JSON array (same shape as attached_multimedia_url) — parse
+            // it the same way instead of passing the raw field through, or
+            // media_kit gets a literal "[\"url\"]" string and fails to open it.
             List<String> voiceNote = parseAttachments(m['voice_note_url']);
 
             messages.add(
@@ -302,7 +307,7 @@ class ChatDataController extends GetxController {
                 seenByClinicians: List<int>.from(m["seen_by_clinicians"] ?? []),
                 attachedMultimediaUrls: attachments,
                 stickerMultimediaUrl: m["sticker_multimedia_url"] ?? "",
-                voiceNoteUrl: m['voice_note_url'] ?? '',
+                voiceNoteUrl: voiceNote.isNotEmpty ? voiceNote.first : '',
                 sentAsSms: m["sent_as_sms"] ?? false,
                 sender: Sender(
                   userId: sender["userId"] ?? 0,
@@ -390,11 +395,13 @@ class ChatDataController extends GetxController {
         if (data["messages"] != null) {
           for (var m in data["messages"]) {
             final sender = m["sender"] ?? {};
+            // Same fix as the group chat parser above: voice_note_url can
+            // arrive as a JSON array, so use the parsed URL, not the raw field.
             List<String> voiceNoteUrls = parseAttachedMultimediaUrl(m['voice_note_url']);
 
             messages.add(
               EmpMessage(
-                voiceNoteUrl: m['voice_note_url'] ?? '',
+                voiceNoteUrl: voiceNoteUrls.isNotEmpty ? voiceNoteUrls.first : '',
                 textContent: m["text_content"] ?? "",
                 dateCreated: m["date_created"] ?? "",
                 dateModified: m["date_modified"],
@@ -920,6 +927,40 @@ class ChatDataController extends GetxController {
         success: false,
         message: "Something Went Wrong",
       );
+    }
+  }
+  Future<DownloadFileData?> getEmployeeDocumentByFileName(
+      {
+        required String apiPath,
+        required String fileUrl,
+      }
+      ) async {
+    try {
+      // Signed URLs (e.g. "...photo.jpg?token=...") carry query params —
+      // split on '/' alone would leave "photo.jpg?token=..." as the
+      // filename, breaking both the API path and the saved file's extension.
+      final uri = Uri.tryParse(fileUrl);
+      final fileName = (uri != null && uri.pathSegments.isNotEmpty)
+          ? uri.pathSegments.last
+          : fileUrl.split('/').last;
+      final response = await _api.getBytes(
+        path: "$apiPath/$fileName",
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return DownloadFileData(
+          fileName: fileName,
+          bytes: response.data,
+        );
+      } else {
+        print('Api Error');
+        return null;
+      }
+    } on DioException catch (e) {
+      print("Error ${e.response?.data['message'] ?? e.message}");
+      return null;
+    } catch (e) {
+      print("Error $e");
+      return null;
     }
   }
 
