@@ -1,5 +1,7 @@
 // ignore_for_file: invalid_use_of_protected_member
 
+import 'dart:io';
+
 import 'package:clinician_app/controller/home_controller.dart';
 import 'package:clinician_app/controller/visit_controller.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
@@ -9,9 +11,12 @@ import 'package:clinician_app/core/ui/common_appbar.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
 import 'package:clinician_app/pages/home/widget/chat_fab_widget.dart';
 import 'package:clinician_app/pages/profile/widgets/add_doc_dailog.dart';
+import 'package:clinician_app/pages/profile/widgets/edit_doc_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../controller/update_documents_controller.dart';
 
@@ -29,11 +34,61 @@ class _DocumnetPageState extends State<DocumnetPage>
 
   final homeController = Get.find<HomeController>();
   RxInt selectedIndex = 0.obs;
-  final UpdateDocumentsController updateController = Get.put(UpdateDocumentsController());
+  final UpdateDocumentsController updateController =
+  Get.put(UpdateDocumentsController());
+
   @override
   void initState() {
-    updateController.fetchDocListDetails(empId: widget.empId, approveOnly: 'no', searchText: 'all');
+    updateController.fetchDocListDetails(
+      empId: widget.empId,
+      approveOnly: 'no',
+      searchText: 'all',
+    );
     super.initState();
+  }
+
+  // GetX's Get.snackbar resolves its overlay via a private Overlay-context
+  // hack that can throw "No Overlay widget found" right after a page push
+  // (e.g. tapping a row immediately after the Cupertino transition lands).
+  // ScaffoldMessenger.of(context) uses the ScaffoldMessenger that
+  // GetMaterialApp/MaterialApp always provides, so it doesn't share that
+  // failure mode.
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  /// Downloads the tapped document through the authenticated API and opens
+  /// it. [url] should be the full document URL coming from the API model
+  /// (docItem.docList[index].documentUrl) — only its filename is used.
+  Future<void> _downloadDocument(String? url) async {
+    if (url == null || url.trim().isEmpty) {
+      _showMessage("Document URL not found");
+      return;
+    }
+
+    try {
+      _showMessage("Document downloading...");
+
+      final fileData = await updateController.getEmployeeDocumentByFileName(
+        fileUrl: url.trim(),
+      );
+
+      if (fileData == null) {
+        _showMessage("Unable to open document");
+        return;
+      }
+
+      final dir = await getTemporaryDirectory();
+      final savePath = "${dir.path}/${fileData.fileName}";
+      await File(savePath).writeAsBytes(fileData.bytes, flush: true);
+
+      await OpenFile.open(savePath);
+    } catch (e) {
+      _showMessage("Something went wrong while opening the document");
+    }
   }
 
   @override
@@ -44,283 +99,311 @@ class _DocumnetPageState extends State<DocumnetPage>
       body: DefaultTabController(
         length: 3,
         child: SafeArea(
-            child: Column(
-              children: [
-                // ------ header -------
-                CommonAppbar(
-                  label: "Document Update",
-                  padding: EdgeInsets.only(
-                    left: 20.w,
-                    right: 20.w,
-                    top: 15.h,
-                    bottom: 8.h,
-                  ),
+          child: Column(
+            children: [
+              // ------ header -------
+              CommonAppbar(
+                label: "Document Update",
+                padding: EdgeInsets.only(
+                  left: 20.w,
+                  right: 20.w,
+                  top: 15.h,
+                  bottom: 8.h,
                 ),
-                Divider(),
-                customHeight(18.h),
+              ),
+              Divider(),
+              customHeight(18.h),
 
-                // --------- search and dropdown ----------
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 15.w),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 30.h,
-                          child: PrimaryTextField(
-                            onChanged: (value){
-                              if (value.trim().isEmpty) {
-                                updateController.fetchDocListDetails(empId: widget.empId, approveOnly: 'no', searchText: 'all');
-                              } else {
-                                updateController.fetchDocListDetails(empId: widget.empId, approveOnly: 'no', searchText: value.trim());
-                              }
-                            },
-                            borderRadius: 6,
-                            hintText: 'Search',
-                            filledColor: Color(0xffE9E9E9),
-                            prefixIcon: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SvgPicture.asset(AppAsset.searchSvgIcon),
-                            ),
+              // --------- search and dropdown ----------
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 15.w),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 30.h,
+                        child: PrimaryTextField(
+                          onChanged: (value) {
+                            if (value.trim().isEmpty) {
+                              updateController.fetchDocListDetails(
+                                empId: widget.empId,
+                                approveOnly: 'no',
+                                searchText: 'all',
+                              );
+                            } else {
+                              updateController.fetchDocListDetails(
+                                empId: widget.empId,
+                                approveOnly: 'no',
+                                searchText: value.trim(),
+                              );
+                            }
+                          },
+                          borderRadius: 6,
+                          hintText: 'Search',
+                          filledColor: Color(0xffE9E9E9),
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SvgPicture.asset(AppAsset.searchSvgIcon),
                           ),
                         ),
                       ),
-                      customWidth(8.w),
-                      PrimaryOutlinedButton(
-                        spaceBetweenIconText: 2,
-                        text: "Add New",
-                        onPressed: () {
-                          showAddDocumentDialog(context,widget.empId);
-                        },
-                        textStyle: AppTextStyle.normal12style.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryAppColor,
+                    ),
+                    customWidth(8.w),
+                    PrimaryOutlinedButton(
+                      spaceBetweenIconText: 2,
+                      text: "Add New",
+                      onPressed: () {
+                        showAddDocumentDialog(context, widget.empId);
+                      },
+                      textStyle: AppTextStyle.normal12style.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryAppColor,
+                      ),
+                      width: 100.w,
+                      radius: 6,
+                      height: 30.h,
+                      icon: Icon(Icons.add, color: AppColors.primaryAppColor),
+                    ),
+                  ],
+                ),
+              ),
+              customHeight(17.h),
+              Container(
+                height: 40.h,
+                color: Colors.grey.shade200,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Licensure & Certifications",
+                        style: AppTextStyle.normal12style.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-
-                        width: 100.w,
-                        radius: 6,
-                        height: 30.h,
-                        icon: Icon(Icons.add, color: AppColors.primaryAppColor),
+                      ),
+                      Spacer(),
+                      Text(
+                        "Expiry date",
+                        style: AppTextStyle.normal12style.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                customHeight(17.h),
-                Container(
-                  height: 40.h,
-                  color: Colors.grey.shade200,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: Row(
-                      children: [
-                        Text(
-                          "Licensure & Certifications",
-                          style: AppTextStyle.normal12style.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Spacer(),
-                        Text(
-                          "Expiry date",
-                          style: AppTextStyle.normal12style.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Obx(() {
-                  if (updateController.isDocListLoading.value) {
-                    return Expanded(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primaryAppColor,
-                        ),
+              ),
+              Obx(() {
+                if (updateController.isDocListLoading.value) {
+                  return Expanded(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryAppColor,
                       ),
-                    );
-                  }
-
-                  final items = updateController.documentResponseModel.value.document;
-                  if (items.isEmpty) {
-                    return const Expanded(
-                      child: Center(child: Text("No Document Found!")),
-                    );
-                  }
-                 return Expanded(
-                   child: ListView.separated(
-                     padding: EdgeInsets.symmetric(
-                       vertical: 10.h,
-                       horizontal: 20.w,
-                     ),
-                     separatorBuilder: (context, index) {
-                       return Divider();
-                     },
-                     itemCount: updateController.documentResponseModel.value.document.length,
-                     itemBuilder: (context, index) {
-                       var docItem = updateController.documentResponseModel.value.document[index];
-                       return Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           customHeight(20.h),
-                           Text(
-                             docItem.docName,
-                             style: AppTextStyle.bold12style,
-                           ),
-                           customHeight(6.h),
-                           Row(
-                             children: [
-                               Expanded(
-                                 child: Column(
-                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                   children: [
-                                      ...List.generate(docItem.docList.length,
-                                         (index)=>docItem.docList.isEmpty ? Center(child: Text("No Document Found!")) : Column(
-                                           children: [
-                                             Row(
-                                               crossAxisAlignment:
-                                               CrossAxisAlignment.center,
-                                               children: [
-                                                 Icon(
-                                                   Icons.file_copy_outlined,
-                                                   size: 12,
-                                                   color: AppColors.defaultTxtGrey,
-                                                 ),
-                                                 customWidth(5.w),
-                                                 Expanded(
-                                                   child: Text(
-                                                     docItem.docList[index].documentName,
-                                                     style: AppTextStyle.normal12style
-                                                         .copyWith(
-                                                       color: AppColors.grey,
-                                                       fontWeight: FontWeight.w400,
-                                                     ),
-                                                     maxLines: 1,
-                                                     overflow: TextOverflow.ellipsis,
-                                                   ),
-                                                 ),
-                                                 SizedBox(width: 8),
-                                                 Text(
-                                                   docItem.docList[index].expiryDate,
-                                                   style: AppTextStyle.normal12style
-                                                       .copyWith(
-                                                     color: docItem.docList[index].docStatus == "Active" ? AppColors.grey : AppColors.redBackGColor,
-                                                     fontWeight: FontWeight.w400,
-                                                   ),
-                                                 ),
-                                               ],
-                                             ),
-                                             docItem.docList[index].docStatus == "Active" ?customHeight(0.h) :customHeight(8.h),
-                                             docItem.docList[index].docStatus == "Active" ?Offstage() : Row(
-                                               mainAxisAlignment: MainAxisAlignment.end,
-                                               children: [
-                                                 PrimaryButton(
-                                                   label: "Update",
-                                                   buttonColor:
-                                                   AppColors.primaryLightBackGColor,
-                                                   labelStyle: AppTextStyle
-                                                       .regular10style
-                                                       .copyWith(
-                                                     color:
-                                                     AppColors.primaryAppColor,
-                                                   ),
-                                                   padding: EdgeInsets.zero,
-                                                   height: 25.h,
-                                                   width: 50.w,
-                                                   borderRadius: 4,
-                                                 ),
-                                               ],
-                                             ),
-                                             docItem.docList[index].docStatus == "Active" ?customHeight(0.h) : customHeight(10.h),
-                                           ],
-                                         ),),
-                                     // customHeight(8.h),
-                                     // Row(
-                                     //   crossAxisAlignment:
-                                     //   CrossAxisAlignment.center,
-                                     //   children: [
-                                     //     Icon(
-                                     //       Icons.file_copy_outlined,
-                                     //       size: 12,
-                                     //       color: AppColors.defaultTxtGrey,
-                                     //     ),
-                                     //     customWidth(5.w),
-                                     //     Expanded(
-                                     //       child: Text(
-                                     //         "National Provider Identifier (NPI)",
-                                     //         style: AppTextStyle.normal12style
-                                     //             .copyWith(
-                                     //           color: AppColors.grey,
-                                     //           fontWeight: FontWeight.w400,
-                                     //         ),
-                                     //         maxLines: 2,
-                                     //         overflow: TextOverflow.ellipsis,
-                                     //       ),
-                                     //     ),
-                                     //     SizedBox(width: 8),
-                                     //     Text(
-                                     //       "05/13/2025",
-                                     //       style: AppTextStyle.normal12style
-                                     //           .copyWith(
-                                     //         color: AppColors.grey,
-                                     //         fontWeight: FontWeight.w400,
-                                     //       ),
-                                     //     ),
-                                     //   ],
-                                     // ),
-                                     // customHeight(8.h),
-                                     // Row(
-                                     //   crossAxisAlignment:
-                                     //   CrossAxisAlignment.center,
-                                     //   children: [
-                                     //     Icon(
-                                     //       Icons.file_copy_outlined,
-                                     //       size: 12,
-                                     //       color: AppColors.defaultTxtGrey,
-                                     //     ),
-                                     //     customWidth(5.w),
-                                     //     Expanded(
-                                     //       child: Text(
-                                     //         "Board Certification",
-                                     //         style: AppTextStyle.normal12style
-                                     //             .copyWith(
-                                     //           color: AppColors.grey,
-                                     //           fontWeight: FontWeight.w400,
-                                     //         ),
-                                     //         maxLines: 2,
-                                     //         overflow: TextOverflow.ellipsis,
-                                     //       ),
-                                     //     ),
-                                     //     SizedBox(width: 8),
-                                     //     Text(
-                                     //       "05/13/2025",
-                                     //       style: AppTextStyle.normal12style
-                                     //           .copyWith(
-                                     //         color: AppColors.redBackGColor,
-                                     //         fontWeight: FontWeight.w400,
-                                     //       ),
-                                     //     ),
-                                     //   ],
-                                     // ),
-
-
-
-                                   ],
-                                 ),
-                               ),
-                             ],
-                           ),
-                         ],
-                       );
-                     },
-                   ),
-                 );
+                    ),
+                  );
                 }
-                ),
-              ],
-            ),
-          ),
 
+                final items =
+                    updateController.documentResponseModel.value.document;
+                if (items.isEmpty) {
+                  return const Expanded(
+                    child: Center(child: Text("No Document Found!")),
+                  );
+                }
+                return Expanded(
+                  child: ListView.separated(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.h,
+                      horizontal: 20.w,
+                    ),
+                    separatorBuilder: (context, index) {
+                      return Divider();
+                    },
+                    itemCount: updateController
+                        .documentResponseModel.value.document.length,
+                    itemBuilder: (context, index) {
+                      var docItem = updateController
+                          .documentResponseModel.value.document[index];
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          customHeight(20.h),
+                          Text(
+                            docItem.docName,
+                            style: AppTextStyle.bold12style,
+                          ),
+                          customHeight(6.h),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    ...List.generate(
+                                      docItem.docList.length,
+                                          (index) => docItem.docList.isEmpty
+                                          ? Center(
+                                          child: Text(
+                                              "No Document Found!"))
+                                          : Column(
+                                        children: [
+                                          Row(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment
+                                                .center,
+                                            children: [
+                                              InkWell(
+                                                splashColor: Colors.transparent,
+                                                hoverColor: Colors.transparent,
+                                                highlightColor: Colors.transparent,
+                                                onTap: () {
+                                                  // NOTE: replace `documentUrl`
+                                                  // with the actual field name
+                                                  // your API model uses for the
+                                                  // file's download link.
+                                                  _downloadDocument(
+                                                    docItem
+                                                        .docList[
+                                                    index]
+                                                        .documentUrl,
+                                                  );
+                                                },
+                                                child: Icon(
+                                                  Icons
+                                                      .file_copy_outlined,
+                                                  size: 12,
+                                                  color: AppColors
+                                                      .defaultTxtGrey,
+                                                ),
+                                              ),
+                                              customWidth(5.w),
+                                              Expanded(
+                                                child: InkWell(
+                                                  splashColor: Colors.transparent,
+                                                  hoverColor: Colors.transparent,
+                                                  highlightColor: Colors.transparent,
+                                                  onTap: () {
+                                                    // NOTE: replace `documentUrl`
+                                                    // with the actual field name
+                                                    // your API model uses for the
+                                                    // file's download link.
+                                                    _downloadDocument(
+                                                      docItem
+                                                          .docList[
+                                                      index]
+                                                          .documentUrl,
+                                                    );
+                                                  },
+                                                  child: Text(
+                                                    docItem
+                                                        .docList[
+                                                    index]
+                                                        .documentName,
+                                                    style: AppTextStyle
+                                                        .normal12style
+                                                        .copyWith(
+                                                      color: AppColors
+                                                          .grey,
+                                                      fontWeight:
+                                                      FontWeight
+                                                          .w400,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                    TextOverflow
+                                                        .ellipsis,
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                docItem
+                                                    .docList[index]
+                                                    .expiryDate,
+                                                style: AppTextStyle
+                                                    .normal12style
+                                                    .copyWith(
+                                                  color: docItem
+                                                      .docList[
+                                                  index]
+                                                      .docStatus ==
+                                                      "Active"
+                                                      ? AppColors.grey
+                                                      : AppColors
+                                                      .redBackGColor,
+                                                  fontWeight:
+                                                  FontWeight.w400,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          docItem.docList[index]
+                                              .docStatus ==
+                                              "Active"
+                                              ? customHeight(0.h)
+                                              : customHeight(8.h),
+                                          docItem.docList[index]
+                                              .docStatus ==
+                                              "Active"
+                                              ? Offstage()
+                                              : Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment
+                                                .end,
+                                            children: [
+                                              PrimaryButton(
+                                                label: "Update",
+                                                onTap: () {
+                                                  showEditDocumentDialog(
+                                                    context,
+                                                    employeeDocumentId: docItem
+                                                        .docList[index]
+                                                        .employeeDocumentId,
+                                                    empId: widget.empId,
+                                                  );
+                                                },
+                                                buttonColor:
+                                                AppColors
+                                                    .primaryLightBackGColor,
+                                                labelStyle:
+                                                AppTextStyle
+                                                    .regular10style
+                                                    .copyWith(
+                                                  color: AppColors
+                                                      .primaryAppColor,
+                                                ),
+                                                padding:
+                                                EdgeInsets
+                                                    .zero,
+                                                height: 25.h,
+                                                width: 50.w,
+                                                borderRadius: 4,
+                                              ),
+                                            ],
+                                          ),
+                                          docItem.docList[index]
+                                              .docStatus ==
+                                              "Active"
+                                              ? customHeight(0.h)
+                                              : customHeight(10.h),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
       ),
     );
   }

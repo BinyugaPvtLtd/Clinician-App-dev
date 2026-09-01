@@ -27,6 +27,9 @@ class ProfileRepository{
   static String uploadDocument = "/employee-documents/uploadDocument";
   static String uploadDocBase64 = "/employee-documents/uploadDocumentbase64";
   static String metaDataDocument = 'employee-document-type-setup/essential-docs';
+  static String employeeDocuments = '/employee-documents';
+  static String employeeDocumentWithBase64 = '/employee-documents/withBase64';
+  static String employeeDocumentsDownload = '/employee-documents/documents';
 
 
 
@@ -92,6 +95,22 @@ class ProfileRepository{
 
   static String postUploadDocumentBase64({required int docMetaId,required int docTypeSetupId, required int empId}) {
     return '$uploadDocBase64/$docMetaId/$docTypeSetupId/$empId';
+  }
+
+  /// Single employee document — used for both GET (prefill) and PATCH
+  /// (metadata-only update, no new file).
+  static String getOrPatchEmployeeDocument({required int employeeDocumentId}) {
+    return '$employeeDocuments/$employeeDocumentId';
+  }
+
+  /// PATCH with a newly uploaded base64 file replacing the existing one.
+  static String patchEmployeeDocumentWithBase64({
+    required int employeeDocumentId,
+    required int docMetaId,
+    required int docTypeSetupId,
+    required int empId,
+  }) {
+    return '$employeeDocumentWithBase64$employeeDocumentId/$docMetaId/$docTypeSetupId/$empId';
   }
 
   static String getMetaDataDropdown() {

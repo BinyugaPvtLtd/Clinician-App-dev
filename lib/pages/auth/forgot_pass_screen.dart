@@ -1,6 +1,8 @@
+import 'package:clinician_app/core/constant/api_app_constant.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
+import 'package:clinician_app/pages/auth/widget/error_dailog.dart';
 import 'package:clinician_app/pages/auth/widget/pass_reset_email_sent_bottomsheet.dart';
 import 'package:clinician_app/utils/validator.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../controller/auth_controller.dart';
+import '../../services/token_manager/token_manager_service.dart';
+import 'company_list_screen.dart';
 
 class ForgotPassScreen extends StatefulWidget {
   const ForgotPassScreen({super.key});
@@ -86,29 +90,64 @@ class _ForgotPassScreenState extends State<ForgotPassScreen> {
               Obx(() => auth.isLoading.value ? CircularProgressIndicator(
                 color: AppColors.primaryAppColor,
               ):PrimaryButton(
-                    label: 'Send Email',
-                    onTap: () async{
-                      if (auth.isLoading.value) return;
-                      FocusScope.of(context).unfocus();
-                      final email = emailController.text.trim();
-                      if (email.isEmpty) {
-                        _showErrorSnackBar('Email is required');
-                        return;
-                      }
-                      final emailError = Validators.validateEmail(email);
-                      if (emailError != null) {
-                        _showErrorSnackBar(emailError);
-                        return;
-                      }
-                      final response = await auth.forgetPasswordAuth(email: email);
-                      if (response.success) {
-                        Get.bottomSheet(
-                          PassResetEmailSentBottomsheet(email: email),
-                          barrierColor: Colors.white.withValues(alpha: 0.3),
-                        );
-                      }
-                    },
-                  )),
+                label: 'Send Email',
+                onTap: () async {
+                  if (auth.isLoading.value) return;
+                  FocusScope.of(context).unfocus();
+
+                  final email = emailController.text.trim();
+                  if (email.isEmpty) {
+                    _showErrorSnackBar('Email is required');
+                    return;
+                  }
+
+                  final emailError = Validators.validateEmail(email);
+                  if (emailError != null) {
+                    _showErrorSnackBar(emailError);
+                    return;
+                  }
+
+                  // Step 1: resolve which company/alias this email belongs to
+                  final companyResponse = await auth.getCompanyList(email);
+
+                  if (!companyResponse.success) {
+                    showErrorDialog(
+                      context: context,
+                      title: "Invalid credentials!",
+                      subtitle: "Unable to retrieve credentials for authorizing user.",
+                    );
+                    return;
+                  }
+
+                  if (companyResponse.companies.length == 1) {
+                    // Single company -> auto-select alias and set domain
+                    final companyAlias = "prohealth-dev";
+                    await TokenManager.setCompanyAlias(companyAlias: "prohealth-dev");
+                    ApiAppConstant.endPointByAlias(3, "prohealth-dev");
+                    print("Endpoint set to: ${ApiAppConstant.domain}");
+
+                    // Step 2: now call forget password against the correct domain
+                    final response = await auth.forgetPasswordAuth(email: email);
+                    if (response.success) {
+                      Get.bottomSheet(
+                        PassResetEmailSentBottomsheet(email: email),
+                        barrierColor: Colors.white.withValues(alpha: 0.3),
+                      );
+                    } else {
+                      _showErrorSnackBar('Unable to send reset email');
+                    }
+                  } else {
+                    // Multiple companies -> let user pick one first
+                    Get.to(() => CompanyListScreen(
+                      isForgotPasswordScreen: true,
+                      email: email,
+                      companyList: companyResponse.companies,
+                      // pass a callback or route so that after selection,
+                      // it sets the alias and then triggers forgetPasswordAuth
+                    ));
+                  }
+                },
+              )),
                   customHeight(5.h),
                   RichText(
                     text: TextSpan(

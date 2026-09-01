@@ -13,8 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-import '../../controller/profile_controller.dart';
 import '../../controller/timesheet_controller.dart';
+import '../../main.dart';
 
 class TimeSheetPage extends StatefulWidget {
   const TimeSheetPage({super.key});
@@ -24,29 +24,36 @@ class TimeSheetPage extends StatefulWidget {
 }
 
 class _TimeSheetPageState extends State<TimeSheetPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late TabController _tabController;
   VisitController visitController = Get.put(VisitController());
   TimeSheetController timeSheetController = Get.put(TimeSheetController());
   // final homeController = Get.find<HomeController>();
   RxInt selectedIndex = 0.obs;
   TextEditingController searchController = TextEditingController();
-  ProfileController controller = Get.put(ProfileController());
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(vsync: this, length: 4);
-    timeSheetController.selectedTypeRecord.value = 'All';
-    timeSheetController.clinitianId.value = controller.employeeIdByEmail.value.employeeId;
-    timeSheetController.selectedDate.value = timeSheetController.selectedDate.value;
-    timeSheetController.searchText.value = 'all';
+    _tabController = TabController(vsync: this, length: 3);
   }
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     if (Get.isRegistered<TimeSheetController>()) {
       Get.delete<TimeSheetController>(); // triggers onClose()
     }
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    timeSheetController.refreshNow();
   }
 
 
@@ -69,7 +76,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                 HomeAppbarWidget(),
                 // --------- search and dropdown ----------
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 15.w),
+                  padding: EdgeInsets.symmetric(horizontal: 11.w),
                   child: Row(
                     children: [
                       Expanded(
@@ -96,7 +103,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
             Obx(
                   () => timeSheetController.selectedTypeRecord.value != "Visit"
                       || timeSheetController.selectedTypeRecord.value != "All"
-                  ? customWidth(15.w) : Offstage()),
+                  ? customWidth(0.w) : Offstage()),
                       Obx(() {
                         final type =
                             timeSheetController.selectedTypeRecord.value;
@@ -147,7 +154,7 @@ class _TimeSheetPageState extends State<TimeSheetPage>
                     controller: _tabController,
                     indicatorColor: Colors.transparent,
           
-                    labelPadding: EdgeInsets.only(right: 10.w),
+                    labelPadding: EdgeInsets.only(right: 11.w),
           
                     dividerHeight: 10,
                     dividerColor: Colors.transparent,

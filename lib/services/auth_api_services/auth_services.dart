@@ -444,19 +444,70 @@ class ApiService extends GetxService {
   void onInit() {
     super.onInit();
     dioClient = dio.Dio(dio.BaseOptions(
-      baseUrl:        ApiAppConstant.endPointByAlias(3, 'dev'),
+      baseUrl:        ApiAppConstant.domain,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
     ));
     dioClient.interceptors.add(buildAuthInterceptor(dioClient));
   }
 
-  Future<dio.Response> get(String path)                              => dioClient.get(path);
-  Future<dio.Response> post(String path, Map<String, dynamic> data)  => dioClient.post(path, data: data);
-  Future<dio.Response> postList(String path, List data)              => dioClient.post(path, data: data);
-  Future<dio.Response> patch(String path, Map<String, dynamic> data) => dioClient.patch(path, data: data);
-  Future<dio.Response> patchList(String path, List data)             => dioClient.patch(path, data: data);
-  Future<dio.Response> delete(String path)                           => dioClient.delete(path);
+  // ApiAppConstant.domain changes at runtime once the user picks a company
+  // alias (post-email-lookup), but dioClient's baseUrl was only captured once
+  // in onInit(). Re-sync it before every request instead of relying on that
+  // stale snapshot.
+  dio.Dio get _client {
+    dioClient.options.baseUrl = ApiAppConstant.domain;
+    return dioClient;
+  }
+
+  Future<dio.Response> get(String path)                              => _client.get(path);
+  Future<dio.Response> getWithQueryParam({
+    required String path,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? queryParameters,
+  }) =>
+      _client.get(
+        path,
+        queryParameters: queryParameters,
+        options: dio.Options(headers: headers),
+      );
+  Future<dio.Response> post(String path, Map<String, dynamic> data)  => _client.post(path, data: data);
+  Future<dio.Response> postList(String path, List data)              => _client.post(path, data: data);
+  Future<dio.Response> patch(String path, Map<String, dynamic> data) => _client.patch(path, data: data);
+  Future<dio.Response> patchList(String path, List data)             => _client.patch(path, data: data);
+  Future<dio.Response> delete(String path)                           => _client.delete(path);
+  Future<dio.Response> patchNoRequest({required String path, Map? data})     => _client.patch(path, data: data);
+  Future<dio.Response> getBytes({required String path}) => _client.get(
+    path,
+    options: dio.Options(responseType: dio.ResponseType.bytes),
+  );
+  Future<dio.Response> deleteWithData({required String path, Map? data}) async {
+    String token = await TokenManager.getAccessToken();
+    var headers = {
+      'accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    var response = await _client.delete(
+      '${ApiAppConstant.authDomain}$path',
+      data: data,
+      options: dio.Options(
+        headers: headers,
+      ),
+    );
+    return response;
+  }
+  Future<dio.Response> postWithFormData(
+      {required String path, required FormData formData}) async {
+    var response = await _client.post(
+      path,
+      data: formData,
+    );
+    //  print(path);
+    // print("Prachi POST:::::::::${response}");
+    return response;
+  }
+  // Future<Response> patchList({required String path, required List data}) => dioClient.patch(path, data: data);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

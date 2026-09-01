@@ -2,6 +2,7 @@ import 'package:clinician_app/controller/calling_controller.dart';
 import 'package:clinician_app/controller/notification_controller.dart';
 import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/pages/auth/splash_screen.dart';
+import 'package:clinician_app/pages/oasis_form_builder/provider/form_builder_provider.dart';
 import 'package:clinician_app/pages/video_calling/call_background_noti.dart';
 import 'package:clinician_app/pages/video_calling/call_ring.dart';
 import 'package:clinician_app/pages/video_calling/calling_notification.dart';
@@ -10,9 +11,11 @@ import 'package:clinician_app/services/chat_notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
 
@@ -44,7 +47,12 @@ Future<void> main() async {
   setupBackgroundCallListener();
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   MediaKit.ensureInitialized();
-  runApp(const ClinicalApp());
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => FormBuilderProvider()),
+
+    ],
+      child:  ClinicalApp()));
 }
 bool _manuallyRejected = false;
 
@@ -52,6 +60,10 @@ bool _manuallyRejected = false;
 /// But dialogs/navigation will be handled by GetX.
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final callController = Get.put(CallingController());
+
+/// Lets any page mixin RouteAware and reload itself whenever it becomes
+/// visible again (e.g. after popping a screen pushed on top of it).
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 // ✅ Helper: update bell dot + refresh notification list (safe if controller not created yet)
 void _notifyNewNotification({bool refreshList = true}) {
@@ -306,6 +318,7 @@ class ClinicalApp extends StatelessWidget {
         return GetMaterialApp(
           title: 'Clinician App',
           navigatorKey: navigatorKey,
+          navigatorObservers: [routeObserver],
           defaultTransition: Transition.cupertino,
           transitionDuration: const Duration(milliseconds: 300),
           popGesture: true,

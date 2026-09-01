@@ -3,27 +3,22 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/core/ui/common_divider.dart';
-import 'package:clinician_app/model/key_value_model.dart';
 import 'package:clinician_app/pages/home/widget/chat_fab_widget.dart';
-import 'package:clinician_app/pages/request/visit_doc_upload_page.dart';
 import 'package:clinician_app/pages/request/widget/accept_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/assign_assistant_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/reject_dialog_widget.dart';
-import 'package:clinician_app/pages/request/widget/request_clinitian_dialog.dart';
-import 'package:clinician_app/pages/request/widget/reschedule_dialog_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
 import '../../controller/profile_controller.dart';
 import '../../core/common/calling_class.dart';
-import '../../model/profile/visit_details_model.dart';
 
 class VisitDetailPage extends StatefulWidget {
   final int visitId;
   final int employeeTypeId;
   final String visitStatus;
-  const VisitDetailPage({super.key, required this.visitId, required this.employeeTypeId, required this.visitStatus});
+  final bool isSecondLastEpisodeVisit;
+  const VisitDetailPage({super.key, required this.visitId, required this.employeeTypeId, required this.visitStatus, required this.isSecondLastEpisodeVisit});
 
   @override
   State<VisitDetailPage> createState() => _VisitDetailPageState();
@@ -204,15 +199,20 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                   );
                                 }),
                                 Spacer(),
-                                controller.visitDetailModel.value!.isAssistantUser == false ? PrimaryOutlinedButton(
+                                controller.visitDetailModel.value!.isAssistantUser == false ?
+                                widget.isSecondLastEpisodeVisit == false ? PrimaryOutlinedButton(
                                   height: 35.h,
                                   onPressed: () {
                                     Get.dialog(AssignAssistantDialogWidget(visitId: widget.visitId,));
                                   },
                                   radius: 6.r,
-                                  width: 150.w,
+                                  width: 155.w,
                                   borderWidth: 0.8.w,
                                   text: 'Assign to Assistant',
+                                  textStyle: AppTextStyle.normal12style.copyWith(
+                                    fontSize: 11.sp,
+                                    color: AppColors.primaryAppColor,
+                                  ),
                                   padding: EdgeInsets.symmetric(),
                                   // padding: EdgeInsets.symmetric(
                                   //   horizontal: 6.w,
@@ -221,9 +221,9 @@ class _VisitDetailPageState extends State<VisitDetailPage> {
                                   icon: Icon(
                                     Icons.add,
                                     color: AppColors.primaryAppColor,
-                                    size: 15,
+                                    size: 18,
                                   ),
-                                ) : Offstage(),
+                                ) : Offstage() : Offstage(),
                               ],
                             ),
                             customHeight(10.h),

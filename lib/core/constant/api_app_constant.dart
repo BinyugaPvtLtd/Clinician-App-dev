@@ -1,4 +1,4 @@
-///dev
+// ///dev
 // class ApiAppConstant {
 //   static  String domain = 'https://prohealth-dev.symmetry.care/';
 //   static const String authDomain = 'https://auth.symmetry.care/';
@@ -26,13 +26,14 @@
 
 
 
+
 ///demo
 class ApiAppConstant {
   static  String domain = 'https://prohealth-dev.symmetry.care/';
-  static const String authDomain = 'https://auth.symmetry.care/';
-  static  String clinicialBaseUrl = '${domain}api/';
-  static const String clinicialAuthBaseUrl = '${authDomain}api/';
-  static const googleApiKey = "AIzaSyCw6mXOPCtbKn5i0bWcAcnfXCkb0y5G7Lg";
+  static  String authDomain = 'https://auth.symmetry.care/';
+  static  String get clinicialBaseUrl => '${domain}api/';
+  static  String get clinicialAuthBaseUrl => '${authDomain}api/';
+  static  String googleApiKey = "AIzaSyCw6mXOPCtbKn5i0bWcAcnfXCkb0y5G7Lg";
 
   static const int proHealth = 2;
   static const int clinician = 1;

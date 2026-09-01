@@ -7,11 +7,14 @@ import 'package:clinician_app/pages/home/chat_screen.dart';
 import 'package:clinician_app/services/token_manager/token_manager_service.dart';
 import 'package:clinician_app/utils/common_methods.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../../controller/chat_controller.dart';
 import '../../controller/profile_controller.dart';
+import '../../core/ui/primary_textfield.dart';
+import '../../main.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -20,18 +23,27 @@ class ChatListScreen extends StatefulWidget {
   State<ChatListScreen> createState() => _ChatListScreenState();
 }
 
-class _ChatListScreenState extends State<ChatListScreen> {
+class _ChatListScreenState extends State<ChatListScreen> with RouteAware {
    ChatDataController controller = Get.put(ChatDataController());
    ProfileController profileController = Get.put(ProfileController());
   @override
   initState() {
-    controller.startChatListListening(clinicianId: profileController.employeeIdByEmail.value.employeeId);
+    controller.loadInitial(clinicianId: profileController.employeeIdByEmail.value.employeeId);
     super.initState();
   }
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+  @override
   void dispose() {
-    controller.stopChatListListening();
+    routeObserver.unsubscribe(this);
     super.dispose();
+  }
+  @override
+  void didPopNext() {
+    controller.refreshNow(clinicianId: profileController.employeeIdByEmail.value.employeeId);
   }
   Color getColors(int inx) {
     switch (inx % 2) {
@@ -44,7 +56,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
   }
 
-
+   final TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +65,28 @@ class _ChatListScreenState extends State<ChatListScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            CommonAppbar(label: 'Chats'),
+            CommonAppbar(label: 'Chats',trailing:  Expanded(
+              flex: 4,
+              child: SizedBox(
+                height: 35.h,
+                child: PrimaryTextField(
+                  controller: searchController,
+                  onChanged: (v) {
+                    controller.debounceSearch(
+                      clinicianId: profileController.employeeIdByEmail.value.employeeId,
+                      search: v,
+                    );
+                  },
+                  hintText: 'Search',
+                  filledColor: const Color(0xffE9E9E9),
+                  borderRadius: 6.75.r,
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SvgPicture.asset(AppAsset.searchSvgIcon),
+                  ),
+                ),
+              ),
+            ),),
             CommonDivider(color: const Color(0xffDADADA)),
             Expanded(
               child: Obx(() {
@@ -70,10 +103,19 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 // }
             
                 if (controller.chatListItem.isEmpty) {
-                  return const Center(child: Text("No chats found"));
+                  return const Center(child: Text("No chats found!"));
                 }
             
-                return ListView.separated(
+                return RefreshIndicator(
+                  color: AppColors.primaryAppColor,
+                  onRefresh: () async {
+                    await controller.fetchChatListAllData(
+                      clinicianId: profileController.employeeIdByEmail.value.employeeId,
+                      showLoader: false,
+                      searchTextFilter: controller.searchText.value,
+                    );
+                  },
+                  child: ListView.separated(
                   itemCount: controller.chatListItem.length,
                   shrinkWrap: true,
                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
@@ -209,6 +251,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                       ),
                     );
                   },
+                  ),
                 );
               }),
             ),

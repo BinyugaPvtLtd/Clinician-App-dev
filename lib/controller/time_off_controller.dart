@@ -1,5 +1,6 @@
 import 'package:clinician_app/controller/repository/profile_repo.dart';
 import 'package:clinician_app/model/profile/time_off_model.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -120,49 +121,82 @@ class TimeController extends GetxController {
       isTimeOffSaveLoading.value = true;
       error.value = '';
 
-      final res = await _api.post(ProfileRepository.postAddTimeOffRequest(), leaveType == 'One day' ?
-      {
-        "employeeId": empId,
-        "timeOffTypeId": timeOffTypeId,
-        "leaveTypeId": leaveTypeId,
-        "startDate": startDate,
-        "reason": reason,
-      } : leaveType == "Multi days" ? {
-        "employeeId": empId,
-        "timeOffTypeId": timeOffTypeId,
-        "leaveTypeId": leaveTypeId,
-        "startDate": startDate,
-        "endDate": endDate,
-        "reason": reason
-      } : {
-        "employeeId": empId,
-        "timeOffTypeId": timeOffTypeId,
-        "leaveTypeId": leaveTypeId,
-        "reason": reason,
-        "firstHalf": firstHalf
-      });
+      final res = await _api.post(
+        ProfileRepository.postAddTimeOffRequest(),
+        leaveType == 'One day'
+            ? {
+          "employeeId": empId,
+          "timeOffTypeId": timeOffTypeId,
+          "leaveTypeId": leaveTypeId,
+          "startDate": startDate,
+          "reason": reason,
+        }
+            : leaveType == "Multi days"
+            ? {
+          "employeeId": empId,
+          "timeOffTypeId": timeOffTypeId,
+          "leaveTypeId": leaveTypeId,
+          "startDate": startDate,
+          "endDate": endDate,
+          "reason": reason,
+        }
+            : {
+          "employeeId": empId,
+          "timeOffTypeId": timeOffTypeId,
+          "leaveTypeId": leaveTypeId,
+          "reason": reason,
+          "firstHalf": firstHalf,
+        },
+      );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        // final data = res.data as Map<String, dynamic>;
+        final data = res.data as Map<String, dynamic>?;
+        final backendMessage = data?['message']?.toString() ??
+            res.statusMessage ??
+            AppString.somethingWentWrong;
+
         return ApiData(
-            success: true,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: true,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
-      }else{
-        error.value = res.statusMessage!;
+      } else {
+        final data = res.data as Map<String, dynamic>?;
+        final backendMessage = data?['message']?.toString() ??
+            res.statusMessage ??
+            AppString.somethingWentWrong;
+
+        error.value = backendMessage;
         return ApiData(
-            success: false,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: false,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
       }
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      String backendMessage;
+
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        backendMessage = data['message'].toString();
+      } else if (data is String && data.isNotEmpty) {
+        backendMessage = data;
+      } else {
+        backendMessage = AppString.somethingWentWrong;
+      }
+
+      error.value = backendMessage;
+      return ApiData(
+        success: false,
+        message: backendMessage,
+        statusCode: e.response?.statusCode ?? 404,
+      );
     } catch (e) {
       error.value = e.toString();
       return ApiData(
-          success: false,
-          message:AppString.somethingWentWrong,
-          statusCode: 404
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 404,
       );
     } finally {
       isTimeOffSaveLoading.value = false;
@@ -178,9 +212,8 @@ class TimeController extends GetxController {
 
       DateTime dateTime = DateTime.parse(iosDate);
 
-      return DateFormat('dd/MM/yyyy/h.mma')
-          .format(dateTime)
-          .toLowerCase();
+      return DateFormat('yyyy/MM/dd/h.mm a')
+          .format(dateTime);
     }
     try {
       isLoading.value = true;

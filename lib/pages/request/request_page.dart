@@ -11,6 +11,8 @@ import 'package:clinician_app/core/ui/primary_textfield.dart';
 import 'package:clinician_app/pages/home/widget/home_appbar_widget.dart';
 import 'package:clinician_app/pages/request/widget/request_info_widget.dart';
 
+import '../../main.dart';
+
 class RequestPage extends StatefulWidget {
   const RequestPage({super.key});
 
@@ -18,7 +20,7 @@ class RequestPage extends StatefulWidget {
   State<RequestPage> createState() => _RequestPageState();
 }
 
-class _RequestPageState extends State<RequestPage> {
+class _RequestPageState extends State<RequestPage> with RouteAware {
   final ProfileController profileController = Get.find<ProfileController>();
   final HomeController homeController = Get.find<HomeController>();
 
@@ -40,16 +42,27 @@ class _RequestPageState extends State<RequestPage> {
         patientName: 'all',
         isPollingCall: false,
       );
-
-      // ✅ Start polling every 2 seconds
-      homeController.startAutoRefresh();
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // A screen pushed on top of this one (e.g. RequestDetailPage) was
+    // popped — reload so the list reflects any accept/reject/status change.
+    homeController.refreshRequestList();
   }
 
   @override
@@ -123,9 +136,6 @@ class _RequestPageState extends State<RequestPage> {
                               : searchController.text.trim(),
                           isPollingCall: false,
                         );
-
-                        // ✅ restart polling
-                        homeController.startAutoRefresh();
                       },
                     ),
                   ),
@@ -176,7 +186,9 @@ class _RequestPageState extends State<RequestPage> {
                   physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.symmetric(horizontal: 10.w),
                   itemBuilder: (context, index) {
-                    return RequestInfoWidget(data: items[index]);
+                    return RequestInfoWidget(
+                      filterStatus: homeController.statusVal.value.toLowerCase(),
+                        data: items[index]);
                   },
                 ),
               );

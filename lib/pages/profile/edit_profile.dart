@@ -72,6 +72,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           }
                           //Get.to(() => HomeScreen());
                           else {
+                            showDocErrorDialog(context: context,
+                                message: imageResponse.message,
+                                title: "Error");
                             // Form is invalid
                             print('Validation failed');
                           }
@@ -96,6 +99,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             controller.fetchRecordType();
                           //Get.to(() => HomeScreen());
                         }else{
+                          showDocErrorDialog(context: context,
+                              message: response.message,
+                              title: "Error");
                           print('Validation failed');
                         }
                       }
@@ -104,8 +110,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   },
                   label: "Save",
                   padding: EdgeInsets.zero,
-                  labelStyle: TextStyle(color: Colors.white, fontSize: 10.sp),
-                  height: 20.h,
+                  labelStyle: TextStyle(color: Colors.white, fontSize: 13.sp),
+                  height: 30.h,
                   width: 60.w,
                   borderRadius: 6,
                 ),
@@ -138,7 +144,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                   imageProvider = NetworkImage(controller.employeeImage.value);
                                 } else {
                                   imageProvider =
-                                  const AssetImage('assets/images/profilepic.png');
+                                  const AssetImage('assets/png/profilepic.png');
                                 }
 
                                 return CircleAvatar(
@@ -194,7 +200,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           isUsPhone: true,
                           validator: (value) {
                             if (value == null || value.length != 14) {
-                              return 'Enter valid US phone number';
+                              return 'Enter valid phone number';
                             }
                             return null;
                           },

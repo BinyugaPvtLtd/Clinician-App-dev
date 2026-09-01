@@ -142,7 +142,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '2x4    | 2.5 miles',
+                                '2x4    | ${liveMapController.visitDashboardDetails.value.visit.distanceInMiles}',
                                 style: AppTextStyle.normal12style.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.defaultTxtGrey,
@@ -161,7 +161,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                         ],
                       ),
                       Text(
-                        'Distance ${liveMapController.visitDashboardDetails.value.visit.distance ?? "--"}km',
+                        'Distance ${liveMapController.visitDashboardDetails.value.visit.distanceKm ?? "--"}',
                         style: AppTextStyle.normal12style.copyWith(
                           color: AppColors.textGreyColor,
                         ),
@@ -177,7 +177,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                           ),
                           Spacer(),
                           Text(
-                            'Time to reach',
+                            liveMapController.visitDashboardDetails.value.visit.timeToReach,
                             style: AppTextStyle.normal12style.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.textGreyColor,
@@ -198,8 +198,8 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                               ),
                             ),
                           ),
-                          Text(
-                            '30- 40 mins',
+                          Text(" ",
+                            //'30- 40 mins',
                             style: AppTextStyle.normal12style.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.textGreyColor,
@@ -230,7 +230,7 @@ class _ClinicianInfoDialogState extends State<ClinicianInfoDialog> {
                             return Container(
                               padding: EdgeInsets.symmetric(
                                 vertical: 2.h,
-                                horizontal: 4.w,
+                                horizontal: 3.w,
                               ),
                               width: 24.w,
                               alignment: Alignment.center,

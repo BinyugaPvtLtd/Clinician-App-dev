@@ -18,19 +18,21 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  SplashController controller = Get.put(SplashController());
   ProfileController profileController = Get.put(ProfileController());
+
   @override
   void initState() {
-    profileController.fetchClinitionLoginDetails();
     super.initState();
-    // Future.delayed(Duration(seconds: 3), () async{
-    //   var authToken = await TokenManager.getAccessToken();
-    //   print('Auth token ${authToken}');
-    //   Get.offAll(() => authToken.isEmpty ? LoginScreen() : HomeScreen());
-    // });
+
+    Future.delayed(const Duration(seconds: 3), () async {
+      await controller.checkAuth();
+      await profileController.fetchRecordType();
+      await profileController.fetchClinitionLoginDetails();
+    });
   }
 
-  final SplashController controller = Get.put(SplashController());
+
 
 
   @override

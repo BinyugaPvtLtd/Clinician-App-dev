@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:clinician_app/controller/repository/profile_repo.dart';
 import 'package:clinician_app/model/profile/edit_employee_model.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -60,11 +61,11 @@ class ProfileController extends GetxController{
   final phoneController     = TextEditingController().obs;
   final emailAssistenseController  = TextEditingController().obs;
   final RxString employeeImage = ''.obs;
-  @override
-  void onInit() {
-    super.onInit();
-    fetchRecordType();
-  }
+  // @override
+  // void onInit() {
+  //   super.onInit();
+  //   fetchRecordType();
+  // }
 
 
 
@@ -242,44 +243,67 @@ class ProfileController extends GetxController{
     required String employeeLastName,
     required String employeePhone,
     required String employeeEmail,
-    required String employeeaddress
+    required String employeeaddress,
   }) async {
+    // Shared helper — add once at the top of the class (or in a utils file)
+    String extractBackendMessage(dynamic data, String? fallback) {
+      if (data is Map<String, dynamic> && data['message'] != null) {
+        return data['message'].toString();
+      } else if (data is String && data.isNotEmpty) {
+        return data;
+      }
+      return fallback ?? AppString.somethingWentWrong;
+    }
     try {
       isEmployeeSaveLoading.value = true;
       error.value = '';
+
       final userId = await TokenManager.getUserId();
       final companyId = await TokenManager.getCompanyId();
-      final res = await _api.patch(ProfileRepository.patchEmployeeData(empId: empId), {
-        "employeeId": empId,
-        "userId": userId,
-        "firstName": employeeFirstName,
-        "lastName": employeeLastName,
-        "primaryPhoneNbr": employeePhone,
-        "personalEmail": employeeEmail,
-        "companyId": companyId,
-      });
+
+      final res = await _api.patch(
+        ProfileRepository.patchEmployeeData(empId: empId),
+        {
+          "employeeId": empId,
+          "userId": userId,
+          "firstName": employeeFirstName,
+          "lastName": employeeLastName,
+          "primaryPhoneNbr": employeePhone,
+          "personalEmail": employeeEmail,
+          "companyId": companyId,
+        },
+      );
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        // final data = res.data as Map<String, dynamic>;
+        final backendMessage = extractBackendMessage(res.data, res.statusMessage);
         return ApiData(
-            success: true,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: true,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
-      }else{
-        error.value = res.statusMessage!;
+      } else {
+        final backendMessage = extractBackendMessage(res.data, res.statusMessage);
+        error.value = backendMessage;
         return ApiData(
-            success: false,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: false,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
       }
+    } on DioException catch (e) {
+      final backendMessage = extractBackendMessage(e.response?.data, null);
+      error.value = backendMessage;
+      return ApiData(
+        success: false,
+        message: backendMessage,
+        statusCode: e.response?.statusCode ?? 404,
+      );
     } catch (e) {
       error.value = e.toString();
       return ApiData(
-          success: false,
-          message:AppString.somethingWentWrong,
-          statusCode: 404
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 404,
       );
     } finally {
       isEmployeeSaveLoading.value = false;
@@ -376,10 +400,9 @@ class ProfileController extends GetxController{
     var itemData;
     String formatTimeToAMPM(String? dateTimeString) {
       if (dateTimeString == null || dateTimeString.isEmpty) return '';
-
       try {
         final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
-        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+        return DateFormat('h.mm a').format(dateTime);
       } catch (e) {
         return '';
       }
@@ -388,9 +411,26 @@ class ProfileController extends GetxController{
       if (name == null || name.trim().isEmpty) return '';
       return name
           .trim()
-          .split(RegExp(r'\s+'))          // split on one or more spaces
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
           .map((word) => word[0].toUpperCase())
           .join();
+    }
+
+    String getDisplayName(String? name) {
+      if (name == null || name.trim().isEmpty) return '';
+
+      final words = name
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .toList();
+
+      if (words.length == 1) {
+        return words.first;          // e.g. "SOC" -> "SOC"
+      }
+
+      return toShortForm(name);      // e.g. "Physical Therapy Notes" -> "PTN"
     }
     try {
       isEmployeeLoading.value = true;
@@ -417,13 +457,14 @@ class ProfileController extends GetxController{
                   ),
                   visitType: VisitType(
                       id: visitType['id'] ?? 0,
-                      name: visitType['name'] != null ? toShortForm(visitType['name']) : '',
+                      name: visitType['name'] != null ? getDisplayName(visitType['name']): '',
                   ),
                   visiteDateTimeFrom: p['visiteDateTimeFrom'] != null ? formatTimeToAMPM(p['visiteDateTimeFrom']) : '',
                   visitDateTimeTo: p['visitDateTimeTo'] != null ? formatTimeToAMPM(p['visitDateTimeTo']) : '',
                   isVisitCompleted: p['isVisitCompleted'] ?? false,
                   isVisitMissed: p['isVisitMissed'] ?? false,
                   isVisitAccepted: p['isVisitAccepted'] ?? false,
+                  isSecondLastEpisodeVisit: p["isSecondLastEpisodeVisit"] ?? false,
                   visitCharge: double.parse(
                     (((p['visit_charge'] as num?)?.toDouble() ?? 0.0)
                         .toStringAsFixed(2)),

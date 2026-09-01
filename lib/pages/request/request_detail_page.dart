@@ -8,6 +8,7 @@ import 'package:clinician_app/pages/request/widget/accept_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/reject_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/reschedule_dialog_widget.dart';
 import 'package:clinician_app/pages/request/widget/schedule_row_widget.dart';
+import 'package:clinician_app/pages/request/widget/start_or_miss_visit_dialog_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -15,19 +16,26 @@ import 'package:get/get.dart';
 import '../../controller/home_controller.dart';
 import '../../controller/profile_controller.dart';
 import '../../core/common/hex_color_decoder.dart';
+import '../../main.dart';
+import '../../services/token_manager/token_manager_service.dart';
+import '../oasis_form_builder/model/chart_patient_referral_data_model.dart';
+import '../oasis_form_builder/model/patient_form_model.dart';
+import '../oasis_form_builder/oasis_form_mapper.dart';
+import '../oasis_form_builder/services/api/managers/patient_form_manager.dart';
 
 class RequestDetailPage extends StatefulWidget {
-  const RequestDetailPage({super.key, required this.visitId, required this.noteText, required this.filterText});
+  const RequestDetailPage({super.key, required this.visitId, required this.noteText, required this.filterText, required this.chartNo});
   final int visitId;
   final String filterText;
   final String noteText;
+  final int chartNo;
 
 
   @override
   State<RequestDetailPage> createState() => _RequestDetailPageState();
 }
 
-class _RequestDetailPageState extends State<RequestDetailPage> {
+class _RequestDetailPageState extends State<RequestDetailPage> with RouteAware {
   // ProfileController controller = Get.put(ProfileController());
    HomeController homeController = Get.put(HomeController());
   @override
@@ -37,6 +45,101 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
     homeController.fetchPatientScheduleData(visitId: widget.visitId);
     super.initState();
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called whenever a route pushed on top of this page is popped and this
+    // page becomes visible again — reload so the list reflects any changes
+    // made on the screen that was just closed.
+    homeController.fetchPatientScheduleData(visitId: widget.visitId);
+  }
+   Future<void> _onTap({
+     required int patientFormId,
+     required int ptId,
+     required int chartNo,
+   }) async {
+     // setState(() => _isStartingVisit = true);
+
+     try {
+       final result = await getPatientFormByPatientID(
+         context,
+         patientFormId: patientFormId,
+       );
+       // String userRole = await TokenManager.getUserStatus();
+
+       // if (!mounted) return;
+       // setState(() => _isStartingVisit = false);
+
+       // ✅ Guard: bail out if result or critical data is null
+       if (result == null) {
+         debugPrint('_onTap: result is null — aborting navigation');
+         // _showErrorSnackbar('Could not load patient form. Please try again.');
+         return;
+       }
+
+       print('patinet DOB ${result.referralData.patientDob }');
+       Navigator.pop(context);
+       Navigator.push(
+         context,
+         MaterialPageRoute(
+           builder: (_) => OasisFormMapper(
+             form: PatientForm(
+               formID: result.formId,
+               formName: result.formName,
+               fillStatus: result.status,
+               subForms: result.subForms
+                   .map((e) => PatientSubForm(
+                   formID: result.formId,
+                   subFormID: e.id,
+                   subFormName: e.subFormName,
+                   patientFormID: result.patientFormId,
+                   fillStatus: e.isFilled,
+                   commentCount: e.comment_count
+               ))
+                   .toList(),
+             ),
+             subForm: PatientSubForm(
+               formID: result.formId,
+               subFormID: result.subForms.isNotEmpty ? result.subForms.first.id : 0,
+               subFormName: result.subForms.isNotEmpty ? result.subForms.first.subFormName : '',
+               patientFormID: result.patientFormId,
+               commentCount: result.subForms.isNotEmpty ? result.subForms.first.comment_count : 0,
+               fillStatus: result.subForms.isNotEmpty ? result.subForms.first.isFilled : false,
+             ),
+             patient: ChartPatientReferral(
+               patientId: ptId,
+               firstName: result.referralData.patientFirstname,
+               lastName: result.referralData.patientLastname,
+               contactNumber: result.referralData.patientPhone,
+               address: result.referralData.patientAddress,
+               imageUrl: result.referralData.patientImageUrl,
+               gender: Gender(genderID: 1, genderName: 'Male'),
+               dateOfBirth: DateTime.tryParse(result.referralData.patientDob ?? '') ?? DateTime.now(),
+               chartNo: result.referralData.patientChartNo,
+               episodes: [],
+             ),
+             appBarString: 'EMR - Clinical',
+             userRole: 'Clinical',
+           ),
+         ),
+       );
+     } catch (e, stack) {
+       debugPrint('_onTap error: $e\n$stack');
+       // if (mounted) setState(() => _isStartingVisit = false);
+     }
+   }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -299,59 +402,91 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                             ),
                             customHeight(8.h),
                             ...List.generate(weekItem.visits.length, (index) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    weekItem.visits[index].visitName,
-                                    style: AppTextStyle.normal12style.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.defaultTxtGrey,
-                                    ),
-                                  ),
-                                  customHeight(8.h),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
-                                    child: Row(
+                              final visit = weekItem.visits[index];
+                              final isCompleted = visit.isVisitCompleted;
+                              final isMissed = visit.isVisitMissed;
+                              final isDisabled = isCompleted || isMissed;
+                              final statusColor = isCompleted
+                                  ? AppColors.chatGreenColor
+                                  : isMissed
+                                      ? AppColors.rejectionRedColor
+                                      : null;
+                              return Padding(
+                                padding:  EdgeInsets.symmetric(vertical: 3.h),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+                                  decoration: isDisabled
+                                      ? BoxDecoration(
+                                          color: statusColor!.withValues(alpha: 0.12),
+                                          borderRadius: BorderRadius.circular(6.r),
+                                        )
+                                      : null,
+                                  child: InkWell(
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                    hoverColor: Colors.transparent,
+                                    onTap: isDisabled
+                                        ? null
+                                        : widget.filterText == "accepted"  ? (){
+                                            Get.dialog(StartOrMissVisitDialogWidget(visitId: weekItem.visits[index].visitId,
+                                              chartNo: weekItem.chartId,patientId: weekItem.patientId,visitData: weekItem.visits[index],));
+                                          } : null,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
                                       children: [
-                                        SvgPicture.asset(AppAsset.scheduleSvgIcon, width: 15.w),
-                                        customWidth(8.5.w),
                                         Text(
-                                          weekItem.visits[index].visitDate,
+                                          visit.visitName,
                                           style: AppTextStyle.normal12style.copyWith(
-                                            color: AppColors.defaultTxtGrey,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDisabled ? statusColor : AppColors.defaultTxtGrey,
                                           ),
                                         ),
-                                        customWidth(2.w),
+                                        customHeight(8.h),
                                         Container(
-                                          padding: EdgeInsets.symmetric(vertical: 3.h, horizontal: 3.w),
-                                          width: 18.w,
-                                          alignment: Alignment.center,
-                                          margin: EdgeInsets.only(right: 2.w),
-                                          decoration: BoxDecoration(
-                                            color: hexToColor(weekItem.visits[index].employeeTypeColor),
-                                            borderRadius: BorderRadius.circular(2.r),
-                                          ),
-                                          child: Text(
-                                            weekItem.visits[index].employeeTypeAbbreviation,
-                                            style: AppTextStyle.normal10style.copyWith(
-                                              fontSize: 7.sp,
-                                              color: Colors.white,
-                                            ),
+                                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h),
+                                          child: Row(
+                                            children: [
+                                              SvgPicture.asset(AppAsset.scheduleSvgIcon, width: 15.w),
+                                              customWidth(8.5.w),
+                                              Text(
+                                                visit.visitDate,
+                                                style: AppTextStyle.normal12style.copyWith(
+                                                  color: AppColors.defaultTxtGrey,
+                                                ),
+                                              ),
+                                              customWidth(2.w),
+                                              Container(
+                                                padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 3.w),
+                                                width: 21.w,
+                                                alignment: Alignment.center,
+                                                margin: EdgeInsets.only(right: 2.w),
+                                                decoration: BoxDecoration(
+                                                  color: hexToColor(visit.employeeTypeColor),
+                                                  borderRadius: BorderRadius.circular(2.r),
+                                                ),
+                                                child: Text(
+                                                  visit.employeeTypeAbbreviation,
+                                                  style: AppTextStyle.normal10style.copyWith(
+                                                    fontSize: 9.sp,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                              Spacer(),
+                                              Text(
+                                                '${visit.visitTimeFrom}-${visit.visitTimeTo}',
+                                                style: AppTextStyle.normal12style.copyWith(
+                                                  color: AppColors.defaultTxtGrey,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        Spacer(),
-                                        Text(
-                                          '${weekItem.visits[index].visitTimeFrom}-${weekItem.visits[index].visitTimeTo}',
-                                          style: AppTextStyle.normal12style.copyWith(
-                                            color: AppColors.defaultTxtGrey,
-                                          ),
-                                        ),
+                                        customHeight(8.h),
                                       ],
                                     ),
                                   ),
-                                  customHeight(8.h),
-                                ],
+                                ),
                               );
                             }),
                           ],
@@ -394,20 +529,6 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
                 ),
               ),
               customWidth(5.w),
-              // Expanded(
-              //   child: PrimaryOutlinedButton(
-              //     radius: 6.r,
-              //     text: 'Reschedule',
-              //     buttonColor: AppColors.primaryAppColor,
-              //     onPressed: () {
-              //       Get.dialog(RescheduleDialogWidget());
-              //     },
-              //     textStyle: AppTextStyle.normal12style.copyWith(
-              //       color: AppColors.primaryAppColor,
-              //     ),
-              //   ),
-              // ),
-              customWidth(5.w),
               Expanded(
                 child: PrimaryButton(
                   onTap: () {
@@ -426,7 +547,7 @@ class _RequestDetailPageState extends State<RequestDetailPage> {
             ],
           ),
         ),
-      ) : Offstage(),
+      ) : Offstage()
     );
   }
 }

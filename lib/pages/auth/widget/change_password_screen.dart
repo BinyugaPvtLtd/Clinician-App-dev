@@ -66,11 +66,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     hintText: 'New Password',
                     textInputAction: TextInputAction.done,
                     keyboardType: TextInputType.visiblePassword,
-                    validator:
-                        (value) => Validators.validatePassword(value ?? 'New'),
+                    obscureText: true,
+                    validator: (value) => Validators.validatePassword(value ?? ''),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: SvgPicture.asset(AppAsset.passwordSvgIcon),
+                      child: SvgPicture.asset(AppAsset.passwordSvgIcon,width: 20,      // ← explicit size
+                        height: 20,     // ← explicit size
+                        fit: BoxFit.scaleDown,),
                     ),
                   ),
                   customHeight(20.h),
@@ -79,11 +81,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     hintText: 'Confirm new Password',
                     textInputAction: TextInputAction.done,
                     keyboardType: TextInputType.visiblePassword,
-                    validator:
-                        (value) => Validators.validateConfirmPassword(value ?? '',newPasswordController.text),
+                    obscureText: true,
+                    validator: (value) => Validators.validateConfirmPassword(
+                        value ?? '', newPasswordController.text),
                     prefixIcon: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 15.w),
-                      child: SvgPicture.asset(AppAsset.passwordSvgIcon),
+                      child: SvgPicture.asset(AppAsset.passwordSvgIcon,width: 20,      // ← explicit size
+                        height: 20,     // ← explicit size
+                        fit: BoxFit.scaleDown,),
                     ),
                   ),
                   customHeight(34.h),

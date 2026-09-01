@@ -91,7 +91,7 @@ class _AssignAssistantDialogWidgetState
                         'Assistant Name',
                       ),
                       contentPadding: EdgeInsets.zero,
-                       filled: false,
+                      filled: false,
                       // buttonStyleData: ButtonStyleData(
                       //   width: 120.w,
                       //   height: 44.h,
@@ -160,6 +160,7 @@ class _AssignAssistantDialogWidgetState
                   // ),
                   customHeight(10.h),
                   PrimaryTextField(
+                    borderRadius: 3.r,
                     controller: controller.emailAssistenseController.value,
                     hintText: 'Assistant Email',
                     readonly: true,
@@ -172,39 +173,56 @@ class _AssignAssistantDialogWidgetState
                       ),
                     ),
                     filledColor: Colors.white,
-                    // style: AppTextStyle.normal12style.copyWith(
-                    //   color: AppColors.greyColor,
-                    // ),
                   ),
                   customHeight(20.h),
                   Align(
                     alignment: Alignment.bottomCenter,
-                    child:Obx(()=> controller.isAssistantAssignLoading.value ?
-                    CircularProgressIndicator(color: AppColors.primaryAppColor,) :
-                        PrimaryButton(
-                      onTap: () async{
-                        var response = await controller.PostAssignAssistance(
-                            visitId: widget.visitId,
-                            EmployeeId: controller.selectedDataId.value);
-                        if(response.statusCode == 200 || response.statusCode == 201){
-                          Get.back();
-                          showSucessDialog( context: context,
-                              message: 'Assistant assigned successfully',
-                              title: 'Successfully');
-                          controller.selectedDataName.value = '';
-                          controller.selectedDataId.value = 0;
-                          controller.emailAssistenseController.value.clear();
-                        }
-                      },
-                      label: 'Assign',
-                      width: double.infinity,
-                      borderRadius: 6.r,
-                      padding: EdgeInsets.symmetric(vertical: 6.h),
-                      labelStyle: AppTextStyle.normal12style.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    )),
+                    child: Obx(() {
+                      final bool isSelected =
+                          controller.selectedDataId.value != 0;
+
+                      if (controller.isAssistantAssignLoading.value) {
+                        return CircularProgressIndicator(
+                          color: AppColors.primaryAppColor,
+                        );
+                      }
+
+                      return Opacity(
+                        opacity: isSelected ? 1.0 : 0.5,
+                        child: PrimaryButton(
+                          onTap: isSelected
+                              ? () async {
+                            var response =
+                            await controller.PostAssignAssistance(
+                                visitId: widget.visitId,
+                                EmployeeId:
+                                controller.selectedDataId.value);
+                            if (response.statusCode == 200 ||
+                                response.statusCode == 201) {
+                              Get.back();
+                              showSucessDialog(
+                                  context: context,
+                                  message:
+                                  'Assistant assigned successfully',
+                                  title: 'Successfully');
+                              controller.selectedDataName.value = '';
+                              controller.selectedDataId.value = 0;
+                              controller.emailAssistenseController.value
+                                  .clear();
+                            }
+                          }
+                              : () {}, // no-op when disabled
+                          label: 'Assign',
+                          width: double.infinity,
+                          borderRadius: 6.r,
+                          padding: EdgeInsets.symmetric(vertical: 6.h),
+                          labelStyle: AppTextStyle.normal12style.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    }),
                   ),
                 ],
               ),

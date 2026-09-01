@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:clinician_app/controller/repository/calender_repo.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -25,9 +23,8 @@ class CalenderListController extends GetxController {
   final calController = CalendarController().obs;
 
   // ============================
-  // ✅ Continue Listening (Polling)
+  // ✅ overlap/rate protection (no periodic polling anymore)
   // ============================
-  Timer? _pollTimer;
   bool _pollInProgress = false;
   DateTime _lastPollAt = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -49,25 +46,13 @@ class CalenderListController extends GetxController {
   // ============================
   // ✅ Public APIs for screen
   // ============================
-  void startContinueListening({
+
+  /// One-time initial load (shows the full loader).
+  void loadInitial({
     required String status,
     required String empIds,
   }) {
-    stopContinueListening();
-
-    // ✅ first time should show loader
     _pollOnce(status: status, empIds: empIds, showLoader: true);
-
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      // ✅ after first fetch -> no loader
-      _pollOnce(status: status, empIds: empIds, showLoader: false);
-    });
-  }
-
-  void stopContinueListening() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
-    _pollInProgress = false;
   }
 
   void refreshNow({
@@ -175,7 +160,7 @@ class CalenderListController extends GetxController {
       if (dateTimeString == null || dateTimeString.isEmpty) return '';
       try {
         final DateTime dateTime = DateTime.parse(dateTimeString).toLocal();
-        return DateFormat('h.mm a').format(dateTime).replaceAll(' ', '');
+        return DateFormat('h.mm a').format(dateTime);
       } catch (e) {
         return '';
       }
@@ -184,9 +169,26 @@ class CalenderListController extends GetxController {
       if (name == null || name.trim().isEmpty) return '';
       return name
           .trim()
-          .split(RegExp(r'\s+'))          // split on one or more spaces
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
           .map((word) => word[0].toUpperCase())
           .join();
+    }
+
+    String getDisplayName(String? name) {
+      if (name == null || name.trim().isEmpty) return '';
+
+      final words = name
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .toList();
+
+      if (words.length == 1) {
+        return words.first;          // e.g. "SOC" -> "SOC"
+      }
+
+      return toShortForm(name);      // e.g. "Physical Therapy Notes" -> "PTN"
     }
 
     try {
@@ -214,7 +216,7 @@ class CalenderListController extends GetxController {
                 patientName: v['patientName'] ?? '',
                 patientImgUrl: v['patientImgUrl'] ?? '',
                 address: v['address'] ?? '--',
-                 visitType: v['visitTypeName'] != null ? toShortForm(v['visitTypeName']) : '',
+                 visitType: v['visitTypeName'] != null ? getDisplayName(v['visitTypeName']) : '',
                 primaryDiagnosis: v['primaryDiagnosis'] ?? '',
                 timeFrom:
                 v['timeFrom'] != null ? formatTimeToAMPM(v['timeFrom']) : '',
@@ -222,6 +224,7 @@ class CalenderListController extends GetxController {
                 v['timeTo'] != null ? formatTimeToAMPM(v['timeTo']) : '',
                 inZone: v['inZone'] ?? false,
                 distance: v['distance'] ?? 0.0,
+                isSecondLastEpisodeVisit: v["isSecondLastEpisodeVisit"] ?? false,
                 visitCharge: double.parse(
                   (((v['visit_charge'] as num?)?.toDouble() ?? 0.0)
                       .toStringAsFixed(2)),
@@ -438,11 +441,5 @@ class CalenderListController extends GetxController {
     }
 
     return visitList;
-  }
-
-  @override
-  void onClose() {
-    stopContinueListening();
-    super.onClose();
   }
 }

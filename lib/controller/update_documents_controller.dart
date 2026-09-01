@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:clinician_app/controller/repository/profile_repo.dart';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 import '../core/common/base64_conversation.dart';
 import '../core/constant/app_string.dart';
+import '../model/chatScreen/chatList_model.dart';
 import '../model/profile/update_documents_model.dart';
 import '../model/request/request_data_model.dart';
 import '../services/auth_api_services/auth_services.dart';
@@ -14,7 +16,6 @@ import '../services/auth_api_services/auth_services.dart';
 class UpdateDocumentsController extends GetxController {
   final ApiService _api = Get.put(ApiService());
   final isDocListLoading = false.obs;
-  final isMetaDocListLoading = false.obs;
   final isSubDocListLoading = false.obs;
   final isDocumentSaveLoading = false.obs;
   final error = ''.obs;
@@ -26,7 +27,20 @@ class UpdateDocumentsController extends GetxController {
   final RxString fileNameValidation = ''.obs;
   final isExpDateShown = false.obs;
   final docSubList = <EmployeeDubDocumentDropDownModel>[].obs;
-  final docMetaList = <DocumentMetaDataModel>[].obs;
+
+  // Edit-document flow
+  final isPrefillLoading = false.obs;
+  final Rxn<EmployeeDocumentPrefillData> prefillData =
+      Rxn<EmployeeDocumentPrefillData>();
+
+  // "Select document" options are fixed, not fetched from the API. The sub
+  // document dropdown below still loads from the API, keyed off whichever
+  // id is picked here.
+  static final List<DocumentMetaDataModel> staticDocMetaList = [
+    DocumentMetaDataModel(employeeDocumentTypeMetaDataId: 5, documentName: 'Acknowledgement'),
+    DocumentMetaDataModel(employeeDocumentTypeMetaDataId: 1, documentName: 'Health Record'),
+  ];
+  final docMetaList = <DocumentMetaDataModel>[...staticDocMetaList].obs;
   final RxString expiryIsoDate = ''.obs;
 
   // ✅ selected dropdown value (use id)
@@ -36,11 +50,6 @@ class UpdateDocumentsController extends GetxController {
   // selecte master visit
   final selectedMasterMetaDocId = 0.obs;
   final selectedMasterMetaDocName = ''.obs;
-  @override
-  void onInit() {
-    fetchMetaDocList();
-    super.onInit();
-  }
 
   @override
   void onClose() {
@@ -117,11 +126,6 @@ class UpdateDocumentsController extends GetxController {
     docSubList.assignAll(list);
 
   }
-  Future<void> fetchMetaDocList() async {
-    final list = await getMetaDocumentListDropdown();
-    docMetaList.assignAll(list);
-
-  }
   Future<void> fetchDocListDetails({required int empId,
     required String approveOnly,
     required String searchText,}) async {
@@ -140,7 +144,7 @@ class UpdateDocumentsController extends GetxController {
 
       DateTime dateTime = DateTime.parse(iosDate);
 
-      return DateFormat('dd/MM/yyyy')
+      return DateFormat('yyyy/MM/dd')
           .format(dateTime)
           .toLowerCase();
     }
@@ -264,46 +268,6 @@ class UpdateDocumentsController extends GetxController {
     return itemData;
   }
 
-  Future<List<DocumentMetaDataModel>> getMetaDocumentListDropdown() async {
-    List<DocumentMetaDataModel> itemData = [];
-
-    String formatIOSDate(String iosDate) {
-      if (iosDate.isEmpty) return '';
-
-      DateTime dateTime = DateTime.parse(iosDate);
-
-      return DateFormat('dd/MM/yyyy')
-          .format(dateTime)
-          .toLowerCase();
-    }
-
-    try {
-      isMetaDocListLoading.value = true;
-      error.value = '';
-
-      final res = await _api.get(
-        ProfileRepository.getMetaDataDropdown(),
-      );
-
-      if (res.statusCode == 200 || res.statusCode == 201) {
-        for(var item in res.data){
-          itemData.add(DocumentMetaDataModel(
-              employeeDocumentTypeMetaDataId: item['EmployeeDocumentTypeMetaDataId'] ?? 0,
-              documentName: item['DocumentName'] ?? ''));
-        }
-      } else {
-        error.value = "Failed to list data";
-      }
-    } catch (e) {
-      error.value = e.toString();
-    } finally {
-      isMetaDocListLoading.value = false;
-    }
-
-    // ✅ GUARANTEED NON-NULL RETURN
-    return itemData;
-  }
-
   /// upload document
   Future<ApiData> postUploadDocumentData({
     required int docMetaId,
@@ -355,46 +319,262 @@ class UpdateDocumentsController extends GetxController {
     required int empId,
     required File base64File,
     required String documentName,
-     String? expiryDate,
+    String? expiryDate,
   }) async {
     try {
       isDocumentSaveLoading.value = true;
       error.value = '';
-      final String base64 = await FileUtils.fileToBase64(base64File!);
+
+      final String base64 = await FileUtils.fileToBase64(base64File);
       print('Expiry Date: $expiryDate');
-      final res = await _api.post(ProfileRepository.postUploadDocumentBase64(
+
+      final res = await _api.post(
+        ProfileRepository.postUploadDocumentBase64(
           docMetaId: docMetaId,
           docTypeSetupId: docTypeSetupId,
-          empId: empId), {
-        "base64": base64,
-        "expiry_date": expiryDate,
-        "documentName": documentName
-      });
+          empId: empId,
+        ),
+        {
+          "base64": base64,
+          "expiry_date": expiryDate,
+          "documentName": documentName,
+        },
+      );
 
+      print("Error message ${res.statusMessage}");
       if (res.statusCode == 200 || res.statusCode == 201) {
-        // final data = res.data as Map<String, dynamic>;
+        final backendMessage = _extractBackendMessage(res.data, res.statusMessage);
         return ApiData(
-            success: true,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: true,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
-      }else{
-        error.value = res.statusMessage!;
+      } else {
+        final backendMessage = _extractBackendMessage(res.data, res.statusMessage);
+        error.value = backendMessage;
         return ApiData(
-            success: false,
-            message: res.statusMessage!,
-            statusCode: res.statusCode!
+          success: false,
+          message: backendMessage,
+          statusCode: res.statusCode!,
         );
       }
+    } on DioException catch (e) {
+      final backendMessage = _extractBackendMessage(e.response?.data, null);
+      error.value = backendMessage;
+      return ApiData(
+        success: false,
+        message: backendMessage,
+        statusCode: e.response?.statusCode ?? 404,
+      );
     } catch (e) {
       error.value = e.toString();
       return ApiData(
-          success: false,
-          message:AppString.somethingWentWrong,
-          statusCode: 404
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 500,
       );
     } finally {
       isDocumentSaveLoading.value = false;
     }
   }
+
+  /// Fetch a single employee document to prefill the edit-document dialog.
+  Future<EmployeeDocumentPrefillData?> fetchPrefillDocument({
+    required int employeeDocumentId,
+  }) async {
+    EmployeeDocumentPrefillData? data;
+    try {
+      isPrefillLoading.value = true;
+      error.value = '';
+
+      final res = await _api.get(
+        ProfileRepository.getOrPatchEmployeeDocument(
+          employeeDocumentId: employeeDocumentId,
+        ),
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        data = EmployeeDocumentPrefillData(
+          documentName: res.data['DocumentName'] ?? '',
+          expiry: res.data['expiry_date'] ?? '',
+          reminderThresold: (res.data['ReminderThreshold'] ?? '').toString(),
+          idOfDocument: (res.data['idOfDocument'] ?? '').toString(),
+          documentType: res.data['DocumentType'] ?? '',
+          empDocMetaDataId: res.data['EmployeeDocumentTypeMetaDataId'] ?? 0,
+          empDocSetupId: res.data['EmployeeDocumentTypeSetupId'] ?? 0,
+          documentUrl: res.data['DocumentUrl'] ?? '',
+          employeeDocumentId: res.data['employeeDocumentId'] ?? 0,
+          employeeId: res.data['employeeId'] ?? 0,
+        );
+        prefillData.value = data;
+        print('Prefill data fetched: ${data.documentName} ${data.documentType}');
+      } else {
+        error.value = "Failed to load document";
+      }
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isPrefillLoading.value = false;
+    }
+    return data;
+  }
+
+  /// Metadata-only update — used when editing the expiry date without
+  /// picking a new file, so the existing uploaded document is kept as-is.
+  Future<ApiData> patchEmployeeDocumentMetadata({
+    required int employeeDocumentId,
+    required int docMetaId,
+    required int docTypeSetupId,
+    required int empId,
+    required String documentUrl,
+    required String uploadDate,
+    String? expiryDate,
+  }) async {
+    try {
+      isDocumentSaveLoading.value = true;
+      error.value = '';
+
+      final res = await _api.patch(
+        ProfileRepository.getOrPatchEmployeeDocument(
+          employeeDocumentId: employeeDocumentId,
+        ),
+        {
+          "EmployeeDocumentTypeMetaDataId": docMetaId,
+          "EmployeeDocumentTypeSetupId": docTypeSetupId,
+          "employeeId": empId,
+          "DocumentUrl": documentUrl,
+          "UploadDate": uploadDate,
+          "expiry_date": expiryDate,
+        },
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final backendMessage = _extractBackendMessage(res.data, res.statusMessage);
+        return ApiData(success: true, message: backendMessage, statusCode: res.statusCode!);
+      } else {
+        final backendMessage = _extractBackendMessage(res.data, res.statusMessage);
+        error.value = backendMessage;
+        return ApiData(success: false, message: backendMessage, statusCode: res.statusCode!);
+      }
+    } on DioException catch (e) {
+      final backendMessage = _extractBackendMessage(e.response?.data, null);
+      error.value = backendMessage;
+      return ApiData(
+        success: false,
+        message: backendMessage,
+        statusCode: e.response?.statusCode ?? 404,
+      );
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 500,
+      );
+    } finally {
+      isDocumentSaveLoading.value = false;
+    }
+  }
+
+  /// Downloads an employee document by filename (derived from its URL)
+  /// through the authenticated API instead of hitting the raw file URL.
+  Future<DownloadFileData?> getEmployeeDocumentByFileName({
+    required String fileUrl,
+  }) async {
+    try {
+      // Signed URLs (e.g. "...file.pdf?token=...") carry query params —
+      // split on '/' alone would leave "file.pdf?token=..." as the
+      // filename, breaking both the API path and the saved file's extension.
+      final uri = Uri.tryParse(fileUrl);
+      final fileName = (uri != null && uri.pathSegments.isNotEmpty)
+          ? uri.pathSegments.last
+          : fileUrl.split('/').last;
+      final response = await _api.getBytes(
+        path: "${ProfileRepository.employeeDocumentsDownload}/$fileName",
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return DownloadFileData(
+          fileName: fileName,
+          bytes: response.data,
+        );
+      } else {
+        print('Api Error');
+        return null;
+      }
+    } on DioException catch (e) {
+      print("Error ${e.response?.data['message'] ?? e.message}");
+      return null;
+    } catch (e) {
+      print("Error $e");
+      return null;
+    }
+  }
+
+  /// PATCH with a newly uploaded file, replacing the existing document.
+  /// This endpoint's body only accepts base64 + documentName — it does not
+  /// take an expiry date. Callers that also need to update the expiry
+  /// should follow this with [patchEmployeeDocumentMetadata].
+  Future<ApiData> patchEmployeeDocumentBase64Data({
+    required int employeeDocumentId,
+    required int docMetaId,
+    required int docTypeSetupId,
+    required int empId,
+    required File base64File,
+    required String documentName,
+  }) async {
+    try {
+      isDocumentSaveLoading.value = true;
+      error.value = '';
+
+      final String base64 = await FileUtils.fileToBase64(base64File);
+      final res = await _api.patch(
+        ProfileRepository.patchEmployeeDocumentWithBase64(
+          employeeDocumentId: employeeDocumentId,
+          docMetaId: docMetaId,
+          docTypeSetupId: docTypeSetupId,
+          empId: empId,
+        ),
+        {
+          "base64": base64,
+          "documentName": documentName,
+        },
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        final backendMessage = _extractBackendMessage(res.data, res.statusMessage);
+        return ApiData(success: true, message: backendMessage, statusCode: res.statusCode!);
+      } else {
+        final backendMessage = _extractBackendMessage(res.data, res.statusMessage);
+        error.value = backendMessage;
+        return ApiData(success: false, message: backendMessage, statusCode: res.statusCode!);
+      }
+    } on DioException catch (e) {
+      final backendMessage = _extractBackendMessage(e.response?.data, null);
+      error.value = backendMessage;
+      return ApiData(
+        success: false,
+        message: backendMessage,
+        statusCode: e.response?.statusCode ?? 404,
+      );
+    } catch (e) {
+      error.value = e.toString();
+      return ApiData(
+        success: false,
+        message: AppString.somethingWentWrong,
+        statusCode: 500,
+      );
+    } finally {
+      isDocumentSaveLoading.value = false;
+    }
+  }
+}
+
+String _extractBackendMessage(dynamic data, String? fallback) {
+  if (data is Map<String, dynamic> && data['message'] != null) {
+    return data['message'].toString();
+  } else if (data is String && data.isNotEmpty) {
+    return data;
+  }
+  return fallback ?? AppString.somethingWentWrong;
 }

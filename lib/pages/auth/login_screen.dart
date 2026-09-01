@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 
 import '../../controller/auth_controller.dart';
 import '../../core/constant/api_app_constant.dart';
+import '../../services/token_manager/token_manager_service.dart';
 import 'company_list_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -148,17 +149,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       final response = await auth.getCompanyList(email);
                       if (response.success) {
                         if (response.companies.length == 1) {
-                          String companyAlias = response.companies.first.companyAlias;
+                          String companyAlias = "prohealth-dev";
+                          await TokenManager.setCompanyAlias(companyAlias: "prohealth-dev");
                           print("Auto selected company: $companyAlias");
-                          String endWith = await ApiAppConstant.endPointByAlias(3, "dev");
+                          String endWith = await ApiAppConstant.endPointByAlias(3, "prohealth-dev");
                           print("Endpoint set to: ${ApiAppConstant.domain}");
-                          await Get.to(
+                           Get.to(
                             () => PasswordScreen(email: email),
                             transition: Transition.rightToLeft,
                             duration: const Duration(milliseconds: 400),
                           );
                         } else {
-                          Get.to(() => CompanyListScreen(email: email, companyList: response.companies));
+                          Get.to(() => CompanyListScreen(
+                            isForgotPasswordScreen: false,
+                              email: email,
+                              companyList: response.companies));
                         }
                       } else {
                         print('Error');

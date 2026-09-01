@@ -42,16 +42,17 @@ class ClinicianStats {
 class VisitDashData {
   final String visitType;
   final String timeRange;
-  final String visitCount;
-  final dynamic distance; // can be null or number/string
+  final String visitCount;// can be null or number/string
   final double visitCharge;
+  final String distanceKm;
+  final String timeToReach;
+  final String distanceInMiles;
 
   VisitDashData({
     required this.visitType,
     required this.timeRange,
     required this.visitCount,
-    required this.distance,
-    required this.visitCharge,
+    required this.visitCharge, required this.distanceKm, required this.timeToReach, required this.distanceInMiles,
   });
 }
 

@@ -13,8 +13,12 @@ class ChatRepository {
   static String patientGroup = "/patient-group";
   static String groupInfo = "/group-info";
   static String patientGroupChat = "/patient-group-chat";
+  static String empChatImages = "/clinicians_chat/images";
+  static String patientGroupChatImages = "/patient-group-chat/images";
 
-
+  static String getChatImagesBasePath({required bool isGroup}) {
+    return isGroup ? patientGroupChatImages : empChatImages;
+  }
 
   static String getChatList({required int clinicianId,}) {
     return '$chatList/$clinicianId';

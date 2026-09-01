@@ -2,7 +2,6 @@ import 'package:clinician_app/core/constant/constant_import.dart';
 import 'package:clinician_app/core/ui/buttons/primary_button.dart';
 import 'package:clinician_app/core/ui/buttons/primary_outlined_button.dart';
 import 'package:clinician_app/core/ui/primary_textfield.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,13 +10,18 @@ import 'package:intl/intl.dart';
 import '../../../controller/update_documents_controller.dart';
 import '../../../core/ui/const_sucess_popup.dart';
 import '../../../core/ui/primary_dropdown.dart';
-import '../../../utils/validator.dart';
 import '../../calender_section/widget/calender_date_pick_dialog_widget.dart';
+import 'upload_capture_option.dart';
 
 void showAddDocumentDialog(BuildContext context,int empId) {
   UpdateDocumentsController docCtrl = Get.put(UpdateDocumentsController());
   TextEditingController expDateController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  // Manual validation state for the two dropdowns — independent of
+  // Form/FormField internals, so it works regardless of how
+  // PrimaryDropDown is implemented under the hood.
+  final RxnString docDropdownError = RxnString(null);
+  final RxnString subDocDropdownError = RxnString(null);
   docCtrl.clearAll();
   showDialog(
     context: context,
@@ -44,123 +48,152 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     ),
                     SizedBox(height: 24),
 
-                    // Upload and Capture Buttons
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.center,
-                    //   children: [
-                    //   Obx(()=>docCtrl.fileName.isEmpty ? _uploadCaptureOption(
-                    //     isRedValidation:  docCtrl.fileNameValidation.value.isEmpty ? false : true,
-                    //       label2: docCtrl.fileNameValidation.value.isEmpty ? "Upload document" : docCtrl.fileNameValidation.value,
-                    //       icon: AppAsset.upload,
-                    //       label: "Upload here",
-                    //       onTap: () {
-                    //         docCtrl.pickPdf();
-                    //         // Handle file picker
-                    //       },
-                    //     ) : _uploadCaptureOption(
-                    //     isRedValidation: false,
-                    //     label2: docCtrl.fileName.value,
-                    //     icon: AppAsset.upload,
-                    //     label: "Upload here",
-                    //     onTap: () {
-                    //       docCtrl.pickPdf();
-                    //       // Handle file picker
-                    //     },
-                    //   )),
-                    //     // Padding(
-                    //     //   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    //     //   child: Text("\nor"),
-                    //     // ),
-                    //     // _uploadCaptureOption(
-                    //     //   label2: "Capture document",
-                    //     //   icon: AppAsset.captured,
-                    //     //   label: "Capture here",
-                    //     //   onTap: () {
-                    //     //     // Handle camera capture
-                    //     //   },
-                    //     // ),
-                    //   ],
-                    // ),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(   // ← ADD THIS
+                        Expanded(
                           child: Obx(() => docCtrl.fileName.isEmpty
-                              ? _uploadCaptureOption(
+                              ? uploadCaptureOption(
                             isRedValidation: docCtrl.fileNameValidation.value.isEmpty ? false : true,
                             label2: docCtrl.fileNameValidation.value.isEmpty
                                 ? "Upload document"
                                 : docCtrl.fileNameValidation.value,
                             icon: AppAsset.upload,
                             label: "Upload here",
-                            onTap: () {
-                              docCtrl.pickPdf();
+                            onTap: () async {
+                              await docCtrl.pickPdf();
+                              // ✅ Clear this dropdown/upload validation
+                              // once a document has actually been selected.
+                              if (docCtrl.fileName.value.isNotEmpty) {
+                                docCtrl.fileNameValidation.value = '';
+                              }
                             },
                           )
-                              : _uploadCaptureOption(
+                              : uploadCaptureOption(
                             isRedValidation: false,
                             label2: docCtrl.fileName.value,
                             icon: AppAsset.upload,
                             label: "Upload here",
-                            onTap: () {
-                              docCtrl.pickPdf();
+                            onTap: () async {
+                              await docCtrl.pickPdf();
+                              if (docCtrl.fileName.value.isNotEmpty) {
+                                docCtrl.fileNameValidation.value = '';
+                              }
                             },
                           )),
-                        ),   // ← CLOSE Expanded
+                        ),
                       ],
                     ),
                     SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       child: Obx(() {
-                        return PrimaryDropDown(
-                          validator: (value) => Validators.validateRequired(docCtrl.selectedMasterMetaDocName.value,'Document'),
-                          contentPadding: EdgeInsets.zero,
-                          filled: false,
-                          value: docCtrl.selectedMasterMetaDocName.value,
-                          buttonStyleData: ButtonStyleData(
-                            width: 120.w,
-                            height: 44.h,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.borderGrey),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          hintText:  "Select document",
-                          // value: addVisitController.selectedRecordName.value == ''
-                          //     ? 'Select type'
-                          //     : addVisitController.selectedRecordName.value,
-                          items: docCtrl.docMetaList.map((item) {
-                            return DropdownMenuItem<String>(
-                              value: item.documentName ?? '',
-                              child: Padding(
-                                padding:  EdgeInsets.all(8.h),
-                                child: Text(
-                                  item.documentName,
-                                  style: AppTextStyle.normal12style
-                                      .copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.defaultTxtGrey,
-                                  ),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PrimaryDropDown(
+                              // No Form validator here — error is fully
+                              // manual via docDropdownError below, so it
+                              // clears reliably the instant a value is picked.
+                              validator: (value) => null,
+                              contentPadding: EdgeInsets.zero,
+                              filled: false,
+                              value: docCtrl.selectedMasterMetaDocName.value,
+                              buttonStyleData: ButtonStyleData(
+                                width: 120.w,
+                                height: 44.h,
+                                // Zeroed out because the hint already carries
+                                // its own EdgeInsets.all(8.h) (see
+                                // primary_dropdown.dart) — adding padding here
+                                // too would double-inset the hint relative to
+                                // the selected value below.
+                                padding: EdgeInsets.zero,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.borderGrey),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            for (var a in docCtrl.docMetaList) {
-                              if (a.documentName == value) {
-                                docCtrl.selectedSubDocId.value = 0;
-                                docCtrl.selectedSubDocName.value = '';
-                                docCtrl.docSubList.clear();
-                                docCtrl.selectedMasterMetaDocName.value = value ?? '';
-                                docCtrl.selectedMasterMetaDocId.value = a.employeeDocumentTypeMetaDataId ?? 0;
-                                docCtrl.fetchSubDocList(docMetaId:  a.employeeDocumentTypeMetaDataId );
-                              }
-                            }
-                            //
-
-                          },
+                              hintText: docCtrl.docMetaList.isEmpty
+                                  ? "No document found"
+                                  : "Select document",
+                              // Fixed, static list (Acknowledgements,
+                              // Compensation, Health Record) — names are short
+                              // and known ahead of time, so a single-line row
+                              // is always enough here.
+                              itemHeight: 44.h,
+                              selectedItemBuilder: (context) =>
+                                  docCtrl.docMetaList.map((item) {
+                                    return Align(
+                                      alignment: Alignment.centerLeft,
+                                      // Mirrors the hint's own EdgeInsets.all(8.h)
+                                      // so the selected value lines up with
+                                      // where the placeholder text sat.
+                                      child: Padding(
+                                        padding: EdgeInsets.all(8.h),
+                                        child: Text(
+                                          item.documentName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTextStyle.normal12style
+                                              .copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            color: AppColors.defaultTxtGrey,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                              items: docCtrl.docMetaList.map((item) {
+                                return DropdownMenuItem<String>(
+                                  value: item.documentName ?? '',
+                                  child: Padding(
+                                    padding: EdgeInsets.all(8.h),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        item.documentName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTextStyle.normal12style
+                                            .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.defaultTxtGrey,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null && value.isNotEmpty) {
+                                  for (var a in docCtrl.docMetaList) {
+                                    if (a.documentName == value) {
+                                      docCtrl.selectedSubDocId.value = 0;
+                                      docCtrl.selectedSubDocName.value = '';
+                                      docCtrl.docSubList.clear();
+                                      docCtrl.selectedMasterMetaDocName.value = value;
+                                      docCtrl.selectedMasterMetaDocId.value = a.employeeDocumentTypeMetaDataId ?? 0;
+                                      docCtrl.fetchSubDocList(docMetaId:  a.employeeDocumentTypeMetaDataId );
+                                    }
+                                  }
+                                  // ✅ Clear this field's error immediately —
+                                  // this is a plain Rx write, not dependent
+                                  // on any FormFieldState lookup.
+                                  docDropdownError.value = null;
+                                }
+                              },
+                            ),
+                            if (docDropdownError.value != null) ...[
+                              SizedBox(height: 6.h),
+                              Text(
+                                docDropdownError.value!,
+                                style: AppTextStyle.normal12style.copyWith(
+                                  fontSize: 10.sp,
+                                  color: AppColors.redColor,
+                                ),
+                              ),
+                            ],
+                          ],
                         );
                       }),
                     ),
@@ -168,50 +201,107 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     SizedBox(
                       width: double.infinity,
                       child: Obx(() {
-                        return PrimaryDropDown(
-                          validator: (value) => Validators.validateRequired(docCtrl.selectedSubDocName.value,'Sub document'),
-                          contentPadding: EdgeInsets.zero,
-                          filled: false,
-                          value: docCtrl.selectedSubDocName.value,
-                          buttonStyleData: ButtonStyleData(
-                            width: 120.w,
-                            height: 44.h,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.borderGrey),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          hintText:  "Select sub document",
-                          // value: addVisitController.selectedRecordName.value == ''
-                          //     ? 'Select type'
-                          //     : addVisitController.selectedRecordName.value,
-                          items: docCtrl.docSubList.map((item) {
-                            return DropdownMenuItem<String>(
-                              value: item.documentName ?? '',
-                              child: Padding(
-                                padding:  EdgeInsets.all(8.h),
-                                child: Text(
-                                  item.documentName,
-                                  style: AppTextStyle.normal12style
-                                      .copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.defaultTxtGrey,
-                                  ),
+                        final bool hasLongSubDocName = docCtrl.docSubList.any(
+                                (item) => item.documentName.length > 30);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PrimaryDropDown(
+                              validator: (value) => null,
+                              contentPadding: EdgeInsets.zero,
+                              filled: false,
+                              value: docCtrl.selectedSubDocName.value,
+                              buttonStyleData: ButtonStyleData(
+                                width: 120.w,
+                                height: 44.h,
+                                // Zeroed out because the hint already carries
+                                // its own EdgeInsets.all(8.h) (see
+                                // primary_dropdown.dart) — adding padding here
+                                // too would double-inset the hint relative to
+                                // the selected value below.
+                                padding: EdgeInsets.zero,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.borderGrey),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            for (var a in docCtrl.docSubList) {
-                              if (a.documentName == value) {
-                                docCtrl.selectedSubDocName.value = value ?? '';
-                                docCtrl.selectedSubDocId.value = a.employeeDocumentTypeSetupId ?? 0;
-                                docCtrl.isExpDateShown.value = a.expiry_type == "Issuer Expiry" ? true: false;
-                              }
-                            }
-                            //
-
-                          },
+                              hintText: docCtrl.docMetaList.isEmpty
+                                  ? "No document found"
+                                  : (docCtrl.docSubList.isEmpty
+                                  ? "No sub document found"
+                                  : "Select sub document"),
+                              itemHeight: hasLongSubDocName ? 60.h : 44.h,
+                              // Same reasoning as the master-document dropdown:
+                              // keep the closed button single-line even when
+                              // the open menu wraps long sub-document names.
+                              selectedItemBuilder: (context) =>
+                                  docCtrl.docSubList.map((item) {
+                                    return Align(
+                                      alignment: Alignment.centerLeft,
+                                      // Mirrors the hint's own EdgeInsets.all(8.h)
+                                      // so the selected value lines up with
+                                      // where the placeholder text sat.
+                                      child: Padding(
+                                        padding: EdgeInsets.all(8.h),
+                                        child: Text(
+                                          item.documentName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTextStyle.normal12style
+                                              .copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            color: AppColors.defaultTxtGrey,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                              items: docCtrl.docSubList.map((item) {
+                                return DropdownMenuItem<String>(
+                                  value: item.documentName ?? '',
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8.h,vertical: 3.h),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        item.documentName,
+                                        maxLines: hasLongSubDocName ? 2 : 1,
+                                        overflow: TextOverflow.clip,
+                                        style: AppTextStyle.normal12style
+                                            .copyWith(
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.defaultTxtGrey,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                for (var a in docCtrl.docSubList) {
+                                  if (a.documentName == value) {
+                                    docCtrl.selectedSubDocName.value = value ?? '';
+                                    docCtrl.selectedSubDocId.value = a.employeeDocumentTypeSetupId ?? 0;
+                                    docCtrl.isExpDateShown.value = a.expiry_type == "Issuer Expiry" ? true: false;
+                                  }
+                                }
+                                if (value != null && value.isNotEmpty) {
+                                  // ✅ Clear this field's error immediately.
+                                  subDocDropdownError.value = null;
+                                }
+                              },
+                            ),
+                            if (subDocDropdownError.value != null) ...[
+                              SizedBox(height: 6.h),
+                              Text(
+                                subDocDropdownError.value!,
+                                style: AppTextStyle.normal12style.copyWith(
+                                  fontSize: 10.sp,
+                                  color: AppColors.redColor,
+                                ),
+                              ),
+                            ],
+                          ],
                         );
                       }),
                     ),
@@ -229,7 +319,6 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                     SizedBox(height: 8),
 
                     Obx(()=> docCtrl.isExpDateShown.value ? PrimaryTextField(
-                      // validator: (value) => Validators.validateRequired(value!,'Expiry date'),
                       readonly: true,
                       controller: expDateController,
                       hintStyle: AppTextStyle.regular12style.copyWith(
@@ -242,12 +331,18 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                         await Get.dialog(CalenderDatePickDialogWidget());
 
                         if (selectedDate != null) {
-                          // show only in UI
                           expDateController.text = selectedDate;
 
-                          // convert to ISO and store separately
                           final DateTime datePicked = DateFormat("yyyy-MM-dd").parse(selectedDate);
-                          docCtrl.expiryIsoDate.value = datePicked.toUtc().toIso8601String(); // ✅ ISO (Z included)
+                          // Build UTC midnight directly from the picked
+                          // Y/M/D — parsing gives local midnight, and
+                          // .toUtc() on that shifts the calendar day back
+                          // by one whenever the device is ahead of UTC.
+                          docCtrl.expiryIsoDate.value = DateTime.utc(
+                            datePicked.year,
+                            datePicked.month,
+                            datePicked.day,
+                          ).toIso8601String();
                         }
                       },
                       suffixIcon: Icon(Icons.calendar_month_outlined),
@@ -273,6 +368,11 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                             buttonColor: AppColors.primaryAppColor,
                             onPressed: () {
                               docCtrl.clearAll();
+                              docCtrl.docSubList.clear();
+                              docCtrl.selectedSubDocName.value = '';
+                              docCtrl.selectedSubDocId.value = 0;
+                              docDropdownError.value = null;
+                              subDocDropdownError.value = null;
                               Get.back();
                             },
                           ),
@@ -286,8 +386,22 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                             ),
                           ): PrimaryButton(
                             onTap: () async{
-                              if (_formKey.currentState!.validate()){
-                                if(docCtrl.fileNameValidation.value.isNotEmpty){
+                              // Manual validation for the two dropdowns.
+                              docDropdownError.value =
+                              docCtrl.selectedMasterMetaDocName.value.trim().isEmpty
+                                  ? 'Document is required'
+                                  : null;
+                              subDocDropdownError.value =
+                              docCtrl.selectedSubDocName.value.trim().isEmpty
+                                  ? 'Sub document is required'
+                                  : null;
+
+                              final bool isFormValid = _formKey.currentState!.validate();
+                              final bool isDropdownValid = docDropdownError.value == null &&
+                                  subDocDropdownError.value == null;
+
+                              if (isFormValid && isDropdownValid){
+                                if(docCtrl.fileNameValidation.value.isNotEmpty || docCtrl.fileNameValidation.value == "File too large"){
                                   var uploadResponse = await docCtrl.postUploadDocumentBase64Data(
                                       docMetaId: docCtrl.selectedMasterMetaDocId.value,
                                       docTypeSetupId: docCtrl.selectedSubDocId.value,
@@ -300,32 +414,23 @@ void showAddDocumentDialog(BuildContext context,int empId) {
                                     docCtrl.clearAll();
                                     docCtrl.fetchDocListDetails(empId: empId, approveOnly: 'no', searchText: 'all');
                                     showSucessDialog( context: context,
-                                        message: 'Document uploaded successfully',
+                                        message: 'Document uploaded successfully.',
                                         title: 'Successfully');
                                   }else{
-
+                                    Get.back();
+                                    docCtrl.clearAll();
+                                    showDocErrorDialog(context: context,
+                                        message: uploadResponse.message,
+                                        title: 'Error');
                                   }
                                 }else{
                                   docCtrl.fileNameValidation.value = 'Please upload document';
                                   print('Validation failed');
                                 }
-
-                                // if(docCtrl.fileName.value.isEmpty){
-                                //   docCtrl.fileNameValidation.value = 'Please upload document';
-                                //   //return;
-                                // }else{
-                                //
-                                //   // var response = await docCtrl.postUploadDocumentData(
-                                //   //     docMetaId: docCtrl.selectedMasterMetaDocId.value,
-                                //   //     docTypeSetupId: docCtrl.selectedSubDocId.value,
-                                //   //     empId: empId);
-                                //   // if(response.statusCode == 200 || response.statusCode == 201){
-                                //   //
-                                //   // }
-                                // }
-
                               }else{
-                                docCtrl.fileNameValidation.value = 'Please upload document';
+                                if (docCtrl.fileName.value.isEmpty) {
+                                  docCtrl.fileNameValidation.value = 'Please upload document';
+                                }
                                 print('Validation failed');
                               }
                             },
@@ -351,63 +456,5 @@ void showAddDocumentDialog(BuildContext context,int empId) {
         ),
       );
     },
-  );
-}
-
-Widget _uploadCaptureOption({
-  required String icon,
-  required String label,
-  required String label2,
-  required bool isRedValidation,
-  required VoidCallback onTap,
-}) {
-  return Column(
-    children: [
-      Text(
-        label2,
-        style: AppTextStyle.bold12style.copyWith(
-          color: isRedValidation ? AppColors.redColor : AppColors.defaultTxtGrey,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-      ),
-      customHeight(12.h),
-      InkWell(
-        onTap: onTap,
-        child: DottedBorder(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-          borderType: BorderType.RRect,
-          dashPattern: [6],
-          color: Color(0xffBEBEBE),
-          radius: Radius.circular(6),
-          strokeWidth: 1.5,
-
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                height: 60.h,
-                width: 62.w,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  color: Colors.grey.withValues(alpha: 0.3),
-                ),
-                child: Center(child: Image.asset(icon, height: 40.h)),
-              ),
-              SizedBox(height: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Color(0xff008ABD),
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ],
   );
 }
