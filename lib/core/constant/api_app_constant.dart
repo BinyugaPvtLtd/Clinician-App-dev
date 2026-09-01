@@ -30,7 +30,10 @@
 ///demo
 class ApiAppConstant {
   static  String domain = 'https://demo.symmetry.care/';
+
   static  String authDomain = 'https://auth.symmetry.care/';
+  // `domain` can change at runtime (endPointByAlias), so this must recompute
+  // on every access instead of freezing the value seen at class-load time.
   static  String get clinicialBaseUrl => '${domain}api/';
   static  String get clinicialAuthBaseUrl => '${authDomain}api/';
   static  String googleApiKey = "AIzaSyCw6mXOPCtbKn5i0bWcAcnfXCkb0y5G7Lg";
